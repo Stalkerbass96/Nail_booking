@@ -54,18 +54,26 @@ export default async function BookingPage({ searchParams }: Props) {
   }));
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-semibold text-brand-900">{isJa ? "予約" : "在线预约"}</h1>
-        <div className="flex gap-3 text-sm">
-          <Link className="text-brand-700 underline" href={`/services?lang=${lang}`}>
-            {isJa ? "メニュー" : "套餐列表"}
-          </Link>
-          <Link className="text-brand-700 underline" href={`/booking/lookup?lang=${lang}`}>
-            {isJa ? "予約照会" : "查询预约"}
-          </Link>
+    <main className="mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
+      <section className="mb-6 rounded-3xl border border-brand-100/80 bg-white/80 p-6 shadow-[0_16px_40px_rgba(120,25,55,0.08)] backdrop-blur">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">
+              {isJa ? "Nail Booking" : "Nail Booking"}
+            </p>
+            <h1 className="mt-1 text-3xl font-semibold text-brand-900 md:text-4xl">{isJa ? "予約" : "在线预约"}</h1>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-sm">
+            <Link className="rounded-full border border-brand-300 bg-white px-4 py-2 text-brand-800 transition hover:border-brand-500 hover:text-brand-900" href={`/services?lang=${lang}`}>
+              {isJa ? "メニュー" : "套餐列表"}
+            </Link>
+            <Link className="rounded-full border border-brand-300 bg-white px-4 py-2 text-brand-800 transition hover:border-brand-500 hover:text-brand-900" href={`/booking/lookup?lang=${lang}`}>
+              {isJa ? "予約照会" : "查询预约"}
+            </Link>
+          </div>
         </div>
-      </div>
+      </section>
 
       <BookingForm lang={lang} packages={packageOptions} initialPackageId={query?.packageId} />
     </main>

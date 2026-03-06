@@ -204,15 +204,20 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
   }
 
   return (
-    <form className="grid gap-6" onSubmit={onSubmit}>
-      <section className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
+    <form className="grid gap-5" onSubmit={onSubmit}>
+      <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-brand-900 md:text-2xl">{t.title}</h2>
+          <div className="rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">
+            {totalPrice} JPY · {totalDuration} min
+          </div>
+        </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <label className="grid gap-2">
             <span className="text-sm text-brand-800">{t.package}</span>
             <select
-              className="rounded-lg border border-brand-200 px-3 py-2"
+              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
               value={packageId}
               onChange={(event) => {
                 const nextPackageId = event.target.value;
@@ -232,7 +237,7 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
           <label className="grid gap-2">
             <span className="text-sm text-brand-800">{t.date}</span>
             <input
-              className="rounded-lg border border-brand-200 px-3 py-2"
+              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
               type="date"
               value={date}
               onChange={(event) => {
@@ -252,7 +257,7 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
               return (
                 <label
                   key={addon.id}
-                  className={`rounded-lg border px-3 py-2 ${checked ? "border-brand-500 bg-brand-50" : "border-brand-200"}`}
+                  className={`rounded-xl border px-3 py-2.5 transition ${checked ? "border-brand-500 bg-brand-50 shadow-sm" : "border-brand-200 bg-white hover:border-brand-300"}`}
                 >
                   <input
                     className="mr-2"
@@ -267,7 +272,7 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
             })}
           </div>
 
-          <p className="mt-3 text-sm text-brand-700">
+          <p className="mt-3 text-sm font-medium text-brand-700">
             Total: {totalPrice} JPY / {totalDuration} min
           </p>
         </div>
@@ -284,7 +289,7 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
                 <button
                   key={slot.startAt}
                   type="button"
-                  className={`rounded-lg border px-2 py-2 text-sm ${active ? "border-brand-600 bg-brand-600 text-white" : "border-brand-200 bg-white text-brand-900"}`}
+                  className={`rounded-xl border px-2 py-2.5 text-sm font-medium transition ${active ? "border-brand-600 bg-brand-600 text-white shadow" : "border-brand-200 bg-white text-brand-900 hover:border-brand-400 hover:bg-brand-50"}`}
                   onClick={() => setSelectedStartAt(slot.startAt)}
                 >
                   {new Date(slot.startAt).toLocaleTimeString(lang === "ja" ? "ja-JP" : "zh-CN", {
@@ -299,12 +304,12 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
         </div>
       </section>
 
-      <section className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
+      <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2">
             <span className="text-sm text-brand-800">{t.name}</span>
             <input
-              className="rounded-lg border border-brand-200 px-3 py-2"
+              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
               value={name}
               onChange={(event) => setName(event.target.value)}
             />
@@ -313,7 +318,7 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
           <label className="grid gap-2">
             <span className="text-sm text-brand-800">{t.email}</span>
             <input
-              className="rounded-lg border border-brand-200 px-3 py-2"
+              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               type="email"
@@ -324,7 +329,7 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
         <label className="mt-4 grid gap-2">
           <span className="text-sm text-brand-800">{t.styleNote}</span>
           <textarea
-            className="min-h-20 rounded-lg border border-brand-200 px-3 py-2"
+            className="min-h-24 rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
             value={styleNote}
             onChange={(event) => setStyleNote(event.target.value)}
           />
@@ -333,18 +338,18 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
         <label className="mt-4 grid gap-2">
           <span className="text-sm text-brand-800">{t.customerNote}</span>
           <textarea
-            className="min-h-20 rounded-lg border border-brand-200 px-3 py-2"
+            className="min-h-24 rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
             value={customerNote}
             onChange={(event) => setCustomerNote(event.target.value)}
           />
         </label>
 
-        {error ? <p className="mt-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
-        {message ? <p className="mt-4 rounded bg-green-50 px-3 py-2 text-sm text-green-700">{message}</p> : null}
+        {error ? <p className="mt-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+        {message ? <p className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p> : null}
 
         <button
           disabled={submitting}
-          className="mt-4 rounded-lg bg-brand-700 px-4 py-2 font-medium text-white disabled:opacity-60"
+          className="mt-4 inline-flex items-center justify-center rounded-xl bg-brand-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
           type="submit"
         >
           {submitting ? "..." : t.submit}

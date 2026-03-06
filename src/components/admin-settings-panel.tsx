@@ -129,47 +129,47 @@ export default function AdminSettingsPanel({ lang }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+    <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
       <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
       <p className="mt-1 text-sm text-brand-700">{t.desc}</p>
 
       {loading ? <p className="mt-4 text-sm text-brand-700">{t.loading}</p> : null}
 
-      <form className="mt-4 grid gap-3 md:grid-cols-2" onSubmit={onSubmit}>
+      <form className="mt-5 grid gap-3 md:grid-cols-2" onSubmit={onSubmit}>
         <label className="grid gap-1 text-sm text-brand-800">
           <span>{t.slotMinutes}</span>
-          <input className="rounded border border-brand-200 px-3 py-2" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
+          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800">
           <span>{t.pendingAutoCancelHours}</span>
-          <input className="rounded border border-brand-200 px-3 py-2" value={pendingAutoCancelHours} onChange={(e) => setPendingAutoCancelHours(e.target.value)} />
+          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={pendingAutoCancelHours} onChange={(e) => setPendingAutoCancelHours(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800">
           <span>{t.cancelCutoffHours}</span>
-          <input className="rounded border border-brand-200 px-3 py-2" value={cancelCutoffHours} onChange={(e) => setCancelCutoffHours(e.target.value)} />
+          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={cancelCutoffHours} onChange={(e) => setCancelCutoffHours(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800">
           <span>{t.pointEarnRatioJpy}</span>
-          <input className="rounded border border-brand-200 px-3 py-2" value={pointEarnRatioJpy} onChange={(e) => setPointEarnRatioJpy(e.target.value)} />
+          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={pointEarnRatioJpy} onChange={(e) => setPointEarnRatioJpy(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800">
           <span>{t.pointRedeemRatioJpy}</span>
-          <input className="rounded border border-brand-200 px-3 py-2" value={pointRedeemRatioJpy} onChange={(e) => setPointRedeemRatioJpy(e.target.value)} />
+          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={pointRedeemRatioJpy} onChange={(e) => setPointRedeemRatioJpy(e.target.value)} />
         </label>
 
         <div className="flex items-end">
-          <button className="rounded bg-brand-700 px-4 py-2 text-white disabled:opacity-60" disabled={saving} type="submit">
+          <button className="rounded-xl bg-brand-700 px-4 py-2.5 font-medium text-white transition hover:bg-brand-800 disabled:opacity-60" disabled={saving} type="submit">
             {saving ? `${t.save}...` : t.save}
           </button>
         </div>
       </form>
 
-      {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
-      {ok ? <p className="mt-3 rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{ok}</p> : null}
+      {error ? <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {ok ? <p className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{ok}</p> : null}
     </section>
   );
 }
