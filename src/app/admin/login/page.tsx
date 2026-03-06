@@ -1,4 +1,4 @@
-﻿import AdminLoginForm from "@/components/admin-login-form";
+import AdminLoginForm from "@/components/admin-login-form";
 import { getAdminFromServerCookies } from "@/lib/admin-auth";
 import { resolveLang } from "@/lib/lang";
 import { redirect } from "next/navigation";
@@ -43,12 +43,13 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   const nextPath = ensureLang(rawNext, lang);
 
   return (
-    <main className="mx-auto w-full max-w-md px-6 py-10">
-      <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-brand-900">{t.title}</h1>
-        <p className="mt-2 text-sm text-brand-700">{t.desc}</p>
+    <main className="mx-auto w-full max-w-lg px-5 py-10 md:py-14">
+      <section className="admin-panel-shell">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">Admin Console</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-brand-900">{t.title}</h1>
+        <p className="mt-2 max-w-lg text-sm text-brand-700">{t.desc}</p>
 
-        <div className="mt-5">
+        <div className="mt-7">
           <AdminLoginForm nextPath={nextPath} lang={lang} />
         </div>
       </section>

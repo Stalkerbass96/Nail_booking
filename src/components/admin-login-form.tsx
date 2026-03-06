@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -63,29 +63,29 @@ export default function AdminLoginForm({ nextPath, lang }: Props) {
 
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
-      <label className="grid gap-1">
-        <span className="text-sm text-brand-800">{t.email}</span>
+      <label className="grid gap-1.5">
+        <span className="text-sm font-medium text-brand-800">{t.email}</span>
         <input
-          className="rounded-lg border border-brand-200 px-3 py-2"
+          className="admin-input"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
       </label>
 
-      <label className="grid gap-1">
-        <span className="text-sm text-brand-800">{t.password}</span>
+      <label className="grid gap-1.5">
+        <span className="text-sm font-medium text-brand-800">{t.password}</span>
         <input
-          className="rounded-lg border border-brand-200 px-3 py-2"
+          className="admin-input"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
       </label>
 
-      {error ? <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="admin-danger">{error}</p> : null}
 
-      <button className="rounded-lg bg-brand-700 px-4 py-2 text-white disabled:opacity-60" type="submit" disabled={loading}>
+      <button className="admin-btn-primary" type="submit" disabled={loading}>
         {loading ? t.submitting : t.submit}
       </button>
     </form>

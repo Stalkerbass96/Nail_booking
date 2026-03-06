@@ -36,3 +36,53 @@ button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(199, 40, 80, 0.2);
 }
+
+@layer components {
+  .admin-panel-shell {
+    @apply rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)] md:p-7;
+  }
+
+  .admin-section-title {
+    @apply text-xl font-semibold tracking-tight text-brand-900 md:text-2xl;
+  }
+
+  .admin-subsection {
+    @apply mt-4 grid gap-3 rounded-2xl border border-brand-100/90 bg-brand-50/40 p-4;
+  }
+
+  .admin-input {
+    @apply rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition placeholder:text-brand-500/70 hover:border-brand-400;
+  }
+
+  .admin-input-sm {
+    @apply rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm text-brand-900 transition placeholder:text-brand-500/70 hover:border-brand-400;
+  }
+
+  .admin-check {
+    @apply mr-2 align-middle accent-brand-700;
+  }
+
+  .admin-btn-primary {
+    @apply rounded-xl bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-60;
+  }
+
+  .admin-btn-secondary {
+    @apply rounded-xl border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-900 transition hover:border-brand-500 hover:bg-brand-50;
+  }
+
+  .admin-btn-ghost {
+    @apply rounded-lg border border-brand-300 bg-white px-3 py-1.5 text-sm text-brand-900 transition hover:border-brand-500 hover:bg-brand-50;
+  }
+
+  .admin-note {
+    @apply text-sm text-brand-700;
+  }
+
+  .admin-danger {
+    @apply mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700;
+  }
+
+  .admin-item {
+    @apply rounded-2xl border border-brand-100/90 bg-white px-4 py-3 shadow-sm;
+  }
+}
