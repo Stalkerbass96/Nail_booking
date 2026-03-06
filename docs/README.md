@@ -14,6 +14,7 @@
 8. `testing/e2e-report-2026-03-07.md`：最新 E2E 测试报告
 9. `deployment/deployment-v1.md`：部署手册（生产/预发）
 10. `operations/notes-v1.md`：备注、已知限制、后续建议
+11. `CHANGELOG.md`：版本更新说明
 
 ## 文档维护约定
 
