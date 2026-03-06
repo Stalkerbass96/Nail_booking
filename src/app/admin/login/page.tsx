@@ -43,10 +43,10 @@ export default async function AdminLoginPage({ searchParams }: Props) {
   const nextPath = ensureLang(rawNext, lang);
 
   return (
-    <main className="mx-auto w-full max-w-lg px-5 py-10 md:py-14">
+    <main className="mx-auto w-full max-w-lg px-4 py-8 sm:px-5 sm:py-10 md:py-14">
       <section className="admin-panel-shell">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">Admin Console</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-brand-900">{t.title}</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-brand-900 sm:text-3xl">{t.title}</h1>
         <p className="mt-2 max-w-lg text-sm text-brand-700">{t.desc}</p>
 
         <div className="mt-7">

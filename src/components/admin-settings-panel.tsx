@@ -129,47 +129,47 @@ export default function AdminSettingsPanel({ lang }: Props) {
   }
 
   return (
-    <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
-      <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
+    <section className="admin-panel-shell">
+      <h2 className="admin-section-title">{t.title}</h2>
       <p className="mt-1 text-sm text-brand-700">{t.desc}</p>
 
-      {loading ? <p className="mt-4 text-sm text-brand-700">{t.loading}</p> : null}
+      {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <form className="mt-5 grid gap-3 md:grid-cols-2" onSubmit={onSubmit}>
-        <label className="grid gap-1 text-sm text-brand-800">
+        <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-slot-minutes">
           <span>{t.slotMinutes}</span>
-          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
+          <input id="settings-slot-minutes" className="admin-input" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
         </label>
 
-        <label className="grid gap-1 text-sm text-brand-800">
+        <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-auto-cancel-hours">
           <span>{t.pendingAutoCancelHours}</span>
-          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={pendingAutoCancelHours} onChange={(e) => setPendingAutoCancelHours(e.target.value)} />
+          <input id="settings-auto-cancel-hours" className="admin-input" value={pendingAutoCancelHours} onChange={(e) => setPendingAutoCancelHours(e.target.value)} />
         </label>
 
-        <label className="grid gap-1 text-sm text-brand-800">
+        <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-cutoff-hours">
           <span>{t.cancelCutoffHours}</span>
-          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={cancelCutoffHours} onChange={(e) => setCancelCutoffHours(e.target.value)} />
+          <input id="settings-cutoff-hours" className="admin-input" value={cancelCutoffHours} onChange={(e) => setCancelCutoffHours(e.target.value)} />
         </label>
 
-        <label className="grid gap-1 text-sm text-brand-800">
+        <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-earn-ratio">
           <span>{t.pointEarnRatioJpy}</span>
-          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={pointEarnRatioJpy} onChange={(e) => setPointEarnRatioJpy(e.target.value)} />
+          <input id="settings-earn-ratio" className="admin-input" value={pointEarnRatioJpy} onChange={(e) => setPointEarnRatioJpy(e.target.value)} />
         </label>
 
-        <label className="grid gap-1 text-sm text-brand-800">
+        <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-redeem-ratio">
           <span>{t.pointRedeemRatioJpy}</span>
-          <input className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400" value={pointRedeemRatioJpy} onChange={(e) => setPointRedeemRatioJpy(e.target.value)} />
+          <input id="settings-redeem-ratio" className="admin-input" value={pointRedeemRatioJpy} onChange={(e) => setPointRedeemRatioJpy(e.target.value)} />
         </label>
 
         <div className="flex items-end">
-          <button className="rounded-xl bg-brand-700 px-4 py-2.5 font-medium text-white transition hover:bg-brand-800 disabled:opacity-60" disabled={saving} type="submit">
+          <button className="admin-btn-primary w-full sm:w-auto" disabled={saving} type="submit">
             {saving ? `${t.save}...` : t.save}
           </button>
         </div>
       </form>
 
-      {error ? <p className="mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
-      {ok ? <p className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{ok}</p> : null}
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {ok ? <p className="ui-state-success" aria-live="polite">{ok}</p> : null}
     </section>
   );
 }

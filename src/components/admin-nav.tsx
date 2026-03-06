@@ -45,12 +45,16 @@ export default function AdminNav({ lang }: Props) {
   const rawSearch = searchParams.toString();
 
   return (
-    <nav className="mb-4 flex flex-wrap items-center gap-2">
+    <nav className="mb-4 flex flex-wrap items-center gap-2 sm:mb-5">
       {LINKS.map((item) => (
         <Link
           key={item.href}
           href={buildHref(item.href, rawSearch, lang)}
-          className="rounded-lg border border-brand-300 px-3 py-1 text-sm text-brand-900"
+          className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-sm transition-colors duration-200 ${
+            pathname === item.href
+              ? "border-brand-700 bg-brand-700 text-white"
+              : "border-brand-300 bg-white text-brand-900 hover:border-brand-500 hover:bg-brand-50"
+          }`}
         >
           {lang === "ja" ? item.ja : item.zh}
         </Link>
@@ -59,13 +63,21 @@ export default function AdminNav({ lang }: Props) {
       <div className="ml-auto flex items-center gap-2">
         <Link
           href={buildHref(pathname, rawSearch, "zh")}
-          className={`rounded-lg border px-3 py-1 text-sm ${lang === "zh" ? "border-brand-700 bg-brand-700 text-white" : "border-brand-300 text-brand-900"}`}
+          className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-sm transition-colors duration-200 ${
+            lang === "zh"
+              ? "border-brand-700 bg-brand-700 text-white"
+              : "border-brand-300 bg-white text-brand-900 hover:border-brand-500 hover:bg-brand-50"
+          }`}
         >
           {t.langZh}
         </Link>
         <Link
           href={buildHref(pathname, rawSearch, "ja")}
-          className={`rounded-lg border px-3 py-1 text-sm ${lang === "ja" ? "border-brand-700 bg-brand-700 text-white" : "border-brand-300 text-brand-900"}`}
+          className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-sm transition-colors duration-200 ${
+            lang === "ja"
+              ? "border-brand-700 bg-brand-700 text-white"
+              : "border-brand-300 bg-white text-brand-900 hover:border-brand-500 hover:bg-brand-50"
+          }`}
         >
           {t.langJa}
         </Link>

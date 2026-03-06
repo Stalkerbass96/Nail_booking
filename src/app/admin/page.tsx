@@ -37,32 +37,32 @@ export default async function AdminHomePage({ searchParams }: Props) {
   const t = TEXT[lang];
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <AdminNav lang={lang} />
-      <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-semibold text-brand-900">{t.title}</h1>
+      <section className="ui-card">
+        <h1 className="text-xl font-semibold text-brand-900 sm:text-2xl">{t.title}</h1>
         <p className="mt-2 text-brand-800">{t.desc}</p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link className="rounded-lg bg-brand-700 px-4 py-2 text-white" href={`/admin/appointments?lang=${lang}`}>
+        <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap sm:gap-3">
+          <Link className="ui-btn-primary" href={`/admin/appointments?lang=${lang}`}>
             {t.appointments}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/categories?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/admin/categories?lang=${lang}`}>
             {t.categories}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/packages?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/admin/packages?lang=${lang}`}>
             {t.packages}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/addons?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/admin/addons?lang=${lang}`}>
             {t.addons}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/customers?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/admin/customers?lang=${lang}`}>
             {t.customers}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/points?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/admin/points?lang=${lang}`}>
             {t.points}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/settings?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/admin/settings?lang=${lang}`}>
             {t.settings}
           </Link>
         </div>

@@ -63,29 +63,33 @@ export default function AdminLoginForm({ nextPath, lang }: Props) {
 
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
-      <label className="grid gap-1.5">
+      <label className="grid gap-1.5" htmlFor="admin-login-email">
         <span className="text-sm font-medium text-brand-800">{t.email}</span>
         <input
+          id="admin-login-email"
           className="admin-input"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
         />
       </label>
 
-      <label className="grid gap-1.5">
+      <label className="grid gap-1.5" htmlFor="admin-login-password">
         <span className="text-sm font-medium text-brand-800">{t.password}</span>
         <input
+          id="admin-login-password"
           className="admin-input"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
         />
       </label>
 
-      {error ? <p className="admin-danger">{error}</p> : null}
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
 
-      <button className="admin-btn-primary" type="submit" disabled={loading}>
+      <button className="admin-btn-primary w-full sm:w-auto" type="submit" disabled={loading}>
         {loading ? t.submitting : t.submit}
       </button>
     </form>

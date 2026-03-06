@@ -53,7 +53,8 @@ const TEXT = {
     loadAddonFailed: "加载加项失败",
     loadFailed: "加载失败",
     createFailed: "创建失败",
-    updateFailed: "更新失败"
+    updateFailed: "更新失败",
+    empty: "暂无加项"
   },
   ja: {
     title: "追加オプション管理",
@@ -78,7 +79,8 @@ const TEXT = {
     loadAddonFailed: "追加オプションの読み込みに失敗しました",
     loadFailed: "読み込みに失敗しました",
     createFailed: "作成に失敗しました",
-    updateFailed: "更新に失敗しました"
+    updateFailed: "更新に失敗しました",
+    empty: "追加オプションはありません"
   }
 };
 
@@ -229,8 +231,8 @@ export default function AdminAddonsPanel({ lang }: Props) {
         </button>
       </div>
 
-      {error ? <p className="admin-danger">{error}</p> : null}
-      {loading ? <p className="mt-3 admin-note">{t.loading}</p> : null}
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <form className="admin-subsection" onSubmit={createAddon}>
         <p className="font-medium text-brand-900">{t.createTitle}</p>
@@ -283,6 +285,7 @@ export default function AdminAddonsPanel({ lang }: Props) {
       </form>
 
       <div className="mt-4 grid gap-3">
+        {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
         {items.map((item) => (
           <article key={item.id} className="admin-item">
             <p className="font-medium text-brand-900">

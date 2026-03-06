@@ -50,7 +50,8 @@ const TEXT = {
     createFailed: "创建失败",
     updateFailed: "更新失败",
     batchFailed: "批量更新失败",
-    reorderFailed: "排序失败"
+    reorderFailed: "排序失败",
+    empty: "暂无分类"
   },
   ja: {
     title: "カテゴリ管理",
@@ -77,7 +78,8 @@ const TEXT = {
     createFailed: "作成に失敗しました",
     updateFailed: "更新に失敗しました",
     batchFailed: "一括更新に失敗しました",
-    reorderFailed: "並び替えに失敗しました"
+    reorderFailed: "並び替えに失敗しました",
+    empty: "カテゴリはありません"
   }
 };
 
@@ -283,7 +285,7 @@ export default function AdminCategoriesPanel({ lang }: Props) {
       </div>
 
       {error ? <p className="admin-danger">{error}</p> : null}
-      {loading ? <p className="mt-3 admin-note">{t.loading}</p> : null}
+      {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <form className="admin-subsection" onSubmit={createCategory}>
         <p className="font-medium text-brand-900">{t.createTitle}</p>
@@ -333,6 +335,7 @@ export default function AdminCategoriesPanel({ lang }: Props) {
       </div>
 
       <div className="mt-4 grid gap-3">
+        {!loading && orderedItems.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
         {orderedItems.map((item, index) => (
           <article key={item.id} className="admin-item">
             <div className="flex flex-wrap items-start justify-between gap-3">

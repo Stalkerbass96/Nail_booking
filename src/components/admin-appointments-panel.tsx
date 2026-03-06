@@ -45,6 +45,7 @@ const TEXT = {
     confirm: "确认",
     cancel: "取消",
     complete: "完成",
+    loading: "加载中...",
     empty: "暂无数据",
     loadFailed: "加载失败",
     actionFailed: "操作失败",
@@ -69,6 +70,7 @@ const TEXT = {
     confirm: "確認",
     cancel: "キャンセル",
     complete: "完了",
+    loading: "読み込み中...",
     empty: "データなし",
     loadFailed: "読み込み失敗",
     actionFailed: "操作失敗",
@@ -146,31 +148,33 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   }
 
   return (
-    <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <section className="admin-panel-shell">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
         <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
           {items.length} items
         </span>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-end">
         <div className="grid gap-1">
-          <label className="text-sm text-brand-800">{t.date}</label>
+          <label className="text-sm text-brand-800" htmlFor="appointments-date-filter">{t.date}</label>
           <input
+            id="appointments-date-filter"
             type="date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
-            className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+            className="admin-input"
           />
         </div>
 
         <div className="grid gap-1">
-          <label className="text-sm text-brand-800">{t.status}</label>
+          <label className="text-sm text-brand-800" htmlFor="appointments-status-filter">{t.status}</label>
           <select
+            id="appointments-status-filter"
             value={status}
             onChange={(event) => setStatus(event.target.value as (typeof STATUS_VALUES)[number])}
-            className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+            className="admin-input"
           >
             <option value="all">{t.all}</option>
             <option value="pending">{t.pending}</option>
@@ -182,22 +186,22 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
 
         <button
           type="button"
-          className="rounded-xl border border-brand-300 bg-white px-4 py-2.5 font-medium text-brand-900 transition hover:border-brand-500 hover:bg-brand-50"
+          className="admin-btn-secondary"
           onClick={() => void fetchItems()}
         >
           {t.refresh}
         </button>
       </div>
 
-      {error ? <p className="mt-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
 
-      {loading ? <p className="mt-4 text-sm text-brand-700">...</p> : null}
+      {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <div className="mt-5 grid gap-3">
-        {items.length === 0 && !loading ? <p className="text-sm text-brand-700">{t.empty}</p> : null}
+        {items.length === 0 && !loading ? <p className="ui-state-info">{t.empty}</p> : null}
 
         {items.map((item) => (
-          <article key={item.id} className="rounded-2xl border border-brand-100 bg-white px-4 py-3 shadow-sm">
+          <article key={item.id} className="admin-item">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="grid gap-1 text-sm text-brand-800">
                 <p className="flex items-center gap-2 font-medium text-brand-900">
@@ -224,7 +228,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 {item.status === "pending" ? (
                   <button
                     type="button"
-                    className="rounded-lg bg-brand-700 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-brand-800"
+                    className="admin-btn-primary min-h-10 px-3 py-2"
                     onClick={() => void doPatch(`/api/admin/appointments/${item.id}/confirm`)}
                   >
                     {t.confirm}
@@ -234,7 +238,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 {(item.status === "pending" || item.status === "confirmed") ? (
                   <button
                     type="button"
-                    className="rounded-lg border border-brand-300 bg-white px-3 py-1.5 text-sm font-medium text-brand-900 transition hover:border-brand-500 hover:bg-brand-50"
+                    className="admin-btn-ghost px-3 py-2"
                     onClick={() => {
                       if (!window.confirm(t.confirmCancel)) return;
                       void doPatch(`/api/admin/appointments/${item.id}/cancel`, {
@@ -249,7 +253,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 {item.status === "confirmed" ? (
                   <button
                     type="button"
-                    className="rounded-lg bg-brand-800 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-brand-900"
+                    className="admin-btn-primary min-h-10 bg-brand-800 px-3 py-2 hover:bg-brand-900"
                     onClick={() => {
                       const paidRaw = window.prompt(t.completePrompt, "0");
                       if (paidRaw === null) return;

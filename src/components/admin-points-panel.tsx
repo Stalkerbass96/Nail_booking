@@ -33,7 +33,9 @@ const TEXT = {
     submitUse: "执行扣减",
     loadLedgerFailed: "加载积分流水失败",
     useFailed: "扣减失败",
-    loadFailed: "加载失败"
+    loadFailed: "加载失败",
+    loading: "加载中...",
+    empty: "暂无积分记录"
   },
   ja: {
     title: "ポイント履歴と利用",
@@ -45,7 +47,9 @@ const TEXT = {
     submitUse: "ポイント利用",
     loadLedgerFailed: "ポイント履歴の読み込みに失敗しました",
     useFailed: "ポイント利用に失敗しました",
-    loadFailed: "読み込みに失敗しました"
+    loadFailed: "読み込みに失敗しました",
+    loading: "読み込み中...",
+    empty: "ポイント履歴はありません"
   }
 };
 
@@ -56,6 +60,7 @@ export default function AdminPointsPanel({ lang }: Props) {
   const [customerId, setCustomerId] = useState("");
   const [items, setItems] = useState<LedgerItem[]>([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [useCustomerId, setUseCustomerId] = useState("");
   const [useAppointmentId, setUseAppointmentId] = useState("");
@@ -63,6 +68,7 @@ export default function AdminPointsPanel({ lang }: Props) {
 
   async function search() {
     setError("");
+    setLoading(true);
     try {
       const qs = new URLSearchParams({ limit: "200" });
       if (customerId.trim()) qs.set("customerId", customerId.trim());
@@ -73,6 +79,8 @@ export default function AdminPointsPanel({ lang }: Props) {
       setItems(data.items ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.loadFailed);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -109,25 +117,28 @@ export default function AdminPointsPanel({ lang }: Props) {
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>
 
-      <div className="mt-4 flex gap-2">
-        <input className="admin-input" placeholder={t.customerFilter} value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
-        <button className="admin-btn-primary" onClick={() => void search()} type="button">
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <label htmlFor="points-customer-filter" className="sr-only">{t.customerFilter}</label>
+        <input id="points-customer-filter" className="admin-input" placeholder={t.customerFilter} value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
+        <button className="admin-btn-primary w-full sm:w-auto" onClick={() => void search()} type="button">
           {t.searchLedger}
         </button>
       </div>
 
       <form className="admin-subsection md:grid-cols-4" onSubmit={useManualPoints}>
-        <input className="admin-input-sm" placeholder={t.customerIdRequired} value={useCustomerId} onChange={(e) => setUseCustomerId(e.target.value)} />
-        <input className="admin-input-sm" placeholder={t.appointmentIdOptional} value={useAppointmentId} onChange={(e) => setUseAppointmentId(e.target.value)} />
-        <input className="admin-input-sm" placeholder={t.usePoints} value={usePoints} onChange={(e) => setUsePoints(e.target.value)} />
+        <input className="admin-input-sm" aria-label={t.customerIdRequired} placeholder={t.customerIdRequired} value={useCustomerId} onChange={(e) => setUseCustomerId(e.target.value)} />
+        <input className="admin-input-sm" aria-label={t.appointmentIdOptional} placeholder={t.appointmentIdOptional} value={useAppointmentId} onChange={(e) => setUseAppointmentId(e.target.value)} />
+        <input className="admin-input-sm" aria-label={t.usePoints} placeholder={t.usePoints} value={usePoints} onChange={(e) => setUsePoints(e.target.value)} />
         <button className="admin-btn-secondary" type="submit">
           {t.submitUse}
         </button>
       </form>
 
-      {error ? <p className="admin-danger">{error}</p> : null}
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <div className="mt-4 grid gap-2">
+        {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
         {items.map((item) => (
           <article key={item.id} className="admin-item text-sm text-brand-800">
             <p>{item.customer.name} ({item.customer.email})</p>

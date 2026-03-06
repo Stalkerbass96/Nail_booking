@@ -75,7 +75,8 @@ const TEXT = {
     loadPackageFailed: "加载套餐失败",
     loadFailed: "加载失败",
     createFailed: "创建失败",
-    updateFailed: "更新失败"
+    updateFailed: "更新失败",
+    empty: "暂无套餐"
   },
   ja: {
     title: "メニュー管理",
@@ -105,7 +106,8 @@ const TEXT = {
     loadPackageFailed: "メニューの読み込みに失敗しました",
     loadFailed: "読み込みに失敗しました",
     createFailed: "作成に失敗しました",
-    updateFailed: "更新に失敗しました"
+    updateFailed: "更新に失敗しました",
+    empty: "メニューはありません"
   }
 };
 
@@ -320,8 +322,8 @@ export default function AdminPackagesPanel({ lang }: Props) {
         </button>
       </div>
 
-      {error ? <p className="admin-danger">{error}</p> : null}
-      {loading ? <p className="mt-3 admin-note">{t.loading}</p> : null}
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <form className="admin-subsection" onSubmit={createPackage}>
         <p className="font-medium text-brand-900">{t.createTitle}</p>
@@ -410,6 +412,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
       </form>
 
       <div className="mt-4 grid gap-3">
+        {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
         {items.map((item) => (
           <article key={item.id} className="admin-item">
             <p className="font-medium text-brand-900">
