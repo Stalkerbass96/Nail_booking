@@ -1,13 +1,13 @@
-﻿# 本地运行手册 V1
+# 本地运行手册 V1
 
 - 适用：开发机（Windows / macOS / Linux）
-- 更新日期：2026-03-06
+- 更新日期：2026-03-07
 
 ## 1. 前置要求
 
 - Node.js 20+
 - npm 10+
-- Docker（用于启动 PostgreSQL）
+- PostgreSQL 16（可用 Docker 或本机服务）
 
 ## 2. 初始化步骤
 
@@ -23,10 +23,18 @@ Windows PowerShell 可用：
 Copy-Item .env.example .env
 ```
 
-2. 启动数据库
+2. 启动数据库（任选一种）
+
+- Docker：
 
 ```bash
 docker compose up -d
+```
+
+- 本机服务：
+
+```bash
+systemctl start postgresql
 ```
 
 3. 安装依赖
@@ -61,12 +69,23 @@ npm run dev
 
 ## 5. 常见排查
 
-- 数据库连接失败：确认 `docker compose ps` 中 `postgres` 为 `running`。
+- 数据库连接失败：
+  - Docker 模式下检查 `docker compose ps`
+  - 本机模式下检查 `systemctl status postgresql`
 - 迁移失败：检查 `.env` 的 `DATABASE_URL`。
-- 登录失败：重新执行 `npm run db:seed`（会重置默认管理员密码为当前 `ADMIN_SEED_PASSWORD`）。
+- 登录失败：重新执行 `npm run db:seed`。
 - 自动取消未生效：手动执行 `npm run job:auto-cancel` 验证。
 
-## 6. 开发常用命令
+## 6. 测试与验证
+
+```bash
+npm run build
+npm run test:e2e
+```
+
+最近报告：`docs/testing/e2e-report-2026-03-07.md`
+
+## 7. 开发常用命令
 
 ```bash
 npm run dev
@@ -75,5 +94,6 @@ npm run start
 npm run prisma:generate
 npm run prisma:migrate:deploy
 npm run db:seed
+npm run test:e2e
 npm run job:auto-cancel
 ```

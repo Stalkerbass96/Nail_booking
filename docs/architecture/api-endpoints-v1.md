@@ -1,6 +1,6 @@
-﻿# API Endpoints V1
+# API Endpoints V1
 
-- 更新日期：2026-03-06
+- 更新日期：2026-03-07
 - 基础路径：同 Next.js 应用域名
 - 返回格式：JSON
 
@@ -29,7 +29,8 @@
     - `addonIds`（可选，逗号分隔）
 
 - `POST /api/public/appointments`
-  - 创建预约（状态为 `pending`）
+  - 创建预约（状态 `pending`）
+  - 已加入并发防护（事务内 advisory lock + 冲突校验）
 
 - `GET /api/public/appointments/lookup`
   - 使用 `email + bookingNo` 查询预约
@@ -81,13 +82,26 @@
 - `GET /api/admin/points/ledger`
 - `POST /api/admin/points/use`
 
+### 系统设置
+
+- `GET /api/admin/system-settings`
+- `PATCH /api/admin/system-settings`
+  - 字段：
+    - `slotMinutes`
+    - `pendingAutoCancelHours`
+    - `cancelCutoffHours`
+    - `pointEarnRatioJpy`
+    - `pointRedeemRatioJpy`
+
 ## 3. System APIs
 
 - `POST /api/system/jobs/auto-cancel-pending`
   - 功能：取消所有超时 `pending` 预约
-  - 当设置 `CRON_SECRET` 时，需请求头 `x-cron-secret`
+  - 当前策略：`CRON_SECRET` 为必需；未配置返回 503
+  - 请求头：`x-cron-secret`
 
-## 4. 备注
+## 4. 安全与备注
 
 - `/admin/*` 与 `/api/admin/*` 均由中间件鉴权。
-- 支持 `?lang=zh|ja` 的接口会返回本地化显示字段（同时保留原始中/日文字段）。
+- `ADMIN_AUTH_SECRET` 现在为必需（未配置直接 fail-closed）。
+- 支持 `?lang=zh|ja` 的接口会返回本地化显示字段（同时保留中/日文字段）。
