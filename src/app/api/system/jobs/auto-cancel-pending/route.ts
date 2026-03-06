@@ -5,11 +5,16 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const cronSecret = process.env.CRON_SECRET;
-    if (cronSecret) {
-      const incoming = request.headers.get("x-cron-secret");
-      if (incoming !== cronSecret) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    if (!cronSecret) {
+      return NextResponse.json(
+        { error: "Server misconfigured: CRON_SECRET is required" },
+        { status: 503 }
+      );
+    }
+
+    const incoming = request.headers.get("x-cron-secret");
+    if (incoming !== cronSecret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const now = new Date();

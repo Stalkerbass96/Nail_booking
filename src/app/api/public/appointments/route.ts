@@ -126,6 +126,8 @@ export async function POST(request: NextRequest) {
     const autoCancelAt = addMinutes(new Date(), runtime.pendingAutoCancelHours * 60);
 
     const created = await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${bookingYmd}))`;
+
       const hasConflict = await tx.appointment.findFirst({
         where: {
           status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },

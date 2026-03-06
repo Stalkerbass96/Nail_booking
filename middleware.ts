@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const ADMIN_SESSION_COOKIE = "nb_admin_session";
-const DEFAULT_AUTH_SECRET = "dev-admin-secret-change-me";
 
 type SessionPayload = {
   adminId: string;
@@ -91,12 +90,25 @@ function isPublicAdminPath(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
+  const secret = process.env.ADMIN_AUTH_SECRET;
+  if (!secret) {
+    if (pathname.startsWith("/api/admin/")) {
+      return NextResponse.json(
+        { error: "Server misconfigured: ADMIN_AUTH_SECRET is required" },
+        { status: 503 }
+      );
+    }
+
+    return new NextResponse("Server misconfigured: ADMIN_AUTH_SECRET is required", {
+      status: 503
+    });
+  }
+
   if (isPublicAdminPath(pathname)) {
     return NextResponse.next();
   }
 
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  const secret = process.env.ADMIN_AUTH_SECRET || DEFAULT_AUTH_SECRET;
   const payload = token ? await verifySessionToken(token, secret) : null;
 
   if (payload) {

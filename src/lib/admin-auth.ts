@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 
 export const ADMIN_SESSION_COOKIE = "nb_admin_session";
 const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
-const DEFAULT_AUTH_SECRET = "dev-admin-secret-change-me";
 
 type SessionPayload = {
   adminId: string;
@@ -21,7 +20,12 @@ type AdminIdentity = {
 };
 
 function getAuthSecret(): string {
-  return process.env.ADMIN_AUTH_SECRET || DEFAULT_AUTH_SECRET;
+  const secret = process.env.ADMIN_AUTH_SECRET;
+  if (!secret) {
+    throw new Error("ADMIN_AUTH_SECRET is required");
+  }
+
+  return secret;
 }
 
 function sha256Hex(input: string): string {
