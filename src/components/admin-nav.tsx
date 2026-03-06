@@ -16,7 +16,8 @@ const LINKS = [
   { href: "/admin/packages", zh: "套餐", ja: "メニュー" },
   { href: "/admin/addons", zh: "加项", ja: "追加オプション" },
   { href: "/admin/customers", zh: "客户", ja: "顧客" },
-  { href: "/admin/points", zh: "积分", ja: "ポイント" }
+  { href: "/admin/points", zh: "积分", ja: "ポイント" },
+  { href: "/admin/settings", zh: "设置", ja: "設定" }
 ];
 
 const TEXT = {

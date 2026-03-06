@@ -15,7 +15,8 @@ const TEXT = {
     packages: "套餐管理",
     addons: "加项管理",
     customers: "客户管理",
-    points: "积分管理"
+    points: "积分管理",
+    settings: "系统设置"
   },
   ja: {
     title: "管理コンソール",
@@ -25,7 +26,8 @@ const TEXT = {
     packages: "メニュー管理",
     addons: "追加オプション管理",
     customers: "顧客管理",
-    points: "ポイント管理"
+    points: "ポイント管理",
+    settings: "システム設定"
   }
 };
 
@@ -59,6 +61,9 @@ export default async function AdminHomePage({ searchParams }: Props) {
           </Link>
           <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/points?lang=${lang}`}>
             {t.points}
+          </Link>
+          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/admin/settings?lang=${lang}`}>
+            {t.settings}
           </Link>
         </div>
       </section>

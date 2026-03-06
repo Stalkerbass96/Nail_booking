@@ -2,6 +2,7 @@ import { PointTxType } from "@prisma/client";
 import { calculateRedeemJpy } from "@/lib/points";
 import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
+import { getRuntimeSettingsSnapshot } from "@/lib/system-settings";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -21,6 +22,8 @@ export async function POST(request: NextRequest) {
       payload.appointmentId === undefined
         ? null
         : parseSingleBigInt(String(payload.appointmentId), "appointmentId");
+
+    const runtime = await getRuntimeSettingsSnapshot();
 
     const result = await prisma.$transaction(async (tx) => {
       const customer = await tx.customer.findUnique({
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
           appointmentId,
           type: PointTxType.use,
           points: payload.points,
-          jpyValue: calculateRedeemJpy(payload.points),
+          jpyValue: calculateRedeemJpy(payload.points, runtime.pointRedeemRatioJpy),
           note: payload.note ?? "Manual points deduction"
         }
       });

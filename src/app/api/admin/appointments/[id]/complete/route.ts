@@ -2,6 +2,7 @@ import { AppointmentStatus, PointTxType } from "@prisma/client";
 import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import { calculateEarnedPoints, calculateRedeemJpy } from "@/lib/points";
+import { getRuntimeSettingsSnapshot } from "@/lib/system-settings";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -19,6 +20,7 @@ export async function PATCH(
     const { id } = await context.params;
     const appointmentId = parseSingleBigInt(id, "appointmentId");
     const payload = completeSchema.parse(await request.json());
+    const runtime = await getRuntimeSettingsSnapshot();
 
     const result = await prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.findUnique({
@@ -53,8 +55,8 @@ export async function PATCH(
         } as const;
       }
 
-      const earnedPoints = calculateEarnedPoints(payload.actualPaidJpy);
-      const redeemJpy = calculateRedeemJpy(payload.usePoints);
+      const earnedPoints = calculateEarnedPoints(payload.actualPaidJpy, runtime.pointEarnRatioJpy);
+      const redeemJpy = calculateRedeemJpy(payload.usePoints, runtime.pointRedeemRatioJpy);
 
       await tx.appointment.update({
         where: { id: appointmentId },
