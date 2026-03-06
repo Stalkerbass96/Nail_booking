@@ -1,0 +1,189 @@
+const { createHash } = require("node:crypto");
+const { PrismaClient } = require("@prisma/client");
+
+const prisma = new PrismaClient();
+
+const SYSTEM_SETTINGS = [
+  ["slot_minutes", "30"],
+  ["pending_auto_cancel_hours", "24"],
+  ["cancel_cutoff_hours", "6"],
+  ["point_earn_ratio_jpy", "100"],
+  ["point_redeem_ratio_jpy", "100"]
+];
+
+function hashPassword(password) {
+  return `sha256:${createHash("sha256").update(password).digest("hex")}`;
+}
+
+function fixedTime(hour, minute = 0) {
+  return new Date(Date.UTC(1970, 0, 1, hour, minute, 0, 0));
+}
+
+async function seedSystemSettings() {
+  for (const [key, value] of SYSTEM_SETTINGS) {
+    await prisma.systemSetting.upsert({
+      where: { key },
+      create: { key, value },
+      update: { value }
+    });
+  }
+}
+
+async function seedAdmin() {
+  const seedPassword = process.env.ADMIN_SEED_PASSWORD || "dev-only-change-me";
+  const passwordHash = hashPassword(seedPassword);
+
+  await prisma.admin.upsert({
+    where: { email: "owner@nail-booking.local" },
+    create: {
+      email: "owner@nail-booking.local",
+      passwordHash,
+      displayName: "店长"
+    },
+    update: {
+      passwordHash,
+      displayName: "店长"
+    }
+  });
+}
+
+async function seedBusinessHours() {
+  const count = await prisma.businessHour.count();
+  if (count > 0) return;
+
+  await prisma.businessHour.createMany({
+    data: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+      weekday,
+      isOpen: true,
+      openTime: fixedTime(10, 0),
+      closeTime: fixedTime(20, 0)
+    }))
+  });
+}
+
+async function seedCatalog() {
+  const categoryCount = await prisma.serviceCategory.count();
+  if (categoryCount === 0) {
+    await prisma.serviceCategory.createMany({
+      data: [
+        { nameZh: "经典款", nameJa: "ベーシック", sortOrder: 10, isActive: true },
+        { nameZh: "延长甲", nameJa: "長さだし", sortOrder: 20, isActive: true },
+        { nameZh: "护理", nameJa: "ケア", sortOrder: 30, isActive: true }
+      ]
+    });
+  }
+
+  const categories = await prisma.serviceCategory.findMany({
+    orderBy: { sortOrder: "asc" }
+  });
+
+  if (categories.length === 0) {
+    throw new Error("No service categories found after seed");
+  }
+
+  const packageCount = await prisma.servicePackage.count();
+  if (packageCount === 0) {
+    const first = categories[0];
+    const second = categories[1] ?? categories[0];
+    const third = categories[2] ?? categories[0];
+
+    await prisma.servicePackage.createMany({
+      data: [
+        {
+          categoryId: first.id,
+          nameZh: "经典单色",
+          nameJa: "ワンカラー",
+          descZh: "基础单色，适合日常通勤。",
+          descJa: "通勤に合うベーシックなワンカラー。",
+          imageUrl: null,
+          priceJpy: 5800,
+          durationMin: 60,
+          isActive: true
+        },
+        {
+          categoryId: second.id,
+          nameZh: "自然延长",
+          nameJa: "ナチュラル長さだし",
+          descZh: "自然感延长，提升手型线条。",
+          descJa: "自然な長さだしで指先をきれいに。",
+          imageUrl: null,
+          priceJpy: 9800,
+          durationMin: 120,
+          isActive: true
+        },
+        {
+          categoryId: third.id,
+          nameZh: "手部深层护理",
+          nameJa: "ハンドディープケア",
+          descZh: "去角质与保湿护理。",
+          descJa: "角質ケアと保湿トリートメント。",
+          imageUrl: null,
+          priceJpy: 4500,
+          durationMin: 60,
+          isActive: true
+        }
+      ]
+    });
+  }
+
+  const addonCount = await prisma.serviceAddon.count();
+  if (addonCount === 0) {
+    await prisma.serviceAddon.createMany({
+      data: [
+        {
+          nameZh: "卸甲",
+          nameJa: "オフ",
+          descZh: "旧甲卸除",
+          descJa: "既存ジェルのオフ",
+          priceJpy: 1000,
+          durationIncreaseMin: 30,
+          isActive: true
+        },
+        {
+          nameZh: "加固",
+          nameJa: "補強",
+          descZh: "甲面加固保护",
+          descJa: "爪表面の補強",
+          priceJpy: 800,
+          durationIncreaseMin: 30,
+          isActive: true
+        }
+      ]
+    });
+  }
+
+  const linkCount = await prisma.packageAddonLink.count();
+  if (linkCount === 0) {
+    const packages = await prisma.servicePackage.findMany({ select: { id: true } });
+    const addons = await prisma.serviceAddon.findMany({ select: { id: true } });
+
+    const linkData = [];
+    for (const pkg of packages) {
+      for (const addon of addons) {
+        linkData.push({ packageId: pkg.id, addonId: addon.id });
+      }
+    }
+
+    if (linkData.length > 0) {
+      await prisma.packageAddonLink.createMany({ data: linkData });
+    }
+  }
+}
+
+async function main() {
+  await seedSystemSettings();
+  await seedAdmin();
+  await seedBusinessHours();
+  await seedCatalog();
+
+  console.log("Seed completed");
+}
+
+main()
+  .catch((error) => {
+    console.error("Seed failed:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

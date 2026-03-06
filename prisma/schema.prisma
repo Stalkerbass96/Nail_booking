@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  completed
+  canceled
+}
+
+enum PointTxType {
+  earn
+  use
+  adjust
+}
+
+model Admin {
+  id           BigInt   @id @default(autoincrement())
+  email        String   @unique @db.VarChar(120)
+  passwordHash String   @db.VarChar(255)
+  displayName  String   @db.VarChar(80)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  pointLedgers PointLedger[]
+
+  @@map("admins")
+}
+
+model Customer {
+  id            BigInt       @id @default(autoincrement())
+  name          String       @db.VarChar(80)
+  email         String       @unique @db.VarChar(120)
+  notes         String?
+  totalSpentJpy Int          @default(0) @map("total_spent_jpy")
+  currentPoints Int          @default(0) @map("current_points")
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  appointments  Appointment[]
+  pointLedgers  PointLedger[]
+
+  @@map("customers")
+}
+
+model ServiceCategory {
+  id        BigInt           @id @default(autoincrement())
+  nameZh    String           @map("name_zh") @db.VarChar(80)
+  nameJa    String           @map("name_ja") @db.VarChar(80)
+  sortOrder Int              @default(0) @map("sort_order")
+  isActive  Boolean          @default(true) @map("is_active")
+
+  packages  ServicePackage[]
+
+  @@map("service_categories")
+}
+
+model ServicePackage {
+  id          BigInt              @id @default(autoincrement())
+  categoryId  BigInt              @map("category_id")
+  nameZh      String              @map("name_zh") @db.VarChar(120)
+  nameJa      String              @map("name_ja") @db.VarChar(120)
+  descZh      String?             @map("desc_zh")
+  descJa      String?             @map("desc_ja")
+  imageUrl    String?             @map("image_url")
+  priceJpy    Int                 @map("price_jpy")
+  durationMin Int                 @map("duration_min")
+  isActive    Boolean             @default(true) @map("is_active")
+
+  category    ServiceCategory     @relation(fields: [categoryId], references: [id])
+  addonLinks  PackageAddonLink[]
+  appointments Appointment[]
+
+  @@map("service_packages")
+}
+
+model ServiceAddon {
+  id                  BigInt               @id @default(autoincrement())
+  nameZh              String               @map("name_zh") @db.VarChar(120)
+  nameJa              String               @map("name_ja") @db.VarChar(120)
+  descZh              String?              @map("desc_zh")
+  descJa              String?              @map("desc_ja")
+  priceJpy            Int                  @map("price_jpy")
+  durationIncreaseMin Int                  @map("duration_increase_min")
+  isActive            Boolean              @default(true) @map("is_active")
+
+  packageLinks        PackageAddonLink[]
+  appointmentAddons   AppointmentAddon[]
+
+  @@map("service_addons")
+}
+
+model PackageAddonLink {
+  id        BigInt        @id @default(autoincrement())
+  packageId BigInt        @map("package_id")
+  addonId   BigInt        @map("addon_id")
+
+  package   ServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  addon     ServiceAddon   @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, addonId])
+  @@map("package_addon_links")
+}
+
+model Appointment {
+  id            BigInt             @id @default(autoincrement())
+  bookingNo     String             @unique @map("booking_no") @db.VarChar(40)
+  customerId    BigInt             @map("customer_id")
+  packageId     BigInt             @map("package_id")
+  styleNote     String?            @map("style_note")
+  customerNote  String?            @map("customer_note")
+  startAt       DateTime           @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime           @map("end_at") @db.Timestamptz(6)
+  status        AppointmentStatus  @default(pending)
+  autoCancelAt  DateTime           @map("auto_cancel_at") @db.Timestamptz(6)
+  cancelReason  String?            @map("cancel_reason")
+  confirmedAt   DateTime?          @map("confirmed_at") @db.Timestamptz(6)
+  completedAt   DateTime?          @map("completed_at") @db.Timestamptz(6)
+  actualPaidJpy Int?               @map("actual_paid_jpy")
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  customer      Customer           @relation(fields: [customerId], references: [id])
+  servicePackage ServicePackage    @relation(fields: [packageId], references: [id])
+  addons        AppointmentAddon[]
+  pointLedgers  PointLedger[]
+
+  @@index([startAt])
+  @@index([status, startAt])
+  @@index([customerId, createdAt(sort: Desc)])
+  @@map("appointments")
+}
+
+model AppointmentAddon {
+  id                  BigInt      @id @default(autoincrement())
+  appointmentId       BigInt      @map("appointment_id")
+  addonId             BigInt      @map("addon_id")
+  priceSnapshotJpy    Int         @map("price_snapshot_jpy")
+  durationSnapshotMin Int         @map("duration_snapshot_min")
+
+  appointment         Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  addon               ServiceAddon @relation(fields: [addonId], references: [id])
+
+  @@map("appointment_addons")
+}
+
+model PointLedger {
+  id             BigInt      @id @default(autoincrement())
+  customerId     BigInt      @map("customer_id")
+  appointmentId  BigInt?     @map("appointment_id")
+  type           PointTxType
+  points         Int
+  jpyValue       Int         @map("jpy_value")
+  operatorAdminId BigInt?    @map("operator_admin_id")
+  note           String?
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  customer       Customer    @relation(fields: [customerId], references: [id])
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
+  operatorAdmin  Admin?      @relation(fields: [operatorAdminId], references: [id])
+
+  @@map("point_ledger")
+}
+
+model BusinessHour {
+  id        BigInt   @id @default(autoincrement())
+  weekday   Int
+  isOpen    Boolean  @map("is_open")
+  openTime  DateTime? @map("open_time") @db.Time(6)
+  closeTime DateTime? @map("close_time") @db.Time(6)
+
+  @@map("business_hours")
+}
+
+model SpecialBusinessDate {
+  id        BigInt   @id @default(autoincrement())
+  date      DateTime @unique @db.Date
+  isOpen    Boolean  @map("is_open")
+  openTime  DateTime? @map("open_time") @db.Time(6)
+  closeTime DateTime? @map("close_time") @db.Time(6)
+  note      String?
+
+  @@map("special_business_dates")
+}
+
+model SystemSetting {
+  id    BigInt @id @default(autoincrement())
+  key   String @unique @db.VarChar(80)
+  value String @db.VarChar(255)
+
+  @@map("system_settings")
+}

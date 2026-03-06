@@ -1,0 +1,364 @@
+﻿"use client";
+
+import { useEffect, useState } from "react";
+import type { Lang } from "@/lib/lang";
+
+type AddonItem = {
+  id: string;
+  nameZh: string;
+  nameJa: string;
+  descZh?: string | null;
+  descJa?: string | null;
+  priceJpy: number;
+  durationIncreaseMin: number;
+  isActive: boolean;
+  packageIds: string[];
+};
+
+type AddonFormState = {
+  nameZh: string;
+  nameJa: string;
+  descZh: string;
+  descJa: string;
+  priceJpy: string;
+  durationIncreaseMin: string;
+  isActive: boolean;
+};
+
+type Props = {
+  lang: Lang;
+};
+
+const TEXT = {
+  zh: {
+    title: "加项管理",
+    refresh: "刷新",
+    loading: "加载中...",
+    createTitle: "新建加项",
+    nameZh: "中文名",
+    nameJa: "日文名",
+    price: "价格",
+    duration: "时长增量(30倍数)",
+    descZh: "中文描述",
+    descJa: "日文描述",
+    create: "新建加项",
+    usedBy: "被",
+    packageSuffix: "个套餐使用",
+    enabled: "启用",
+    disabled: "停用",
+    active: "启用",
+    edit: "编辑",
+    save: "保存",
+    cancel: "取消",
+    loadAddonFailed: "加载加项失败",
+    loadFailed: "加载失败",
+    createFailed: "创建失败",
+    updateFailed: "更新失败"
+  },
+  ja: {
+    title: "追加オプション管理",
+    refresh: "更新",
+    loading: "読み込み中...",
+    createTitle: "追加オプション作成",
+    nameZh: "中国語名",
+    nameJa: "日本語名",
+    price: "価格",
+    duration: "時間追加(30分単位)",
+    descZh: "中国語説明",
+    descJa: "日本語説明",
+    create: "作成",
+    usedBy: "利用メニュー",
+    packageSuffix: "件",
+    enabled: "有効",
+    disabled: "無効",
+    active: "有効",
+    edit: "編集",
+    save: "保存",
+    cancel: "キャンセル",
+    loadAddonFailed: "追加オプションの読み込みに失敗しました",
+    loadFailed: "読み込みに失敗しました",
+    createFailed: "作成に失敗しました",
+    updateFailed: "更新に失敗しました"
+  }
+};
+
+function createEmptyFormState(): AddonFormState {
+  return {
+    nameZh: "",
+    nameJa: "",
+    descZh: "",
+    descJa: "",
+    priceJpy: "0",
+    durationIncreaseMin: "30",
+    isActive: true
+  };
+}
+
+function fromAddon(item: AddonItem): AddonFormState {
+  return {
+    nameZh: item.nameZh,
+    nameJa: item.nameJa,
+    descZh: item.descZh ?? "",
+    descJa: item.descJa ?? "",
+    priceJpy: String(item.priceJpy),
+    durationIncreaseMin: String(item.durationIncreaseMin),
+    isActive: item.isActive
+  };
+}
+
+export default function AdminAddonsPanel({ lang }: Props) {
+  const t = TEXT[lang];
+
+  const [items, setItems] = useState<AddonItem[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [createForm, setCreateForm] = useState<AddonFormState>(createEmptyFormState());
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<AddonFormState>(createEmptyFormState());
+
+  function patchCreateForm(next: Partial<AddonFormState>) {
+    setCreateForm((prev) => ({ ...prev, ...next }));
+  }
+
+  function patchEditForm(next: Partial<AddonFormState>) {
+    setEditForm((prev) => ({ ...prev, ...next }));
+  }
+
+  function serializeForm(form: AddonFormState) {
+    return {
+      nameZh: form.nameZh.trim(),
+      nameJa: form.nameJa.trim(),
+      descZh: form.descZh.trim() || null,
+      descJa: form.descJa.trim() || null,
+      priceJpy: Number.parseInt(form.priceJpy, 10) || 0,
+      durationIncreaseMin: Number.parseInt(form.durationIncreaseMin, 10) || 0,
+      isActive: form.isActive
+    };
+  }
+
+  async function refresh() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/addons");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.loadAddonFailed);
+      const nextItems: AddonItem[] = data.items ?? [];
+      setItems(nextItems);
+
+      if (editingId) {
+        const target = nextItems.find((item) => item.id === editingId);
+        if (target) {
+          setEditForm(fromAddon(target));
+        } else {
+          setEditingId(null);
+          setEditForm(createEmptyFormState());
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.loadFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  async function createAddon(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("/api/admin/addons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(serializeForm(createForm))
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.createFailed);
+
+      setCreateForm(createEmptyFormState());
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.createFailed);
+    }
+  }
+
+  function startEdit(item: AddonItem) {
+    setEditingId(item.id);
+    setEditForm(fromAddon(item));
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditForm(createEmptyFormState());
+  }
+
+  async function saveEdit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingId) return;
+
+    setError("");
+
+    try {
+      const res = await fetch(`/api/admin/addons/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(serializeForm(editForm))
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.updateFailed);
+
+      setEditingId(null);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.updateFailed);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
+        <button className="rounded border border-brand-300 px-3 py-1 text-sm" onClick={() => void refresh()} type="button">
+          {t.refresh}
+        </button>
+      </div>
+
+      {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {loading ? <p className="mt-3 text-sm text-brand-700">{t.loading}</p> : null}
+
+      <form className="mt-4 grid gap-3 rounded-xl border border-brand-100 p-4" onSubmit={createAddon}>
+        <p className="font-medium text-brand-900">{t.createTitle}</p>
+
+        <div className="grid gap-3 md:grid-cols-4">
+          <input
+            className="rounded border border-brand-200 px-3 py-2"
+            placeholder={t.nameZh}
+            value={createForm.nameZh}
+            onChange={(e) => patchCreateForm({ nameZh: e.target.value })}
+          />
+          <input
+            className="rounded border border-brand-200 px-3 py-2"
+            placeholder={t.nameJa}
+            value={createForm.nameJa}
+            onChange={(e) => patchCreateForm({ nameJa: e.target.value })}
+          />
+          <input
+            className="rounded border border-brand-200 px-3 py-2"
+            placeholder={t.price}
+            value={createForm.priceJpy}
+            onChange={(e) => patchCreateForm({ priceJpy: e.target.value })}
+          />
+          <input
+            className="rounded border border-brand-200 px-3 py-2"
+            placeholder={t.duration}
+            value={createForm.durationIncreaseMin}
+            onChange={(e) => patchCreateForm({ durationIncreaseMin: e.target.value })}
+          />
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2">
+          <textarea
+            className="min-h-20 rounded border border-brand-200 px-3 py-2"
+            placeholder={t.descZh}
+            value={createForm.descZh}
+            onChange={(e) => patchCreateForm({ descZh: e.target.value })}
+          />
+          <textarea
+            className="min-h-20 rounded border border-brand-200 px-3 py-2"
+            placeholder={t.descJa}
+            value={createForm.descJa}
+            onChange={(e) => patchCreateForm({ descJa: e.target.value })}
+          />
+        </div>
+
+        <button className="w-fit rounded bg-brand-700 px-4 py-2 text-white" type="submit">
+          {t.create}
+        </button>
+      </form>
+
+      <div className="mt-4 grid gap-3">
+        {items.map((item) => (
+          <article key={item.id} className="rounded-xl border border-brand-100 px-4 py-3">
+            <p className="font-medium text-brand-900">
+              {item.nameZh} / {item.nameJa}
+            </p>
+            <p className="text-sm text-brand-700">
+              {item.priceJpy} JPY · +{item.durationIncreaseMin} min · {t.usedBy} {item.packageIds.length} {t.packageSuffix} · {item.isActive ? t.enabled : t.disabled}
+            </p>
+
+            <div className="mt-2 flex gap-2">
+              <button className="rounded border border-brand-300 px-3 py-1 text-sm" onClick={() => startEdit(item)} type="button">
+                {t.edit}
+              </button>
+            </div>
+
+            {editingId === item.id ? (
+              <form className="mt-3 grid gap-3 rounded-lg border border-brand-100 p-3" onSubmit={saveEdit}>
+                <div className="grid gap-3 md:grid-cols-4">
+                  <input
+                    className="rounded border border-brand-200 px-3 py-2"
+                    value={editForm.nameZh}
+                    onChange={(e) => patchEditForm({ nameZh: e.target.value })}
+                  />
+                  <input
+                    className="rounded border border-brand-200 px-3 py-2"
+                    value={editForm.nameJa}
+                    onChange={(e) => patchEditForm({ nameJa: e.target.value })}
+                  />
+                  <input
+                    className="rounded border border-brand-200 px-3 py-2"
+                    value={editForm.priceJpy}
+                    onChange={(e) => patchEditForm({ priceJpy: e.target.value })}
+                  />
+                  <input
+                    className="rounded border border-brand-200 px-3 py-2"
+                    value={editForm.durationIncreaseMin}
+                    onChange={(e) => patchEditForm({ durationIncreaseMin: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <textarea
+                    className="min-h-20 rounded border border-brand-200 px-3 py-2"
+                    value={editForm.descZh}
+                    onChange={(e) => patchEditForm({ descZh: e.target.value })}
+                  />
+                  <textarea
+                    className="min-h-20 rounded border border-brand-200 px-3 py-2"
+                    value={editForm.descJa}
+                    onChange={(e) => patchEditForm({ descJa: e.target.value })}
+                  />
+                </div>
+
+                <label className="text-sm text-brand-800">
+                  <input
+                    className="mr-2"
+                    type="checkbox"
+                    checked={editForm.isActive}
+                    onChange={(e) => patchEditForm({ isActive: e.target.checked })}
+                  />
+                  {t.active}
+                </label>
+
+                <div className="flex gap-2">
+                  <button className="rounded bg-brand-700 px-3 py-1 text-sm text-white" type="submit">
+                    {t.save}
+                  </button>
+                  <button className="rounded border border-brand-300 px-3 py-1 text-sm" type="button" onClick={cancelEdit}>
+                    {t.cancel}
+                  </button>
+                </div>
+              </form>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
