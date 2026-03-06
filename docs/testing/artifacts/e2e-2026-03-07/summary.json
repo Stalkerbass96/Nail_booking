@@ -1,0 +1,39 @@
+{
+  "baseUrl": "http://127.0.0.1:3000",
+  "generatedAt": "2026-03-06T16:43:25.921Z",
+  "adminEmail": "owner@nail-booking.local",
+  "cases": [
+    {
+      "name": "Public services page loads",
+      "status": "FAIL",
+      "durationMs": 28,
+      "detail": "fetch failed | cause: connect EPERM 127.0.0.1:3000 - Local (undefined:undefined)"
+    },
+    {
+      "name": "Booking page loads and key form controls visible",
+      "status": "FAIL",
+      "durationMs": 1,
+      "detail": "fetch failed | cause: connect EPERM 127.0.0.1:3000 - Local (undefined:undefined)"
+    },
+    {
+      "name": "Admin login page loads",
+      "status": "FAIL",
+      "durationMs": 1,
+      "detail": "fetch failed | cause: connect EPERM 127.0.0.1:3000 - Local (undefined:undefined)"
+    },
+    {
+      "name": "Admin login with seeded credentials lands in admin area",
+      "status": "FAIL",
+      "durationMs": 2,
+      "detail": "fetch failed | cause: connect EPERM 127.0.0.1:3000 - Local (undefined:undefined)"
+    },
+    {
+      "name": "Admin panel route loads after login",
+      "status": "FAIL",
+      "durationMs": 0,
+      "detail": "No admin session available from prior test."
+    }
+  ],
+  "passCount": 0,
+  "failCount": 5
+}
