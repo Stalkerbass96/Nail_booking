@@ -118,22 +118,22 @@ export default function AdminCustomersPanel({ lang }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
+    <section className="admin-panel-shell">
+      <h2 className="admin-section-title">{t.title}</h2>
 
       <div className="mt-4 flex gap-2">
-        <input className="w-full rounded border border-brand-200 px-3 py-2" placeholder={t.placeholder} value={q} onChange={(e) => setQ(e.target.value)} />
-        <button className="rounded bg-brand-700 px-4 py-2 text-white" onClick={() => void search()} type="button">
+        <input className="admin-input w-full" placeholder={t.placeholder} value={q} onChange={(e) => setQ(e.target.value)} />
+        <button className="admin-btn-primary" onClick={() => void search()} type="button">
           {t.search}
         </button>
       </div>
 
-      {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="admin-danger">{error}</p> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <div className="grid gap-2">
           {items.map((item) => (
-            <button key={item.id} className="rounded-xl border border-brand-100 px-3 py-2 text-left" onClick={() => void openCustomer(item.id)} type="button">
+            <button key={item.id} className="admin-item text-left transition hover:-translate-y-0.5 hover:shadow-md" onClick={() => void openCustomer(item.id)} type="button">
               <p className="font-medium text-brand-900">{item.name}</p>
               <p className="text-sm text-brand-700">{item.email}</p>
               <p className="text-xs text-brand-700">
@@ -143,8 +143,8 @@ export default function AdminCustomersPanel({ lang }: Props) {
           ))}
         </div>
 
-        <div className="rounded-xl border border-brand-100 p-3">
-          {!detail ? <p className="text-sm text-brand-700">{t.selectHint}</p> : (
+        <div className="rounded-2xl border border-brand-100/90 bg-white p-4">
+          {!detail ? <p className="admin-note">{t.selectHint}</p> : (
             <div className="grid gap-3">
               <div>
                 <p className="text-lg font-semibold text-brand-900">{detail.name}</p>

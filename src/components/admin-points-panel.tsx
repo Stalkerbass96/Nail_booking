@@ -106,30 +106,30 @@ export default function AdminPointsPanel({ lang }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
+    <section className="admin-panel-shell">
+      <h2 className="admin-section-title">{t.title}</h2>
 
       <div className="mt-4 flex gap-2">
-        <input className="rounded border border-brand-200 px-3 py-2" placeholder={t.customerFilter} value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
-        <button className="rounded bg-brand-700 px-4 py-2 text-white" onClick={() => void search()} type="button">
+        <input className="admin-input" placeholder={t.customerFilter} value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
+        <button className="admin-btn-primary" onClick={() => void search()} type="button">
           {t.searchLedger}
         </button>
       </div>
 
-      <form className="mt-4 grid gap-2 md:grid-cols-4" onSubmit={useManualPoints}>
-        <input className="rounded border border-brand-200 px-3 py-2" placeholder={t.customerIdRequired} value={useCustomerId} onChange={(e) => setUseCustomerId(e.target.value)} />
-        <input className="rounded border border-brand-200 px-3 py-2" placeholder={t.appointmentIdOptional} value={useAppointmentId} onChange={(e) => setUseAppointmentId(e.target.value)} />
-        <input className="rounded border border-brand-200 px-3 py-2" placeholder={t.usePoints} value={usePoints} onChange={(e) => setUsePoints(e.target.value)} />
-        <button className="rounded border border-brand-300 px-4 py-2" type="submit">
+      <form className="admin-subsection md:grid-cols-4" onSubmit={useManualPoints}>
+        <input className="admin-input-sm" placeholder={t.customerIdRequired} value={useCustomerId} onChange={(e) => setUseCustomerId(e.target.value)} />
+        <input className="admin-input-sm" placeholder={t.appointmentIdOptional} value={useAppointmentId} onChange={(e) => setUseAppointmentId(e.target.value)} />
+        <input className="admin-input-sm" placeholder={t.usePoints} value={usePoints} onChange={(e) => setUsePoints(e.target.value)} />
+        <button className="admin-btn-secondary" type="submit">
           {t.submitUse}
         </button>
       </form>
 
-      {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="admin-danger">{error}</p> : null}
 
       <div className="mt-4 grid gap-2">
         {items.map((item) => (
-          <article key={item.id} className="rounded-lg border border-brand-100 px-3 py-2 text-sm text-brand-800">
+          <article key={item.id} className="admin-item text-sm text-brand-800">
             <p>{item.customer.name} ({item.customer.email})</p>
             <p>{item.type} · {item.points}pt · {item.jpyValue}JPY · {new Date(item.createdAt).toLocaleString(locale)}</p>
             <p>{item.note || "-"}</p>

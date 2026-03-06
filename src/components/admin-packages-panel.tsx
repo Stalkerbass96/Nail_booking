@@ -312,23 +312,23 @@ export default function AdminPackagesPanel({ lang }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+    <section className="admin-panel-shell">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
-        <button className="rounded border border-brand-300 px-3 py-1 text-sm" onClick={() => void refresh()} type="button">
+        <h2 className="admin-section-title">{t.title}</h2>
+        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">
           {t.refresh}
         </button>
       </div>
 
-      {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
-      {loading ? <p className="mt-3 text-sm text-brand-700">{t.loading}</p> : null}
+      {error ? <p className="admin-danger">{error}</p> : null}
+      {loading ? <p className="mt-3 admin-note">{t.loading}</p> : null}
 
-      <form className="mt-4 grid gap-3 rounded-xl border border-brand-100 p-4" onSubmit={createPackage}>
+      <form className="admin-subsection" onSubmit={createPackage}>
         <p className="font-medium text-brand-900">{t.createTitle}</p>
 
         <div className="grid gap-3 md:grid-cols-5">
           <select
-            className="rounded border border-brand-200 px-3 py-2"
+            className="admin-input-sm"
             value={createForm.categoryId}
             onChange={(e) => patchCreateForm({ categoryId: e.target.value })}
           >
@@ -340,28 +340,28 @@ export default function AdminPackagesPanel({ lang }: Props) {
           </select>
 
           <input
-            className="rounded border border-brand-200 px-3 py-2"
+            className="admin-input-sm"
             placeholder={t.nameZh}
             value={createForm.nameZh}
             onChange={(e) => patchCreateForm({ nameZh: e.target.value })}
           />
 
           <input
-            className="rounded border border-brand-200 px-3 py-2"
+            className="admin-input-sm"
             placeholder={t.nameJa}
             value={createForm.nameJa}
             onChange={(e) => patchCreateForm({ nameJa: e.target.value })}
           />
 
           <input
-            className="rounded border border-brand-200 px-3 py-2"
+            className="admin-input-sm"
             placeholder={t.price}
             value={createForm.priceJpy}
             onChange={(e) => patchCreateForm({ priceJpy: e.target.value })}
           />
 
           <input
-            className="rounded border border-brand-200 px-3 py-2"
+            className="admin-input-sm"
             placeholder={t.duration}
             value={createForm.durationMin}
             onChange={(e) => patchCreateForm({ durationMin: e.target.value })}
@@ -370,13 +370,13 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
         <div className="grid gap-3 md:grid-cols-2">
           <textarea
-            className="min-h-20 rounded border border-brand-200 px-3 py-2"
+            className="admin-input min-h-20"
             placeholder={t.descZh}
             value={createForm.descZh}
             onChange={(e) => patchCreateForm({ descZh: e.target.value })}
           />
           <textarea
-            className="min-h-20 rounded border border-brand-200 px-3 py-2"
+            className="admin-input min-h-20"
             placeholder={t.descJa}
             value={createForm.descJa}
             onChange={(e) => patchCreateForm({ descJa: e.target.value })}
@@ -384,7 +384,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
         </div>
 
         <input
-          className="rounded border border-brand-200 px-3 py-2"
+          className="admin-input-sm"
           placeholder={t.imageUrl}
           value={createForm.imageUrl}
           onChange={(e) => patchCreateForm({ imageUrl: e.target.value })}
@@ -392,9 +392,9 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
         <div className="grid gap-2 md:grid-cols-4">
           {addons.map((addon) => (
-            <label key={addon.id} className="rounded border border-brand-200 px-3 py-2 text-sm">
+            <label key={addon.id} className="rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm text-brand-800">
               <input
-                className="mr-2"
+                className="admin-check"
                 type="checkbox"
                 checked={createForm.addonIds.includes(addon.id)}
                 onChange={() => toggleCreateAddon(addon.id)}
@@ -404,14 +404,14 @@ export default function AdminPackagesPanel({ lang }: Props) {
           ))}
         </div>
 
-        <button className="w-fit rounded bg-brand-700 px-4 py-2 text-white" type="submit">
+        <button className="admin-btn-primary w-fit" type="submit">
           {t.create}
         </button>
       </form>
 
       <div className="mt-4 grid gap-3">
         {items.map((item) => (
-          <article key={item.id} className="rounded-xl border border-brand-100 px-4 py-3">
+          <article key={item.id} className="admin-item">
             <p className="font-medium text-brand-900">
               {item.nameZh} / {item.nameJa}
             </p>
@@ -423,16 +423,16 @@ export default function AdminPackagesPanel({ lang }: Props) {
             </p>
 
             <div className="mt-2 flex gap-2">
-              <button className="rounded border border-brand-300 px-3 py-1 text-sm" onClick={() => startEdit(item)} type="button">
+              <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">
                 {t.edit}
               </button>
             </div>
 
             {editingId === item.id ? (
-              <form className="mt-3 grid gap-3 rounded-lg border border-brand-100 p-3" onSubmit={saveEdit}>
+              <form className="mt-3 grid gap-3 rounded-xl border border-brand-100 p-3" onSubmit={saveEdit}>
                 <div className="grid gap-3 md:grid-cols-5">
                   <select
-                    className="rounded border border-brand-200 px-3 py-2"
+                    className="admin-input-sm"
                     value={editForm.categoryId}
                     onChange={(e) => patchEditForm({ categoryId: e.target.value })}
                   >
@@ -444,25 +444,25 @@ export default function AdminPackagesPanel({ lang }: Props) {
                   </select>
 
                   <input
-                    className="rounded border border-brand-200 px-3 py-2"
+                    className="admin-input-sm"
                     value={editForm.nameZh}
                     onChange={(e) => patchEditForm({ nameZh: e.target.value })}
                   />
 
                   <input
-                    className="rounded border border-brand-200 px-3 py-2"
+                    className="admin-input-sm"
                     value={editForm.nameJa}
                     onChange={(e) => patchEditForm({ nameJa: e.target.value })}
                   />
 
                   <input
-                    className="rounded border border-brand-200 px-3 py-2"
+                    className="admin-input-sm"
                     value={editForm.priceJpy}
                     onChange={(e) => patchEditForm({ priceJpy: e.target.value })}
                   />
 
                   <input
-                    className="rounded border border-brand-200 px-3 py-2"
+                    className="admin-input-sm"
                     value={editForm.durationMin}
                     onChange={(e) => patchEditForm({ durationMin: e.target.value })}
                   />
@@ -470,19 +470,19 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
                 <div className="grid gap-3 md:grid-cols-2">
                   <textarea
-                    className="min-h-20 rounded border border-brand-200 px-3 py-2"
+                    className="admin-input min-h-20"
                     value={editForm.descZh}
                     onChange={(e) => patchEditForm({ descZh: e.target.value })}
                   />
                   <textarea
-                    className="min-h-20 rounded border border-brand-200 px-3 py-2"
+                    className="admin-input min-h-20"
                     value={editForm.descJa}
                     onChange={(e) => patchEditForm({ descJa: e.target.value })}
                   />
                 </div>
 
                 <input
-                  className="rounded border border-brand-200 px-3 py-2"
+                  className="admin-input-sm"
                   placeholder={t.imageUrlShort}
                   value={editForm.imageUrl}
                   onChange={(e) => patchEditForm({ imageUrl: e.target.value })}
@@ -490,7 +490,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
                 <label className="text-sm text-brand-800">
                   <input
-                    className="mr-2"
+                    className="admin-check"
                     type="checkbox"
                     checked={editForm.isActive}
                     onChange={(e) => patchEditForm({ isActive: e.target.checked })}
@@ -500,9 +500,9 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
                 <div className="grid gap-2 md:grid-cols-4">
                   {addons.map((addon) => (
-                    <label key={addon.id} className="rounded border border-brand-200 px-3 py-2 text-sm">
+                    <label key={addon.id} className="rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm text-brand-800">
                       <input
-                        className="mr-2"
+                        className="admin-check"
                         type="checkbox"
                         checked={editForm.addonIds.includes(addon.id)}
                         onChange={() => toggleEditAddon(addon.id)}
@@ -513,10 +513,10 @@ export default function AdminPackagesPanel({ lang }: Props) {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="rounded bg-brand-700 px-3 py-1 text-sm text-white" type="submit">
+                  <button className="admin-btn-primary px-3 py-1.5" type="submit">
                     {t.save}
                   </button>
-                  <button className="rounded border border-brand-300 px-3 py-1 text-sm" type="button" onClick={cancelEdit}>
+                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>
                     {t.cancel}
                   </button>
                 </div>
