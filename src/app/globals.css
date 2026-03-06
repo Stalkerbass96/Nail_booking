@@ -29,17 +29,51 @@ button {
   font: inherit;
 }
 
-input:focus,
-select:focus,
-textarea:focus,
-button:focus-visible {
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(199, 40, 80, 0.2);
 }
 
 @layer components {
+  .ui-card {
+    @apply rounded-3xl border border-brand-100/80 bg-white/90 p-4 shadow-[0_18px_45px_rgba(120,25,55,0.08)] sm:p-5 md:p-6;
+  }
+
+  .ui-input {
+    @apply rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition-colors duration-200 placeholder:text-brand-500/70 hover:border-brand-400 focus-visible:border-brand-500 disabled:cursor-not-allowed disabled:bg-brand-50 disabled:text-brand-500 disabled:hover:border-brand-200;
+  }
+
+  .ui-btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-brand-800 disabled:cursor-not-allowed disabled:bg-brand-500 disabled:text-white/90;
+  }
+
+  .ui-btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-300 bg-white px-4 py-2.5 text-sm font-medium text-brand-900 transition-colors duration-200 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .ui-state {
+    @apply mt-3 rounded-xl border px-3 py-2 text-sm;
+  }
+
+  .ui-state-error {
+    @apply mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700;
+  }
+
+  .ui-state-success {
+    @apply mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700;
+  }
+
+  .ui-state-info {
+    @apply mt-3 rounded-xl border border-brand-100 bg-brand-50/80 px-3 py-2 text-sm text-brand-800;
+  }
+
   .admin-panel-shell {
-    @apply rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)] md:p-7;
+    @apply rounded-3xl border border-brand-100/80 bg-white/90 p-4 shadow-[0_18px_45px_rgba(120,25,55,0.08)] sm:p-5 md:p-6;
   }
 
   .admin-section-title {
@@ -47,31 +81,31 @@ button:focus-visible {
   }
 
   .admin-subsection {
-    @apply mt-4 grid gap-3 rounded-2xl border border-brand-100/90 bg-brand-50/40 p-4;
+    @apply mt-4 grid gap-3 rounded-2xl border border-brand-100/90 bg-brand-50/40 p-3.5 sm:p-4;
   }
 
   .admin-input {
-    @apply rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition placeholder:text-brand-500/70 hover:border-brand-400;
+    @apply ui-input;
   }
 
   .admin-input-sm {
-    @apply rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm text-brand-900 transition placeholder:text-brand-500/70 hover:border-brand-400;
+    @apply rounded-lg border border-brand-200 bg-white px-3 py-2.5 text-sm text-brand-900 transition-colors duration-200 placeholder:text-brand-500/70 hover:border-brand-400 focus-visible:border-brand-500 disabled:cursor-not-allowed disabled:bg-brand-50 disabled:text-brand-500;
   }
 
   .admin-check {
-    @apply mr-2 align-middle accent-brand-700;
+    @apply mr-2 h-4 w-4 align-middle accent-brand-700;
   }
 
   .admin-btn-primary {
-    @apply rounded-xl bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-60;
+    @apply ui-btn-primary font-medium disabled:opacity-100;
   }
 
   .admin-btn-secondary {
-    @apply rounded-xl border border-brand-300 bg-white px-4 py-2 text-sm font-medium text-brand-900 transition hover:border-brand-500 hover:bg-brand-50;
+    @apply ui-btn-secondary;
   }
 
   .admin-btn-ghost {
-    @apply rounded-lg border border-brand-300 bg-white px-3 py-1.5 text-sm text-brand-900 transition hover:border-brand-500 hover:bg-brand-50;
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-brand-300 bg-white px-3 py-2 text-sm text-brand-900 transition-colors duration-200 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .admin-note {
@@ -83,6 +117,6 @@ button:focus-visible {
   }
 
   .admin-item {
-    @apply rounded-2xl border border-brand-100/90 bg-white px-4 py-3 shadow-sm;
+    @apply rounded-2xl border border-brand-100/90 bg-white px-3.5 py-3 shadow-sm sm:px-4;
   }
 }

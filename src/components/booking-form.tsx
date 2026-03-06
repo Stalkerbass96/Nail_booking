@@ -204,8 +204,8 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
   }
 
   return (
-    <form className="grid gap-5" onSubmit={onSubmit}>
-      <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
+    <form className="grid gap-4 sm:gap-5" onSubmit={onSubmit}>
+      <section className="ui-card">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-semibold text-brand-900 md:text-2xl">{t.title}</h2>
           <div className="rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">
@@ -213,11 +213,12 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
           </div>
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-800">{t.package}</span>
+        <div className="mt-4 grid gap-3 sm:gap-4 md:grid-cols-2">
+          <label className="grid gap-2" htmlFor="booking-package">
+            <span className="text-sm font-medium text-brand-800">{t.package}</span>
             <select
-              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+              id="booking-package"
+              className="ui-input"
               value={packageId}
               onChange={(event) => {
                 const nextPackageId = event.target.value;
@@ -234,10 +235,11 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
             </select>
           </label>
 
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-800">{t.date}</span>
+          <label className="grid gap-2" htmlFor="booking-date">
+            <span className="text-sm font-medium text-brand-800">{t.date}</span>
             <input
-              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+              id="booking-date"
+              className="ui-input"
               type="date"
               value={date}
               onChange={(event) => {
@@ -250,17 +252,17 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
         </div>
 
         <div className="mt-4">
-          <p className="text-sm text-brand-800">{t.addons}</p>
-          <div className="mt-2 grid gap-2 md:grid-cols-2">
+          <p className="text-sm font-medium text-brand-800">{t.addons}</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {selectedPackage?.addons.map((addon) => {
               const checked = addonIds.includes(addon.id);
               return (
                 <label
                   key={addon.id}
-                  className={`rounded-xl border px-3 py-2.5 transition ${checked ? "border-brand-500 bg-brand-50 shadow-sm" : "border-brand-200 bg-white hover:border-brand-300"}`}
+                  className={`rounded-xl border px-3 py-2.5 text-sm leading-relaxed transition-colors duration-200 ${checked ? "border-brand-500 bg-brand-50 shadow-sm" : "border-brand-200 bg-white hover:border-brand-300"}`}
                 >
                   <input
-                    className="mr-2"
+                    className="admin-check"
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleAddon(addon.id)}
@@ -278,18 +280,19 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
         </div>
 
         <div className="mt-5">
-          <p className="text-sm text-brand-800">{t.slots}</p>
-          {slotLoading ? <p className="mt-2 text-sm text-brand-700">{t.loadingSlots}</p> : null}
-          {!slotLoading && slots.length === 0 ? <p className="mt-2 text-sm text-brand-700">{t.noSlots}</p> : null}
+          <p className="text-sm font-medium text-brand-800">{t.slots}</p>
+          {slotLoading ? <p className="ui-state-info" aria-live="polite">{t.loadingSlots}</p> : null}
+          {!slotLoading && slots.length === 0 ? <p className="ui-state-info" aria-live="polite">{t.noSlots}</p> : null}
 
-          <div className="mt-2 grid gap-2 md:grid-cols-4">
+          <div className="mt-2 grid gap-2 grid-cols-2 md:grid-cols-4">
             {slots.map((slot) => {
               const active = selectedStartAt === slot.startAt;
               return (
                 <button
                   key={slot.startAt}
                   type="button"
-                  className={`rounded-xl border px-2 py-2.5 text-sm font-medium transition ${active ? "border-brand-600 bg-brand-600 text-white shadow" : "border-brand-200 bg-white text-brand-900 hover:border-brand-400 hover:bg-brand-50"}`}
+                  aria-pressed={active}
+                  className={`min-h-11 rounded-xl border px-2 py-2.5 text-sm font-medium transition-colors duration-200 ${active ? "border-brand-600 bg-brand-600 text-white shadow" : "border-brand-200 bg-white text-brand-900 hover:border-brand-400 hover:bg-brand-50"}`}
                   onClick={() => setSelectedStartAt(slot.startAt)}
                 >
                   {new Date(slot.startAt).toLocaleTimeString(lang === "ja" ? "ja-JP" : "zh-CN", {
@@ -300,56 +303,62 @@ export default function BookingForm({ lang, packages, initialPackageId }: Props)
               );
             })}
           </div>
-          {!selectedStartAt ? <p className="mt-2 text-xs text-brand-700">{t.selectSlot}</p> : null}
+          {!selectedStartAt ? <p className="mt-2 text-xs text-brand-700" aria-live="polite">{t.selectSlot}</p> : null}
         </div>
       </section>
 
-      <section className="rounded-3xl border border-brand-100/80 bg-white/90 p-6 shadow-[0_18px_45px_rgba(120,25,55,0.08)]">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-800">{t.name}</span>
+      <section className="ui-card">
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          <label className="grid gap-2" htmlFor="booking-name">
+            <span className="text-sm font-medium text-brand-800">{t.name}</span>
             <input
-              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+              id="booking-name"
+              className="ui-input"
               value={name}
               onChange={(event) => setName(event.target.value)}
+              autoComplete="name"
             />
           </label>
 
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-800">{t.email}</span>
+          <label className="grid gap-2" htmlFor="booking-email">
+            <span className="text-sm font-medium text-brand-800">{t.email}</span>
             <input
-              className="rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+              id="booking-email"
+              className="ui-input"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               type="email"
+              autoComplete="email"
             />
           </label>
         </div>
 
-        <label className="mt-4 grid gap-2">
-          <span className="text-sm text-brand-800">{t.styleNote}</span>
+        <label className="mt-4 grid gap-2" htmlFor="booking-style-note">
+          <span className="text-sm font-medium text-brand-800">{t.styleNote}</span>
           <textarea
-            className="min-h-24 rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+            id="booking-style-note"
+            className="ui-input min-h-24"
             value={styleNote}
             onChange={(event) => setStyleNote(event.target.value)}
           />
         </label>
 
-        <label className="mt-4 grid gap-2">
-          <span className="text-sm text-brand-800">{t.customerNote}</span>
+        <label className="mt-4 grid gap-2" htmlFor="booking-customer-note">
+          <span className="text-sm font-medium text-brand-800">{t.customerNote}</span>
           <textarea
-            className="min-h-24 rounded-xl border border-brand-200 bg-white px-3 py-2.5 text-brand-900 transition hover:border-brand-400"
+            id="booking-customer-note"
+            className="ui-input min-h-24"
             value={customerNote}
             onChange={(event) => setCustomerNote(event.target.value)}
           />
         </label>
 
-        {error ? <p className="mt-4 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
-        {message ? <p className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</p> : null}
+        {error ? <p className="ui-state-error" aria-live="assertive">{error}</p> : null}
+        {message ? <p className="ui-state-success" aria-live="polite">{message}</p> : null}
 
         <button
           disabled={submitting}
-          className="mt-4 inline-flex items-center justify-center rounded-xl bg-brand-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="ui-btn-primary mt-4 w-full sm:w-auto"
           type="submit"
         >
           {submitting ? "..." : t.submit}

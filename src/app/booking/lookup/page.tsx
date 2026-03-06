@@ -12,7 +12,7 @@ export default async function BookingLookupPage({ searchParams }: Props) {
   const lang = resolveLang(query?.lang);
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-10">
+    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
       <BookingLookupForm lang={lang} />
     </main>
   );

@@ -88,34 +88,37 @@ export default function BookingLookupForm({ lang }: Props) {
 
   return (
     <div className="grid gap-5">
-      <form onSubmit={onSubmit} className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
+      <form onSubmit={onSubmit} className="ui-card">
         <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-800">{t.email}</span>
+        <div className="mt-4 grid gap-3 sm:gap-4 md:grid-cols-2">
+          <label className="grid gap-2" htmlFor="lookup-email">
+            <span className="text-sm font-medium text-brand-800">{t.email}</span>
             <input
-              className="rounded-lg border border-brand-200 px-3 py-2"
+              id="lookup-email"
+              className="ui-input"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
             />
           </label>
 
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-800">{t.bookingNo}</span>
+          <label className="grid gap-2" htmlFor="lookup-booking-no">
+            <span className="text-sm font-medium text-brand-800">{t.bookingNo}</span>
             <input
-              className="rounded-lg border border-brand-200 px-3 py-2"
+              id="lookup-booking-no"
+              className="ui-input"
               value={bookingNo}
               onChange={(event) => setBookingNo(event.target.value)}
             />
           </label>
         </div>
 
-        {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+        {error ? <p className="ui-state-error" aria-live="assertive">{error}</p> : null}
 
         <button
-          className="mt-4 rounded-lg bg-brand-700 px-4 py-2 font-medium text-white disabled:opacity-60"
+          className="ui-btn-primary mt-4 w-full sm:w-auto"
           type="submit"
           disabled={loading}
         >
@@ -124,7 +127,7 @@ export default function BookingLookupForm({ lang }: Props) {
       </form>
 
       {result ? (
-        <section className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
+        <section className="ui-card">
           <h3 className="text-lg font-semibold text-brand-900">{t.result}</h3>
           <div className="mt-3 grid gap-2 text-sm text-brand-800">
             <p>{t.status}: {result.status}</p>

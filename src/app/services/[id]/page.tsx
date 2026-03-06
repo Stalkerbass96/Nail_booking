@@ -43,12 +43,12 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
   const addons = servicePackage.addonLinks.filter((item) => item.addon.isActive);
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-10">
-      <div className="rounded-2xl border border-brand-100 bg-white p-6 shadow-sm">
+    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="ui-card">
         <p className="text-sm uppercase tracking-[0.14em] text-brand-700">
           {isJa ? servicePackage.category.nameJa : servicePackage.category.nameZh}
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-brand-900">
+        <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
           {isJa ? servicePackage.nameJa : servicePackage.nameZh}
         </h1>
         <p className="mt-3 text-brand-800">{isJa ? servicePackage.descJa || "-" : servicePackage.descZh || "-"}</p>
@@ -72,14 +72,14 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
           )}
         </div>
 
-        <div className="mt-8 flex gap-3">
+        <div className="mt-8 grid gap-3 sm:flex">
           <Link
-            className="rounded-lg bg-brand-700 px-4 py-2 text-white"
+            className="ui-btn-primary"
             href={`/booking?packageId=${servicePackage.id.toString()}&lang=${lang}`}
           >
             {isJa ? "このメニューを予約" : "预约此套餐"}
           </Link>
-          <Link className="rounded-lg border border-brand-300 px-4 py-2 text-brand-900" href={`/services?lang=${lang}`}>
+          <Link className="ui-btn-secondary" href={`/services?lang=${lang}`}>
             {isJa ? "メニュー一覧" : "返回列表"}
           </Link>
         </div>
