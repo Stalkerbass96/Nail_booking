@@ -85,6 +85,8 @@ npm run test:e2e
 
 最近报告：`docs/testing/e2e-report-2026-03-07.md`
 
+说明：`npm run test:e2e` 会先探测 `http://127.0.0.1:3000`，若未运行会自动拉起本地 dev server 并在测试后自动停止；日志与汇总写入 `docs/testing/artifacts/e2e-2026-03-07/`。
+
 ## 7. 开发常用命令
 
 ```bash
