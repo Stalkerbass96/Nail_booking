@@ -1,6 +1,6 @@
 ﻿# Deployment Checklist V1
 
-最后更新：2026-03-07
+最后更新：2026-03-08
 
 这份清单是给两类人用的：
 - 你自己在全新 Ubuntu 主机上部署
@@ -33,6 +33,12 @@
 额外确认：
 - [ ] `APP_BASE_URL` 不是 `127.0.0.1` 或 `localhost`，除非你只是做服务器本机测试
 - [ ] 已替换所有 `change-me-*` 或 `replace-with-*` 占位值
+
+如果这次要同时接入 LINE，再额外确认：
+- [ ] 已准备 `LINE_CHANNEL_SECRET`
+- [ ] 已准备 `LINE_CHANNEL_ACCESS_TOKEN`
+- [ ] `APP_BASE_URL` 是外部真实可访问地址
+- [ ] 已知道 Webhook URL 应该填 `https://your-domain.com/api/line/webhook`
 
 ## 3. 首次部署命令
 
@@ -89,6 +95,14 @@ curl http://127.0.0.1:3000/api/public/packages
 - [ ] `/admin/schedule` 能打开
 - [ ] `/admin/line` 能打开
 - [ ] `/admin/appointments` 能打开
+
+### 4.5 如果本次同时验收 LINE
+
+- [ ] 已在 LINE Developers Console 打开 `Use webhook`
+- [ ] Webhook Verify 成功，或至少控制台未报 Webhook URL 不可达
+- [ ] 测试 LINE 账号给官方账号发消息后，后台 `/admin/line` 能看到新会话
+- [ ] 后台能向该用户发送一条测试消息
+- [ ] 后台发送绑定链接后，顾客能打开 `/line/link`
 
 ## 5. 如果部署失败
 

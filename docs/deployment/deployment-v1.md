@@ -1,6 +1,6 @@
 ﻿# Ubuntu Single-Host Deployment V1
 
-最后更新：2026-03-07
+最后更新：2026-03-08
 
 这份文档的目标很直接：
 - 你拿到一台全新的 Ubuntu 云主机
@@ -155,6 +155,34 @@ LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
 LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
 ```
+
+### 5.5 如果你准备在这次部署里同时接入 LINE
+
+你需要额外准备：
+- LINE Developers Console 中的 `Messaging API channel`
+- `LINE_CHANNEL_SECRET`
+- `LINE_CHANNEL_ACCESS_TOKEN`
+- 一个真实可访问的 `APP_BASE_URL`
+
+推荐做法：
+1. 先完成基础部署，确认前后台都能打开
+2. 再把下面 3 个值写入 `.env.deploy`
+3. 重新执行 `./scripts/deploy-docker.sh`
+4. 最后去 LINE Developers Console 配置 Webhook URL
+
+`.env.deploy` 里实际要填：
+
+```env
+APP_BASE_URL=https://your-domain.com
+LINE_CHANNEL_SECRET=your-line-channel-secret
+LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
+LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
+```
+
+注意：
+- 如果 `APP_BASE_URL` 还是 `localhost` 或 `127.0.0.1`，顾客收到的绑定链接无法从外网打开
+- LINE Webhook URL 必须配置成：`https://your-domain.com/api/line/webhook`
+- 详细的 LINE Console 配置步骤，直接看 `docs/deployment/line-setup-v1.md`
 
 ## 6. 首次部署
 
@@ -346,10 +374,17 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postg
 
 这不会影响预约、后台管理、排班、积分等核心功能。
 
-当你准备接入 LINE 时：
-- `APP_BASE_URL` 必须是外部可访问地址
-- Webhook URL 应配置为：`https://your-domain.com/api/line/webhook`
-- 后台管理页在：`/admin/line`
+如果你准备正式接入 LINE，按这个顺序做：
+1. 确认 `APP_BASE_URL` 是外部可访问地址
+2. 在 `.env.deploy` 填入 `LINE_CHANNEL_SECRET` 与 `LINE_CHANNEL_ACCESS_TOKEN`
+3. 执行 `./scripts/deploy-docker.sh`
+4. 在 LINE Developers Console 中把 Webhook URL 配成 `https://your-domain.com/api/line/webhook`
+5. 打开后台 `/admin/line` 验证收发消息和绑定链接
+
+你还需要知道：
+- 没有 LINE 的顾客，仍然可以正常网页预约
+- 有 LINE 的顾客，才会用到绑定、消息和 1 对 1 会话
+- 详细步骤、截图位说明和排错建议在：`docs/deployment/line-setup-v1.md`
 
 ## 13. 推荐验收顺序
 
