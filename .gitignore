@@ -4,3 +4,4 @@ node_modules
 .env.deploy
 dist
 coverage
+.next-start.log
