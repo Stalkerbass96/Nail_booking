@@ -12,11 +12,13 @@ type Props = {
 const LINKS = [
   { href: "/admin", zh: "总览", ja: "ダッシュボード" },
   { href: "/admin/appointments", zh: "预约", ja: "予約" },
+  { href: "/admin/schedule", zh: "排班", ja: "営業" },
   { href: "/admin/categories", zh: "分类", ja: "カテゴリ" },
   { href: "/admin/packages", zh: "套餐", ja: "メニュー" },
   { href: "/admin/addons", zh: "加项", ja: "追加オプション" },
   { href: "/admin/customers", zh: "客户", ja: "顧客" },
   { href: "/admin/points", zh: "积分", ja: "ポイント" },
+  { href: "/admin/line", zh: "LINE", ja: "LINE" },
   { href: "/admin/settings", zh: "设置", ja: "設定" }
 ];
 

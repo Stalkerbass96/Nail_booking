@@ -1,4 +1,5 @@
 ﻿import { AppointmentStatus } from "@prisma/client";
+import { findOverlappingBookingBlock, overlapsWithBlockedRanges } from "@/lib/booking-blocks";
 import { prisma } from "@/lib/db";
 import {
   addMinutes,
@@ -90,18 +91,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid business hours range" }, { status: 422 });
     }
 
-    const occupiedAppointments = await prisma.appointment.findMany({
-      where: {
-        status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
-        startAt: { lt: businessWindow.closeAt },
-        endAt: { gt: businessWindow.openAt }
-      },
-      select: {
-        startAt: true,
-        endAt: true,
-        status: true
-      }
-    });
+    const [occupiedAppointments, bookingBlocks] = await Promise.all([
+      prisma.appointment.findMany({
+        where: {
+          status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
+          startAt: { lt: businessWindow.closeAt },
+          endAt: { gt: businessWindow.openAt }
+        },
+        select: {
+          startAt: true,
+          endAt: true,
+          status: true
+        }
+      }),
+      prisma.bookingBlock.findMany({
+        where: {
+          startAt: { lt: businessWindow.closeAt },
+          endAt: { gt: businessWindow.openAt }
+        },
+        select: {
+          startAt: true,
+          endAt: true,
+          reason: true
+        },
+        orderBy: { startAt: "asc" }
+      })
+    ]);
 
     const candidateStarts = generateStartSlots(
       businessWindow.openAt,
@@ -113,7 +128,15 @@ export async function GET(request: NextRequest) {
     const slots = candidateStarts
       .filter((startAt) => {
         const endAt = addMinutes(startAt, totalDurationMinutes);
-        return !overlapsWithAppointments(startAt, endAt, occupiedAppointments);
+        if (overlapsWithAppointments(startAt, endAt, occupiedAppointments)) {
+          return false;
+        }
+
+        if (overlapsWithBlockedRanges(startAt, endAt, bookingBlocks)) {
+          return false;
+        }
+
+        return true;
       })
       .map((startAt) => ({
         startAt: startAt.toISOString(),
@@ -124,7 +147,8 @@ export async function GET(request: NextRequest) {
       date,
       slotMinutes: runtime.slotMinutes,
       totalDurationMinutes,
-      slots
+      slots,
+      blockedCount: bookingBlocks.length
     });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Invalid ")) {

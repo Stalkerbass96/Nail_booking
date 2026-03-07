@@ -6,6 +6,8 @@
 - PostgreSQL 数据库
 - 自动取消待确认预约的后台任务
 - 中日双语界面（`?lang=zh|ja`）
+- 后台营业排班、特殊营业日、预约封锁区间
+- LINE Webhook、LINE 会话、顾客绑定与后台主动发消息
 
 当前目标是两件事：
 1. 任何新的 AI coding agent 打开仓库后，能快速接手继续开发。
@@ -17,7 +19,7 @@
 - `npm run build` 通过
 - `npm run lint` 通过
 - Docker 单机部署链路已整理为 `app + postgres + auto-cancel-worker`
-- 管理端已包含预约、分类、套餐、加项、客户、积分、系统设置等页面
+- 管理端已包含预约、营业排班、分类、套餐、加项、客户、积分、LINE 会话、系统设置等页面
 
 ## 技术栈
 
@@ -65,6 +67,14 @@ npm run dev
 - Email: `owner@nail-booking.local`
 - Password: `.env` 中的 `ADMIN_SEED_PASSWORD`
 
+如需本地调试 LINE，再补这些变量：
+
+```env
+LINE_CHANNEL_SECRET=""
+LINE_CHANNEL_ACCESS_TOKEN=""
+LINE_AUTO_REPLY_TEXT="Message received. The salon owner will reply to you shortly."
+```
+
 ## Ubuntu 单机部署
 
 推荐直接使用 Docker Compose 部署。完整步骤见：
@@ -84,6 +94,11 @@ chmod +x scripts/deploy-docker.sh
 部署后访问：
 - `http://<服务器IP>:3000`
 - `http://<服务器IP>:3000/admin/login`
+
+如果接入 LINE：
+- 后台页面：`/admin/line`
+- Webhook 路径：`/api/line/webhook`
+- 需要配置 `LINE_CHANNEL_SECRET` 与 `LINE_CHANNEL_ACCESS_TOKEN`
 
 ## 文档入口
 
@@ -107,4 +122,3 @@ npm run test:e2e
 npm run job:auto-cancel
 npm run job:auto-cancel:loop
 ```
-

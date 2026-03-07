@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import type { Lang } from "@/lib/lang";
@@ -18,47 +18,47 @@ type Props = {
 const TEXT = {
   zh: {
     title: "系统设置",
-    desc: "维护预约粒度、自动取消、取消限制和积分比例。当前版本的预约粒度仅支持 30 分钟的倍数。",
-    slotMinutes: "预约粒度(分钟)",
+    desc: "控制预约粒度、待确认自动取消、取消截止时间，以及积分的累计和使用比例。",
+    slotMinutes: "预约时间粒度(分钟)",
     pendingAutoCancelHours: "待确认自动取消(小时)",
-    cancelCutoffHours: "取消截止窗口(距开始前小时)",
-    pointEarnRatioJpy: "积分累计比例(日元/1分)",
-    pointRedeemRatioJpy: "积分抵扣比例(日元/1分)",
+    cancelCutoffHours: "客户可取消截止(距离到店前小时)",
+    pointEarnRatioJpy: "积分累计比例(多少日元 = 1 point)",
+    pointRedeemRatioJpy: "积分抵扣比例(多少日元 = 1 point)",
     loading: "加载中...",
     save: "保存设置",
     saved: "设置已保存",
     loadFailed: "加载设置失败",
     saveFailed: "保存设置失败",
-    invalidNumber: "请填写合法的数字。",
-    invalidSlot: "预约粒度目前仅支持 30 分钟的倍数。",
-    invalidPending: "待确认自动取消必须在 1 到 168 小时之间。",
-    invalidCutoff: "取消截止窗口必须在 0 到 168 小时之间。",
-    invalidEarnRatio: "积分累计比例必须在 1 到 100000 之间。",
-    invalidRedeemRatio: "积分抵扣比例必须在 1 到 100000 之间。",
-    slotHint: "当前实现仅支持 30、60、90、120 这类 30 分钟倍数。"
+    invalidNumber: "请输入有效的整数",
+    invalidSlot: "预约时间粒度仅支持 30 / 60 / 90 / 120 分钟",
+    invalidPending: "待确认自动取消必须在 1 到 168 小时之间",
+    invalidCutoff: "客户取消截止必须在 0 到 168 小时之间",
+    invalidEarnRatio: "积分累计比例必须在 1 到 100000 之间",
+    invalidRedeemRatio: "积分抵扣比例必须在 1 到 100000 之间",
+    slotHint: "当前系统仅支持 30 分钟的倍数，建议保持 30 分钟。"
   },
   ja: {
     title: "システム設定",
-    desc: "予約スロット、自動キャンセル、キャンセル制限、ポイント比率を管理します。現在の実装では予約粒度は 30 分単位のみサポートします。",
-    slotMinutes: "予約粒度(分)",
-    pendingAutoCancelHours: "未確認の自動キャンセル(時間)",
-    cancelCutoffHours: "キャンセル締切(開始前の時間)",
-    pointEarnRatioJpy: "ポイント付与比率(円/1pt)",
-    pointRedeemRatioJpy: "ポイント利用比率(円/1pt)",
+    desc: "予約枠の粒度、未確認予約の自動キャンセル、キャンセル締切、ポイント付与/利用比率を設定します。",
+    slotMinutes: "予約枠の粒度(分)",
+    pendingAutoCancelHours: "未確認予約の自動キャンセル(時間)",
+    cancelCutoffHours: "お客様キャンセル締切(来店何時間前まで)",
+    pointEarnRatioJpy: "ポイント付与比率(何円で 1 point)",
+    pointRedeemRatioJpy: "ポイント利用比率(何円で 1 point)",
     loading: "読み込み中...",
     save: "設定を保存",
     saved: "設定を保存しました",
     loadFailed: "設定の読み込みに失敗しました",
     saveFailed: "設定の保存に失敗しました",
-    invalidNumber: "有効な数値を入力してください。",
-    invalidSlot: "予約粒度は現在 30 分単位のみサポートしています。",
-    invalidPending: "自動キャンセルは 1 から 168 時間の範囲で入力してください。",
-    invalidCutoff: "キャンセル締切は 0 から 168 時間の範囲で入力してください。",
-    invalidEarnRatio: "ポイント付与比率は 1 から 100000 の範囲で入力してください。",
-    invalidRedeemRatio: "ポイント利用比率は 1 から 100000 の範囲で入力してください。",
-    slotHint: "現在の実装では 30、60、90、120 のような 30 分の倍数のみ対応します。"
+    invalidNumber: "有効な整数を入力してください",
+    invalidSlot: "予約枠の粒度は 30 / 60 / 90 / 120 分のみ対応しています",
+    invalidPending: "自動キャンセル時間は 1 から 168 時間の範囲で入力してください",
+    invalidCutoff: "キャンセル締切は 0 から 168 時間の範囲で入力してください",
+    invalidEarnRatio: "ポイント付与比率は 1 から 100000 の範囲で入力してください",
+    invalidRedeemRatio: "ポイント利用比率は 1 から 100000 の範囲で入力してください",
+    slotHint: "現在の予約モデルでは 30 分単位のみサポートしています。通常は 30 分を推奨します。"
   }
-};
+} as const;
 
 function parseWholeNumber(value: string): number | null {
   if (!/^\d+$/.test(value.trim())) return null;
@@ -148,12 +148,12 @@ export default function AdminSettingsPanel({ lang }: Props) {
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || t.loadFailed);
 
-        const s: SettingsDto = data.settings;
-        setSlotMinutes(String(s.slotMinutes));
-        setPendingAutoCancelHours(String(s.pendingAutoCancelHours));
-        setCancelCutoffHours(String(s.cancelCutoffHours));
-        setPointEarnRatioJpy(String(s.pointEarnRatioJpy));
-        setPointRedeemRatioJpy(String(s.pointRedeemRatioJpy));
+        const settings: SettingsDto = data.settings;
+        setSlotMinutes(String(settings.slotMinutes));
+        setPendingAutoCancelHours(String(settings.pendingAutoCancelHours));
+        setCancelCutoffHours(String(settings.cancelCutoffHours));
+        setPointEarnRatioJpy(String(settings.pointEarnRatioJpy));
+        setPointRedeemRatioJpy(String(settings.pointRedeemRatioJpy));
       } catch (err) {
         setError(err instanceof Error ? err.message : t.loadFailed);
       } finally {
@@ -196,12 +196,12 @@ export default function AdminSettingsPanel({ lang }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || t.saveFailed);
 
-      const s: SettingsDto = data.settings;
-      setSlotMinutes(String(s.slotMinutes));
-      setPendingAutoCancelHours(String(s.pendingAutoCancelHours));
-      setCancelCutoffHours(String(s.cancelCutoffHours));
-      setPointEarnRatioJpy(String(s.pointEarnRatioJpy));
-      setPointRedeemRatioJpy(String(s.pointRedeemRatioJpy));
+      const settings: SettingsDto = data.settings;
+      setSlotMinutes(String(settings.slotMinutes));
+      setPendingAutoCancelHours(String(settings.pendingAutoCancelHours));
+      setCancelCutoffHours(String(settings.cancelCutoffHours));
+      setPointEarnRatioJpy(String(settings.pointEarnRatioJpy));
+      setPointRedeemRatioJpy(String(settings.pointRedeemRatioJpy));
       setOk(t.saved);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.saveFailed);

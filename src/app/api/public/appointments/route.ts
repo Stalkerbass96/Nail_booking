@@ -1,4 +1,5 @@
 ﻿import { AppointmentStatus, Prisma } from "@prisma/client";
+import { findOverlappingBookingBlock } from "@/lib/booking-blocks";
 import {
   addMinutes,
   calculateTotalDurationMinutes,
@@ -128,17 +129,24 @@ export async function POST(request: NextRequest) {
     const created = await prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${bookingYmd}))`;
 
-      const hasConflict = await tx.appointment.findFirst({
-        where: {
-          status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
-          startAt: { lt: endAt },
-          endAt: { gt: startAt }
-        },
-        select: { id: true }
-      });
+      const [hasConflict, blocked] = await Promise.all([
+        tx.appointment.findFirst({
+          where: {
+            status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
+            startAt: { lt: endAt },
+            endAt: { gt: startAt }
+          },
+          select: { id: true }
+        }),
+        findOverlappingBookingBlock(tx, startAt, endAt)
+      ]);
 
       if (hasConflict) {
         throw new ApiError(409, "Selected time slot is no longer available");
+      }
+
+      if (blocked) {
+        throw new ApiError(409, blocked.reason || "Selected time is blocked by the store owner");
       }
 
       const customer = await tx.customer.upsert({
@@ -226,3 +234,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

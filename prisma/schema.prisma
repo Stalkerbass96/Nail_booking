@@ -20,6 +20,19 @@ enum PointTxType {
   adjust
 }
 
+enum LineMessageDirection {
+  incoming
+  outgoing
+  system
+}
+
+enum LineMessageStatus {
+  received
+  queued
+  sent
+  failed
+}
+
 model Admin {
   id           BigInt   @id @default(autoincrement())
   email        String   @unique @db.VarChar(120)
@@ -28,108 +41,112 @@ model Admin {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  pointLedgers PointLedger[]
+  pointLedgers  PointLedger[]
+  bookingBlocks BookingBlock[]
+  lineMessages  LineMessage[]
 
   @@map("admins")
 }
 
 model Customer {
-  id            BigInt       @id @default(autoincrement())
-  name          String       @db.VarChar(80)
-  email         String       @unique @db.VarChar(120)
+  id            BigInt   @id @default(autoincrement())
+  name          String   @db.VarChar(80)
+  email         String   @unique @db.VarChar(120)
   notes         String?
-  totalSpentJpy Int          @default(0) @map("total_spent_jpy")
-  currentPoints Int          @default(0) @map("current_points")
-  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  totalSpentJpy Int      @default(0) @map("total_spent_jpy")
+  currentPoints Int      @default(0) @map("current_points")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  appointments  Appointment[]
-  pointLedgers  PointLedger[]
+  appointments   Appointment[]
+  pointLedgers   PointLedger[]
+  lineUser       LineUser?
+  lineLinkTokens LineLinkToken[]
 
   @@map("customers")
 }
 
 model ServiceCategory {
-  id        BigInt           @id @default(autoincrement())
-  nameZh    String           @map("name_zh") @db.VarChar(80)
-  nameJa    String           @map("name_ja") @db.VarChar(80)
-  sortOrder Int              @default(0) @map("sort_order")
-  isActive  Boolean          @default(true) @map("is_active")
+  id        BigInt  @id @default(autoincrement())
+  nameZh    String  @map("name_zh") @db.VarChar(80)
+  nameJa    String  @map("name_ja") @db.VarChar(80)
+  sortOrder Int     @default(0) @map("sort_order")
+  isActive  Boolean @default(true) @map("is_active")
 
-  packages  ServicePackage[]
+  packages ServicePackage[]
 
   @@map("service_categories")
 }
 
 model ServicePackage {
-  id          BigInt              @id @default(autoincrement())
-  categoryId  BigInt              @map("category_id")
-  nameZh      String              @map("name_zh") @db.VarChar(120)
-  nameJa      String              @map("name_ja") @db.VarChar(120)
-  descZh      String?             @map("desc_zh")
-  descJa      String?             @map("desc_ja")
-  imageUrl    String?             @map("image_url")
-  priceJpy    Int                 @map("price_jpy")
-  durationMin Int                 @map("duration_min")
-  isActive    Boolean             @default(true) @map("is_active")
+  id          BigInt  @id @default(autoincrement())
+  categoryId  BigInt  @map("category_id")
+  nameZh      String  @map("name_zh") @db.VarChar(120)
+  nameJa      String  @map("name_ja") @db.VarChar(120)
+  descZh      String? @map("desc_zh")
+  descJa      String? @map("desc_ja")
+  imageUrl    String? @map("image_url")
+  priceJpy    Int     @map("price_jpy")
+  durationMin Int     @map("duration_min")
+  isActive    Boolean @default(true) @map("is_active")
 
-  category    ServiceCategory     @relation(fields: [categoryId], references: [id])
-  addonLinks  PackageAddonLink[]
+  category     ServiceCategory    @relation(fields: [categoryId], references: [id])
+  addonLinks   PackageAddonLink[]
   appointments Appointment[]
 
   @@map("service_packages")
 }
 
 model ServiceAddon {
-  id                  BigInt               @id @default(autoincrement())
-  nameZh              String               @map("name_zh") @db.VarChar(120)
-  nameJa              String               @map("name_ja") @db.VarChar(120)
-  descZh              String?              @map("desc_zh")
-  descJa              String?              @map("desc_ja")
-  priceJpy            Int                  @map("price_jpy")
-  durationIncreaseMin Int                  @map("duration_increase_min")
-  isActive            Boolean              @default(true) @map("is_active")
+  id                  BigInt  @id @default(autoincrement())
+  nameZh              String  @map("name_zh") @db.VarChar(120)
+  nameJa              String  @map("name_ja") @db.VarChar(120)
+  descZh              String? @map("desc_zh")
+  descJa              String? @map("desc_ja")
+  priceJpy            Int     @map("price_jpy")
+  durationIncreaseMin Int     @map("duration_increase_min")
+  isActive            Boolean @default(true) @map("is_active")
 
-  packageLinks        PackageAddonLink[]
-  appointmentAddons   AppointmentAddon[]
+  packageLinks      PackageAddonLink[]
+  appointmentAddons AppointmentAddon[]
 
   @@map("service_addons")
 }
 
 model PackageAddonLink {
-  id        BigInt        @id @default(autoincrement())
-  packageId BigInt        @map("package_id")
-  addonId   BigInt        @map("addon_id")
+  id        BigInt @id @default(autoincrement())
+  packageId BigInt @map("package_id")
+  addonId   BigInt @map("addon_id")
 
-  package   ServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  addon     ServiceAddon   @relation(fields: [addonId], references: [id], onDelete: Cascade)
+  package ServicePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  addon   ServiceAddon   @relation(fields: [addonId], references: [id], onDelete: Cascade)
 
   @@unique([packageId, addonId])
   @@map("package_addon_links")
 }
 
 model Appointment {
-  id            BigInt             @id @default(autoincrement())
-  bookingNo     String             @unique @map("booking_no") @db.VarChar(40)
-  customerId    BigInt             @map("customer_id")
-  packageId     BigInt             @map("package_id")
-  styleNote     String?            @map("style_note")
-  customerNote  String?            @map("customer_note")
-  startAt       DateTime           @map("start_at") @db.Timestamptz(6)
-  endAt         DateTime           @map("end_at") @db.Timestamptz(6)
-  status        AppointmentStatus  @default(pending)
-  autoCancelAt  DateTime           @map("auto_cancel_at") @db.Timestamptz(6)
-  cancelReason  String?            @map("cancel_reason")
-  confirmedAt   DateTime?          @map("confirmed_at") @db.Timestamptz(6)
-  completedAt   DateTime?          @map("completed_at") @db.Timestamptz(6)
-  actualPaidJpy Int?               @map("actual_paid_jpy")
-  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            BigInt            @id @default(autoincrement())
+  bookingNo     String            @unique @map("booking_no") @db.VarChar(40)
+  customerId    BigInt            @map("customer_id")
+  packageId     BigInt            @map("package_id")
+  styleNote     String?           @map("style_note")
+  customerNote  String?           @map("customer_note")
+  startAt       DateTime          @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime          @map("end_at") @db.Timestamptz(6)
+  status        AppointmentStatus @default(pending)
+  autoCancelAt  DateTime          @map("auto_cancel_at") @db.Timestamptz(6)
+  cancelReason  String?           @map("cancel_reason")
+  confirmedAt   DateTime?         @map("confirmed_at") @db.Timestamptz(6)
+  completedAt   DateTime?         @map("completed_at") @db.Timestamptz(6)
+  actualPaidJpy Int?              @map("actual_paid_jpy")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  customer      Customer           @relation(fields: [customerId], references: [id])
-  servicePackage ServicePackage    @relation(fields: [packageId], references: [id])
-  addons        AppointmentAddon[]
-  pointLedgers  PointLedger[]
+  customer       Customer           @relation(fields: [customerId], references: [id])
+  servicePackage ServicePackage     @relation(fields: [packageId], references: [id])
+  addons         AppointmentAddon[]
+  pointLedgers   PointLedger[]
 
   @@index([startAt])
   @@index([status, startAt])
@@ -138,40 +155,40 @@ model Appointment {
 }
 
 model AppointmentAddon {
-  id                  BigInt      @id @default(autoincrement())
-  appointmentId       BigInt      @map("appointment_id")
-  addonId             BigInt      @map("addon_id")
-  priceSnapshotJpy    Int         @map("price_snapshot_jpy")
-  durationSnapshotMin Int         @map("duration_snapshot_min")
+  id                  BigInt @id @default(autoincrement())
+  appointmentId       BigInt @map("appointment_id")
+  addonId             BigInt @map("addon_id")
+  priceSnapshotJpy    Int    @map("price_snapshot_jpy")
+  durationSnapshotMin Int    @map("duration_snapshot_min")
 
-  appointment         Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  addon               ServiceAddon @relation(fields: [addonId], references: [id])
+  appointment Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  addon       ServiceAddon @relation(fields: [addonId], references: [id])
 
   @@map("appointment_addons")
 }
 
 model PointLedger {
-  id             BigInt      @id @default(autoincrement())
-  customerId     BigInt      @map("customer_id")
-  appointmentId  BigInt?     @map("appointment_id")
-  type           PointTxType
-  points         Int
-  jpyValue       Int         @map("jpy_value")
-  operatorAdminId BigInt?    @map("operator_admin_id")
-  note           String?
-  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  id              BigInt      @id @default(autoincrement())
+  customerId      BigInt      @map("customer_id")
+  appointmentId   BigInt?     @map("appointment_id")
+  type            PointTxType
+  points          Int
+  jpyValue        Int         @map("jpy_value")
+  operatorAdminId BigInt?     @map("operator_admin_id")
+  note            String?
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  customer       Customer    @relation(fields: [customerId], references: [id])
-  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
-  operatorAdmin  Admin?      @relation(fields: [operatorAdminId], references: [id])
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  operatorAdmin Admin?       @relation(fields: [operatorAdminId], references: [id])
 
   @@map("point_ledger")
 }
 
 model BusinessHour {
-  id        BigInt   @id @default(autoincrement())
+  id        BigInt    @id @default(autoincrement())
   weekday   Int
-  isOpen    Boolean  @map("is_open")
+  isOpen    Boolean   @map("is_open")
   openTime  DateTime? @map("open_time") @db.Time(6)
   closeTime DateTime? @map("close_time") @db.Time(6)
 
@@ -179,9 +196,9 @@ model BusinessHour {
 }
 
 model SpecialBusinessDate {
-  id        BigInt   @id @default(autoincrement())
-  date      DateTime @unique @db.Date
-  isOpen    Boolean  @map("is_open")
+  id        BigInt    @id @default(autoincrement())
+  date      DateTime  @unique @db.Date
+  isOpen    Boolean   @map("is_open")
   openTime  DateTime? @map("open_time") @db.Time(6)
   closeTime DateTime? @map("close_time") @db.Time(6)
   note      String?
@@ -195,4 +212,77 @@ model SystemSetting {
   value String @db.VarChar(255)
 
   @@map("system_settings")
+}
+
+model BookingBlock {
+  id               BigInt   @id @default(autoincrement())
+  startAt          DateTime @map("start_at") @db.Timestamptz(6)
+  endAt            DateTime @map("end_at") @db.Timestamptz(6)
+  reason           String?  @db.VarChar(255)
+  createdByAdminId BigInt?  @map("created_by_admin_id")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  createdByAdmin Admin? @relation(fields: [createdByAdminId], references: [id])
+
+  @@index([startAt])
+  @@index([endAt])
+  @@index([startAt, endAt])
+  @@map("booking_blocks")
+}
+
+model LineUser {
+  id            BigInt    @id @default(autoincrement())
+  lineUserId    String    @unique @map("line_user_id") @db.VarChar(120)
+  customerId    BigInt?   @unique @map("customer_id")
+  displayName   String?   @map("display_name") @db.VarChar(120)
+  pictureUrl    String?   @map("picture_url")
+  statusMessage String?   @map("status_message")
+  isFollowing   Boolean   @default(true) @map("is_following")
+  linkedAt      DateTime? @map("linked_at") @db.Timestamptz(6)
+  lastSeenAt    DateTime? @map("last_seen_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  customer   Customer?       @relation(fields: [customerId], references: [id])
+  messages   LineMessage[]
+  linkTokens LineLinkToken[]
+
+  @@map("line_users")
+}
+
+model LineMessage {
+  id            BigInt               @id @default(autoincrement())
+  lineUserId    BigInt               @map("line_user_id")
+  direction     LineMessageDirection
+  status        LineMessageStatus    @default(received)
+  messageType   String               @map("message_type") @db.VarChar(40)
+  text          String?
+  rawJson       Json?                @map("raw_json")
+  sentByAdminId BigInt?              @map("sent_by_admin_id")
+  createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  lineUser    LineUser @relation(fields: [lineUserId], references: [id], onDelete: Cascade)
+  sentByAdmin Admin?   @relation(fields: [sentByAdminId], references: [id])
+
+  @@index([lineUserId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("line_messages")
+}
+
+model LineLinkToken {
+  id         BigInt    @id @default(autoincrement())
+  token      String    @unique @db.VarChar(120)
+  lineUserId BigInt    @map("line_user_id")
+  customerId BigInt    @map("customer_id")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  consumedAt DateTime? @map("consumed_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  lineUser LineUser @relation(fields: [lineUserId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, expiresAt])
+  @@index([lineUserId, expiresAt])
+  @@map("line_link_tokens")
 }

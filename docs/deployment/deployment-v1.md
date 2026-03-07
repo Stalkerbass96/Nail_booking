@@ -19,6 +19,8 @@
 部署完成后，你可以访问：
 - 前台：`http://<服务器IP>:3000`
 - 后台登录：`http://<服务器IP>:3000/admin/login`
+- 后台排班页：`http://<服务器IP>:3000/admin/schedule`
+- 后台 LINE 页：`http://<服务器IP>:3000/admin/line`
 
 默认种子账号：
 - Email: `owner@nail-booking.local`
@@ -97,6 +99,9 @@ vim .env.deploy
 - `POSTGRES_USER`
 - `APP_PORT`
 - `AUTO_CANCEL_INTERVAL_MS`
+- `LINE_CHANNEL_SECRET`（如需接入 LINE）
+- `LINE_CHANNEL_ACCESS_TOKEN`（如需接入 LINE）
+- `LINE_AUTO_REPLY_TEXT`（可选）
 
 推荐配置示例：
 
@@ -109,6 +114,9 @@ CRON_SECRET=replace-with-random-cron-secret
 ADMIN_AUTH_SECRET=replace-with-long-random-secret
 ADMIN_SEED_PASSWORD=replace-with-strong-admin-password
 AUTO_CANCEL_INTERVAL_MS=300000
+LINE_CHANNEL_SECRET=
+LINE_CHANNEL_ACCESS_TOKEN=
+LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
 ```
 
 ## 5. 启动服务
@@ -160,6 +168,12 @@ curl http://127.0.0.1:3000/api/public/categories
 ```
 
 如果你的云厂商有安全组或防火墙，还需要放行 `APP_PORT` 对应端口，默认是 `3000/tcp`。
+
+如果你要启用 LINE：
+- Webhook URL 配置为 `https://<你的域名>/api/line/webhook`
+- 纯测试环境也可以暂时用 `http://<服务器IP>:3000/api/line/webhook`
+- 需要在 `.env.deploy` 中配置 `LINE_CHANNEL_SECRET` 和 `LINE_CHANNEL_ACCESS_TOKEN`
+- 管理后台新增页面：`/admin/line`
 
 如果主机启用了 UFW：
 
@@ -233,6 +247,5 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postg
 补充检查清单：
 - `docs/deployment/deployment-checklist-v1.md`
 
-
 域名与 HTTPS 文档：
-- docs/deployment/nginx-https-v1.md`n
+- `docs/deployment/nginx-https-v1.md`

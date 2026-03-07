@@ -1,4 +1,4 @@
-const { createHash } = require("node:crypto");
+﻿const { createHash } = require("node:crypto");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
@@ -66,17 +66,14 @@ async function seedCatalog() {
   if (categoryCount === 0) {
     await prisma.serviceCategory.createMany({
       data: [
-        { nameZh: "经典款", nameJa: "ベーシック", sortOrder: 10, isActive: true },
-        { nameZh: "延长甲", nameJa: "長さだし", sortOrder: 20, isActive: true },
-        { nameZh: "护理", nameJa: "ケア", sortOrder: 30, isActive: true }
+        { nameZh: "基础护理", nameJa: "ベーシック", sortOrder: 10, isActive: true },
+        { nameZh: "长款设计", nameJa: "ロングデザイン", sortOrder: 20, isActive: true },
+        { nameZh: "修护护理", nameJa: "ケア", sortOrder: 30, isActive: true }
       ]
     });
   }
 
-  const categories = await prisma.serviceCategory.findMany({
-    orderBy: { sortOrder: "asc" }
-  });
-
+  const categories = await prisma.serviceCategory.findMany({ orderBy: { sortOrder: "asc" } });
   if (categories.length === 0) {
     throw new Error("No service categories found after seed");
   }
@@ -91,10 +88,10 @@ async function seedCatalog() {
       data: [
         {
           categoryId: first.id,
-          nameZh: "经典单色",
+          nameZh: "基础单色",
           nameJa: "ワンカラー",
-          descZh: "基础单色，适合日常通勤。",
-          descJa: "通勤に合うベーシックなワンカラー。",
+          descZh: "适合日常通勤的基础护理与单色上甲。",
+          descJa: "通勤にも使いやすいベーシックケア付きワンカラーです。",
           imageUrl: null,
           priceJpy: 5800,
           durationMin: 60,
@@ -102,10 +99,10 @@ async function seedCatalog() {
         },
         {
           categoryId: second.id,
-          nameZh: "自然延长",
-          nameJa: "ナチュラル長さだし",
-          descZh: "自然感延长，提升手型线条。",
-          descJa: "自然な長さだしで指先をきれいに。",
+          nameZh: "长款设计款",
+          nameJa: "ロングデザイン",
+          descZh: "适合偏设计感、需要更完整造型的客人。",
+          descJa: "しっかりデザインを入れたい方向けのロングメニューです。",
           imageUrl: null,
           priceJpy: 9800,
           durationMin: 120,
@@ -113,10 +110,10 @@ async function seedCatalog() {
         },
         {
           categoryId: third.id,
-          nameZh: "手部深层护理",
+          nameZh: "手部修护护理",
           nameJa: "ハンドディープケア",
-          descZh: "去角质与保湿护理。",
-          descJa: "角質ケアと保湿トリートメント。",
+          descZh: "包含基础修护与手部保养，适合护理型预约。",
+          descJa: "ベーシックケアと保湿トリートメントを含むケアメニューです。",
           imageUrl: null,
           priceJpy: 4500,
           durationMin: 60,
@@ -134,16 +131,16 @@ async function seedCatalog() {
           nameZh: "卸甲",
           nameJa: "オフ",
           descZh: "旧甲卸除",
-          descJa: "既存ジェルのオフ",
+          descJa: "付け替えオフ",
           priceJpy: 1000,
           durationIncreaseMin: 30,
           isActive: true
         },
         {
-          nameZh: "加固",
-          nameJa: "補強",
-          descZh: "甲面加固保护",
-          descJa: "爪表面の補強",
+          nameZh: "跳色",
+          nameJa: "カラー追加",
+          descZh: "增加颜色变化",
+          descJa: "色替え・差し色追加",
           priceJpy: 800,
           durationIncreaseMin: 30,
           isActive: true
