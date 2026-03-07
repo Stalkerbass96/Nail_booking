@@ -43,3 +43,10 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
 5. 可以在后台确认预约
 6. worker 容器正常运行
 7. `npm run test:e2e` 或手动 smoke 通过
+
+
+## 5. 部署脚本备注
+
+- scripts/deploy-docker.sh 现在会在失败时自动输出 compose 状态和最近日志。
+- 脚本会对 http://127.0.0.1:<APP_PORT>/api/public/categories 做探活，避免服务启动失败但流程仍显示成功。
+

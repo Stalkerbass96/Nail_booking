@@ -15,9 +15,10 @@
 7. [architecture/local-runbook-v1.md](architecture/local-runbook-v1.md)
 8. [deployment/deployment-v1.md](deployment/deployment-v1.md)
 9. [deployment/deployment-checklist-v1.md](deployment/deployment-checklist-v1.md)
-10. [operations/notes-v1.md](operations/notes-v1.md)
-11. [testing/e2e-report-2026-03-07.md](testing/e2e-report-2026-03-07.md)
-12. [CHANGELOG.md](CHANGELOG.md)
+10. [deployment/nginx-https-v1.md](deployment/nginx-https-v1.md)
+11. [operations/notes-v1.md](operations/notes-v1.md)
+12. [testing/e2e-report-2026-03-07.md](testing/e2e-report-2026-03-07.md)
+13. [CHANGELOG.md](CHANGELOG.md)
 
 ## 给人看的入口
 
@@ -25,6 +26,7 @@
 - 想继续开发：看 `agent-handoff`、`implementation`、API/route 文档
 - 想本地启动：看 `local-runbook`
 - 想上 Ubuntu 云主机：看 `deployment-v1`
+- 想接域名、Nginx 和 HTTPS：看 `deployment/nginx-https-v1.md`
 
 ## 给 AI agent 的最低接手集合
 
@@ -40,6 +42,6 @@
 任何影响运行或部署的改动，提交时至少同步更新下面文档中的一项：
 - 运行方式变更：`architecture/local-runbook-v1.md`
 - 部署方式变更：`deployment/deployment-v1.md`
+- 反向代理或 HTTPS 变更：`deployment/nginx-https-v1.md`
 - API 或页面结构变更：`architecture/api-endpoints-v1.md` 或 `frontend-routes-v1.md`
 - 需求边界变更：`requirements/` 或 `prd/`
-

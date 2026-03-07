@@ -69,6 +69,8 @@ npm run dev
 
 推荐直接使用 Docker Compose 部署。完整步骤见：
 - [docs/deployment/deployment-v1.md](docs/deployment/deployment-v1.md)
+- 如果需要域名、Nginx 和 HTTPS：
+  [docs/deployment/nginx-https-v1.md](docs/deployment/nginx-https-v1.md)
 
 最短路径：
 
@@ -105,3 +107,4 @@ npm run test:e2e
 npm run job:auto-cancel
 npm run job:auto-cancel:loop
 ```
+

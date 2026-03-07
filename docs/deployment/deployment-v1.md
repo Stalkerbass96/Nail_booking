@@ -232,3 +232,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postg
 
 补充检查清单：
 - `docs/deployment/deployment-checklist-v1.md`
+
+
+域名与 HTTPS 文档：
+- docs/deployment/nginx-https-v1.md`n
