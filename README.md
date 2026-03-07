@@ -70,6 +70,7 @@ npm run dev
 如需本地调试 LINE，再补这些变量：
 
 ```env
+APP_BASE_URL="http://localhost:3000"
 LINE_CHANNEL_SECRET=""
 LINE_CHANNEL_ACCESS_TOKEN=""
 LINE_AUTO_REPLY_TEXT="Message received. The salon owner will reply to you shortly."

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
@@ -38,81 +38,98 @@ type Props = {
 
 const TEXT = {
   zh: {
-    title: "营业排班与封锁",
-    desc: "这里控制每周工作时间、某一天的特殊营业时段，以及店长手动封锁的预约区间。",
-    loading: "加载中...",
-    loadFailed: "加载排班失败",
-    saveFailed: "保存失败",
-    deleteFailed: "删除失败",
-    saved: "保存成功",
-    deleted: "删除成功",
-    weeklyTitle: "每周营业时间",
-    weeklyHint: "关闭的日期不会开放预约；开启的日期会按这里的时间生成可预约时段。",
-    saveWeekly: "保存每周排班",
-    specialTitle: "特殊营业日",
-    specialHint: "可覆盖某一天的营业状态和营业时间，例如节假日、临时延长营业。",
-    saveSpecial: "保存特殊营业日",
-    open: "营业",
-    closed: "休息",
-    delete: "删除",
-    noSpecial: "暂无特殊营业日",
-    blockTitle: "封锁预约区间",
-    blockHint: "封锁后，顾客在这些时间段内将看不到可预约时段。",
-    saveBlock: "新增封锁区间",
-    noBlocks: "暂无封锁记录",
-    confirmDelete: "确认删除这条记录吗？",
-    weeklyInvalid: "营业时间必须填写完整，且结束时间晚于开始时间",
-    specialClosedHint: "设为休息后，无需填写开始和结束时间",
-    blockReasonPlaceholder: "例如：外出、补货、私人安排",
-    specialNotePlaceholder: "例如：节假日、临时营业、提前打烊",
-    sunday: "周日",
-    monday: "周一",
-    tuesday: "周二",
-    wednesday: "周三",
-    thursday: "周四",
-    friday: "周五",
-    saturday: "周六"
+    title: "???????",
+    desc: "????????????????????????????????????",
+    loading: "???...",
+    loadFailed: "??????",
+    saveFailed: "????",
+    deleteFailed: "????",
+    saved: "????",
+    deleted: "????",
+    weeklyTitle: "??????",
+    weeklyHint: "????????????????????????????????",
+    saveWeekly: "??????",
+    specialTitle: "?????",
+    specialHint: "??????????????????????????????",
+    saveSpecial: "???????",
+    open: "??",
+    closed: "??",
+    delete: "??",
+    noSpecial: "???????",
+    blockTitle: "??????",
+    blockHint: "???????????????????????",
+    saveBlock: "??????",
+    noBlocks: "??????",
+    confirmDelete: "??????????",
+    weeklyInvalid: "??????????????????????",
+    specialClosedHint: "?????????????????",
+    blockReasonPlaceholder: "?????????????",
+    specialNotePlaceholder: "????????????????",
+    overviewTitle: "????",
+    openDays: "?????",
+    specialCount: "?????",
+    blockCount: "????",
+    blockHours: "????",
+    upcomingLabel: "???????",
+    sunday: "??",
+    monday: "??",
+    tuesday: "??",
+    wednesday: "??",
+    thursday: "??",
+    friday: "??",
+    saturday: "??"
   },
   ja: {
-    title: "営業スケジュールとブロック",
-    desc: "毎週の営業時間、特定日の特別営業、店長が手動で塞ぐ予約枠をここで管理します。",
-    loading: "読み込み中...",
-    loadFailed: "スケジュールの読み込みに失敗しました",
-    saveFailed: "保存に失敗しました",
-    deleteFailed: "削除に失敗しました",
-    saved: "保存しました",
-    deleted: "削除しました",
-    weeklyTitle: "週間営業時間",
-    weeklyHint: "休業日にした曜日は予約不可になります。営業日にした曜日はここで設定した時間帯から空き枠を生成します。",
-    saveWeekly: "週間スケジュールを保存",
-    specialTitle: "特別営業日",
-    specialHint: "祝日や臨時延長営業など、特定日の営業時間を通常設定から上書きできます。",
-    saveSpecial: "特別営業日を保存",
-    open: "営業",
-    closed: "休業",
-    delete: "削除",
-    noSpecial: "特別営業日はありません",
-    blockTitle: "予約枠のブロック",
-    blockHint: "ブロックした時間帯は、お客様側の空き枠一覧から除外されます。",
-    saveBlock: "ブロックを追加",
-    noBlocks: "ブロックはありません",
-    confirmDelete: "この項目を削除しますか？",
-    weeklyInvalid: "営業時間を正しく入力し、終了時間を開始時間より後にしてください",
-    specialClosedHint: "休業にする場合は開始/終了時間は不要です",
-    blockReasonPlaceholder: "例：外出、仕入れ、私用",
-    specialNotePlaceholder: "例：祝日営業、臨時延長、早締め",
-    sunday: "日",
-    monday: "月",
-    tuesday: "火",
-    wednesday: "水",
-    thursday: "木",
-    friday: "金",
-    saturday: "土"
+    title: "?????????????",
+    desc: "??????????????????????????????????????",
+    loading: "?????...",
+    loadFailed: "??????????????????",
+    saveFailed: "?????????",
+    deleteFailed: "?????????",
+    saved: "??????",
+    deleted: "??????",
+    weeklyTitle: "??????",
+    weeklyHint: "??????????????????????????????????????????????????",
+    saveWeekly: "???????????",
+    specialTitle: "?????",
+    specialHint: "???????????????????????????????????",
+    saveSpecial: "????????",
+    open: "??",
+    closed: "??",
+    delete: "??",
+    noSpecial: "???????????",
+    blockTitle: "????????",
+    blockHint: "??????????????????????????????",
+    saveBlock: "???????",
+    noBlocks: "??????????",
+    confirmDelete: "????????????",
+    weeklyInvalid: "???????????????????????????????",
+    specialClosedHint: "??????????/?????????",
+    blockReasonPlaceholder: "???????????",
+    specialNotePlaceholder: "???????????????",
+    overviewTitle: "??????",
+    openDays: "????",
+    specialCount: "?????",
+    blockCount: "???????",
+    blockHours: "??????",
+    upcomingLabel: "?????",
+    sunday: "?",
+    monday: "?",
+    tuesday: "?",
+    wednesday: "?",
+    thursday: "?",
+    friday: "?",
+    saturday: "?"
   }
 } as const;
 
 function toStoreIso(value: string) {
   return `${value}:00+09:00`;
+}
+
+function formatDurationHours(startAt: string, endAt: string) {
+  const diff = new Date(endAt).getTime() - new Date(startAt).getTime();
+  return Math.max(diff / (60 * 60 * 1000), 0);
 }
 
 export default function AdminSchedulePanel({ lang }: Props) {
@@ -162,6 +179,18 @@ export default function AdminSchedulePanel({ lang }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const overview = useMemo(() => {
+    const openDays = weeklyHours.filter((item) => item.isOpen).length;
+    const specialOpen = specialDates.filter((item) => item.isOpen).length;
+    const futureBlockHours = bookingBlocks.reduce((acc, item) => acc + formatDurationHours(item.startAt, item.endAt), 0);
+    return {
+      openDays,
+      specialCount: specialDates.length,
+      blockCount: bookingBlocks.length,
+      futureBlockHours
+    };
+  }, [bookingBlocks, specialDates, weeklyHours]);
 
   function updateWeeklyItem(index: number, next: Partial<WeeklyHour>) {
     setWeeklyHours((prev) => prev.map((item, itemIndex) => (itemIndex === index ? { ...item, ...next } : item)));
@@ -286,14 +315,42 @@ export default function AdminSchedulePanel({ lang }: Props) {
     <section className="admin-panel-shell">
       <div>
         <h2 className="admin-section-title">{t.title}</h2>
-        <p className="admin-note mt-2">{t.desc}</p>
+        <p className="admin-note mt-2 max-w-3xl">{t.desc}</p>
       </div>
 
       {loading ? <p className="ui-state-info">{t.loading}</p> : null}
       {error ? <p className="admin-danger">{error}</p> : null}
       {ok ? <p className="ui-state-success">{ok}</p> : null}
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="mt-5 rounded-[1.65rem] border border-brand-100 bg-[linear-gradient(145deg,rgba(255,248,243,0.95),rgba(255,255,255,0.82))] p-4 shadow-[0_14px_34px_rgba(120,25,55,0.06)]">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">{t.overviewTitle}</p>
+            <p className="mt-1 text-sm text-brand-700">{t.upcomingLabel}</p>
+          </div>
+          <button type="button" className="admin-btn-secondary" onClick={() => void load()}>{lang === "ja" ? "???" : "????"}</button>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <article className="rounded-[1.25rem] border border-brand-100 bg-gradient-to-br from-rose-100 via-white to-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.openDays}</p>
+            <strong className="mt-3 block text-3xl font-semibold text-brand-900">{overview.openDays}</strong>
+          </article>
+          <article className="rounded-[1.25rem] border border-brand-100 bg-gradient-to-br from-sky-100 via-white to-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.specialCount}</p>
+            <strong className="mt-3 block text-3xl font-semibold text-brand-900">{overview.specialCount}</strong>
+          </article>
+          <article className="rounded-[1.25rem] border border-brand-100 bg-gradient-to-br from-amber-100 via-white to-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.blockCount}</p>
+            <strong className="mt-3 block text-3xl font-semibold text-brand-900">{overview.blockCount}</strong>
+          </article>
+          <article className="rounded-[1.25rem] border border-brand-100 bg-gradient-to-br from-emerald-100 via-white to-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.blockHours}</p>
+            <strong className="mt-3 block text-3xl font-semibold text-brand-900">{overview.futureBlockHours.toFixed(1)}</strong>
+          </article>
+        </div>
+      </section>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
         <section className="admin-subsection mt-0">
           <div>
             <h3 className="font-semibold text-brand-900">{t.weeklyTitle}</h3>
@@ -302,9 +359,12 @@ export default function AdminSchedulePanel({ lang }: Props) {
 
           <div className="grid gap-3">
             {weeklyHours.map((item, index) => (
-              <div key={item.weekday} className="rounded-2xl border border-brand-100 bg-white p-3">
-                <div className="grid gap-3 lg:grid-cols-[0.8fr_0.9fr_0.9fr_auto] lg:items-center">
-                  <p className="font-medium text-brand-900">{weekdayLabels[item.weekday]}</p>
+              <div key={item.weekday} className="rounded-[1.2rem] border border-brand-100 bg-white p-3.5 shadow-sm">
+                <div className="grid gap-3 lg:grid-cols-[0.7fr_0.8fr_0.9fr_0.9fr] lg:items-center">
+                  <div>
+                    <p className="font-semibold text-brand-900">{weekdayLabels[item.weekday]}</p>
+                    <p className="mt-1 text-xs text-brand-600">{item.isOpen ? t.open : t.closed}</p>
+                  </div>
                   <label className="flex items-center gap-2 text-sm text-brand-800">
                     <input className="admin-check" type="checkbox" checked={item.isOpen} onChange={(event) => updateWeeklyItem(index, { isOpen: event.target.checked })} />
                     <span>{item.isOpen ? t.open : t.closed}</span>
@@ -348,11 +408,14 @@ export default function AdminSchedulePanel({ lang }: Props) {
             <div className="grid gap-2">
               {specialDates.length === 0 ? <p className="ui-state-info mt-0">{t.noSpecial}</p> : null}
               {specialDates.map((item) => (
-                <article key={item.id} className="admin-item">
+                <article key={item.id} className="rounded-[1.2rem] border border-brand-100 bg-white p-3.5 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="text-sm text-brand-800">
-                      <p className="font-medium text-brand-900">{item.date}</p>
-                      <p>{item.isOpen ? `${item.openTime ?? "--:--"} - ${item.closeTime ?? "--:--"}` : t.closed}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-brand-900">{item.date}</p>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.isOpen ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>{item.isOpen ? t.open : t.closed}</span>
+                      </div>
+                      <p className="mt-1">{item.isOpen ? `${item.openTime ?? "--:--"} - ${item.closeTime ?? "--:--"}` : t.closed}</p>
                       <p>{item.note || "-"}</p>
                     </div>
                     <button type="button" className="admin-btn-ghost" onClick={() => void removeSpecialDate(item.id)}>
@@ -382,11 +445,12 @@ export default function AdminSchedulePanel({ lang }: Props) {
             <div className="grid gap-2">
               {bookingBlocks.length === 0 ? <p className="ui-state-info mt-0">{t.noBlocks}</p> : null}
               {bookingBlocks.map((item) => (
-                <article key={item.id} className="admin-item">
+                <article key={item.id} className="rounded-[1.2rem] border border-brand-100 bg-white p-3.5 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div className="text-sm text-brand-800">
                       <p className="font-medium text-brand-900">{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.startAt))}</p>
                       <p>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.endAt))}</p>
+                      <p className="mt-1 text-xs text-brand-600">{formatDurationHours(item.startAt, item.endAt).toFixed(1)} h</p>
                       <p>{item.reason || "-"}</p>
                     </div>
                     <button type="button" className="admin-btn-ghost" onClick={() => void removeBlock(item.id)}>

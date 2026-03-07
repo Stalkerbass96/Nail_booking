@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
@@ -35,74 +35,98 @@ type Props = {
 
 const TEXT = {
   zh: {
-    title: "预约管理",
-    subtitle: "按日期和状态查看预约，并在一个页面内完成确认、取消和完结操作。",
-    date: "日期",
-    status: "状态",
-    refresh: "刷新",
-    pending: "待确认",
-    confirmed: "已确认",
-    completed: "已完成",
-    canceled: "已取消",
-    all: "全部",
-    customer: "顾客",
-    time: "时间",
-    service: "套餐",
-    actions: "操作",
-    confirm: "确认预约",
-    cancel: "取消预约",
-    complete: "完成预约",
-    loading: "加载中...",
-    empty: "当前筛选条件下没有预约记录。",
-    loadFailed: "加载预约失败",
-    actionFailed: "操作失败",
-    confirmCancel: "确认要取消这笔预约吗？取消后会立即释放档期。",
-    countSuffix: "条预约",
-    completeTitle: "完成预约",
-    actualPaid: "实付金额 (JPY)",
-    usePoints: "使用积分",
-    note: "备注",
-    notePlaceholder: "例如：现场改款、补差价、会员备注",
-    saveComplete: "确认完成",
-    close: "收起",
-    invalidComplete: "请填写有效的实付金额和积分",
-    statusBadge: "状态",
-    addons: "加项"
+    title: "????",
+    subtitle: "?????????????????????????????????",
+    date: "??",
+    status: "??",
+    keyword: "???",
+    keywordPlaceholder: "?????????????",
+    refresh: "??",
+    reset: "????",
+    pending: "???",
+    confirmed: "???",
+    completed: "???",
+    canceled: "???",
+    all: "??",
+    customer: "??",
+    time: "??",
+    service: "??",
+    actions: "??",
+    confirm: "????",
+    cancel: "????",
+    complete: "????",
+    loading: "???...",
+    empty: "??????????????",
+    loadFailed: "??????",
+    actionFailed: "????",
+    confirmCancel: "??????????????????????",
+    countSuffix: "???",
+    completeTitle: "????",
+    actualPaid: "???? (JPY)",
+    usePoints: "????",
+    note: "??",
+    notePlaceholder: "????????????????",
+    saveComplete: "????",
+    close: "??",
+    invalidComplete: "?????????????",
+    addons: "??",
+    filtersTitle: "???",
+    overviewTitle: "????",
+    noAddons: "???",
+    visibleCount: "????",
+    quickActions: "????",
+    pendingHint: "???????????????",
+    confirmedHint: "?????????????",
+    completedHint: "???????????",
+    canceledHint: "????????",
+    allHint: "??????????????"
   },
   ja: {
-    title: "予約管理",
-    subtitle: "日付と状態で予約を絞り込み、そのまま確認・キャンセル・完了処理まで行えます。",
-    date: "日付",
-    status: "ステータス",
-    refresh: "更新",
-    pending: "未確認",
-    confirmed: "確認済み",
-    completed: "完了",
-    canceled: "キャンセル",
-    all: "すべて",
-    customer: "顧客",
-    time: "時間",
-    service: "メニュー",
-    actions: "操作",
-    confirm: "予約を確認",
-    cancel: "予約をキャンセル",
-    complete: "予約を完了",
-    loading: "読み込み中...",
-    empty: "この条件に該当する予約はありません。",
-    loadFailed: "予約の読み込みに失敗しました",
-    actionFailed: "操作に失敗しました",
-    confirmCancel: "この予約をキャンセルしますか？キャンセルすると枠はすぐに解放されます。",
-    countSuffix: "件の予約",
-    completeTitle: "完了処理",
-    actualPaid: "実支払額 (JPY)",
-    usePoints: "利用ポイント",
-    note: "メモ",
-    notePlaceholder: "例：当日デザイン変更、差額調整、会員メモ",
-    saveComplete: "完了を確定",
-    close: "閉じる",
-    invalidComplete: "実支払額とポイントを正しく入力してください",
-    statusBadge: "状態",
-    addons: "追加オプション"
+    title: "????",
+    subtitle: "??????????????????????????????????????????????",
+    date: "??",
+    status: "?????",
+    keyword: "?????",
+    keywordPlaceholder: "???????????????",
+    refresh: "??",
+    reset: "???????",
+    pending: "???",
+    confirmed: "????",
+    completed: "??",
+    canceled: "?????",
+    all: "???",
+    customer: "??",
+    time: "??",
+    service: "????",
+    actions: "??",
+    confirm: "?????",
+    cancel: "????????",
+    complete: "?????",
+    loading: "?????...",
+    empty: "??????????????????",
+    loadFailed: "??????????????",
+    actionFailed: "?????????",
+    confirmCancel: "???????????????????????????????????",
+    countSuffix: "????",
+    completeTitle: "????",
+    actualPaid: "???? (JPY)",
+    usePoints: "??????",
+    note: "??",
+    notePlaceholder: "????????????????????",
+    saveComplete: "?????",
+    close: "???",
+    invalidComplete: "?????????????????????",
+    addons: "???????",
+    filtersTitle: "?????",
+    overviewTitle: "??????",
+    noAddons: "????",
+    visibleCount: "????",
+    quickActions: "???????",
+    pendingHint: "????????????????",
+    confirmedHint: "?????????????????",
+    completedHint: "???????????????",
+    canceledHint: "??????????????????",
+    allHint: "?????????????"
   }
 } as const;
 
@@ -124,11 +148,20 @@ function statusLabel(lang: Lang, status: AppointmentItem["status"]) {
   return t.canceled;
 }
 
+function statusClass(status: AppointmentItem["status"]) {
+  if (status === "pending") return "bg-amber-50 text-amber-700 border-amber-200";
+  if (status === "confirmed") return "bg-sky-50 text-sky-700 border-sky-200";
+  if (status === "completed") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  return "bg-slate-100 text-slate-700 border-slate-200";
+}
+
 export default function AdminAppointmentsPanel({ lang }: Props) {
   const t = TEXT[lang];
+  const locale = lang === "ja" ? "ja-JP" : "zh-CN";
 
   const [date, setDate] = useState("");
   const [status, setStatus] = useState<(typeof STATUS_VALUES)[number]>("all");
+  const [keyword, setKeyword] = useState("");
   const [items, setItems] = useState<AppointmentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -162,6 +195,41 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   useEffect(() => {
     void fetchItems();
   }, [fetchItems]);
+
+  const filteredItems = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) => {
+      const haystack = [
+        item.bookingNo,
+        item.customer.name,
+        item.customer.email,
+        item.package.name,
+        ...item.addons.map((addon) => addon.name)
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [items, keyword]);
+
+  const statusCounts = useMemo(() => {
+    return items.reduce(
+      (acc, item) => {
+        acc[item.status] += 1;
+        return acc;
+      },
+      { pending: 0, confirmed: 0, completed: 0, canceled: 0 }
+    );
+  }, [items]);
+
+  const overviewCards = [
+    { key: "all", label: t.all, value: items.length, hint: t.allHint, tone: "from-brand-100 via-white to-white" },
+    { key: "pending", label: t.pending, value: statusCounts.pending, hint: t.pendingHint, tone: "from-amber-100 via-white to-white" },
+    { key: "confirmed", label: t.confirmed, value: statusCounts.confirmed, hint: t.confirmedHint, tone: "from-sky-100 via-white to-white" },
+    { key: "completed", label: t.completed, value: statusCounts.completed, hint: t.completedHint, tone: "from-emerald-100 via-white to-white" },
+    { key: "canceled", label: t.canceled, value: statusCounts.canceled, hint: t.canceledHint, tone: "from-slate-100 via-white to-white" }
+  ] as const;
 
   async function doPatch(path: string, body?: unknown) {
     setError("");
@@ -209,92 +277,128 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     closeComplete();
   }
 
+  function resetFilters() {
+    setDate("");
+    setStatus("all");
+    setKeyword("");
+  }
+
   return (
     <section className="admin-panel-shell">
-      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+      <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <h2 className="admin-section-title">{t.title}</h2>
-          <p className="admin-note mt-2">{t.subtitle}</p>
+          <p className="admin-note mt-2 max-w-3xl">{t.subtitle}</p>
         </div>
-        <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-          {items.length} {t.countSuffix}
-        </span>
+        <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-800">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.visibleCount}</p>
+          <strong className="mt-1 block text-2xl text-brand-900">{filteredItems.length}</strong>
+          <span>{t.countSuffix}</span>
+        </div>
       </div>
 
-      <div className="grid gap-3 rounded-2xl border border-brand-100 bg-brand-50/40 p-3 sm:flex sm:flex-wrap sm:items-end">
-        <div className="grid gap-1">
-          <label className="text-sm text-brand-800" htmlFor="appointments-date-filter">{t.date}</label>
-          <input
-            id="appointments-date-filter"
-            type="date"
-            value={date}
-            onChange={(event) => setDate(event.target.value)}
-            className="admin-input"
-          />
-        </div>
+      <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="rounded-[1.6rem] border border-brand-100 bg-[linear-gradient(145deg,rgba(255,248,243,0.95),rgba(255,255,255,0.82))] p-4 shadow-[0_14px_34px_rgba(120,25,55,0.06)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">{t.overviewTitle}</p>
+              <p className="mt-1 text-sm text-brand-700">{t.quickActions}</p>
+            </div>
+            <button type="button" className="admin-btn-secondary" onClick={() => void fetchItems()}>
+              {t.refresh}
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {overviewCards.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setStatus(item.key as (typeof STATUS_VALUES)[number])}
+                className={`rounded-[1.25rem] border border-brand-100 bg-gradient-to-br ${item.tone} p-4 text-left shadow-sm transition-transform duration-200 hover:-translate-y-0.5 ${status === item.key ? "ring-2 ring-brand-300" : ""}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{item.label}</p>
+                <strong className="mt-3 block text-3xl font-semibold text-brand-900">{item.value}</strong>
+                <p className="mt-2 text-xs leading-6 text-brand-700">{item.hint}</p>
+              </button>
+            ))}
+          </div>
+        </section>
 
-        <div className="grid gap-1">
-          <label className="text-sm text-brand-800" htmlFor="appointments-status-filter">{t.status}</label>
-          <select
-            id="appointments-status-filter"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as (typeof STATUS_VALUES)[number])}
-            className="admin-input"
-          >
-            <option value="all">{t.all}</option>
-            <option value="pending">{t.pending}</option>
-            <option value="confirmed">{t.confirmed}</option>
-            <option value="completed">{t.completed}</option>
-            <option value="canceled">{t.canceled}</option>
-          </select>
-        </div>
-
-        <button type="button" className="admin-btn-secondary" onClick={() => void fetchItems()}>
-          {t.refresh}
-        </button>
+        <section className="rounded-[1.6rem] border border-brand-100 bg-white/85 p-4 shadow-[0_14px_34px_rgba(120,25,55,0.06)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">{t.filtersTitle}</p>
+          <div className="mt-4 grid gap-3">
+            <label className="grid gap-1 text-sm text-brand-800">
+              <span>{t.date}</span>
+              <input type="date" value={date} onChange={(event) => setDate(event.target.value)} className="admin-input" />
+            </label>
+            <label className="grid gap-1 text-sm text-brand-800">
+              <span>{t.status}</span>
+              <select value={status} onChange={(event) => setStatus(event.target.value as (typeof STATUS_VALUES)[number])} className="admin-input">
+                <option value="all">{t.all}</option>
+                <option value="pending">{t.pending}</option>
+                <option value="confirmed">{t.confirmed}</option>
+                <option value="completed">{t.completed}</option>
+                <option value="canceled">{t.canceled}</option>
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm text-brand-800">
+              <span>{t.keyword}</span>
+              <input className="admin-input" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={t.keywordPlaceholder} />
+            </label>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button type="button" className="admin-btn-secondary" onClick={resetFilters}>{t.reset}</button>
+              <button type="button" className="admin-btn-primary" onClick={() => void fetchItems()}>{t.refresh}</button>
+            </div>
+          </div>
+        </section>
       </div>
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
       {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <div className="mt-5 grid gap-3">
-        {items.length === 0 && !loading ? <p className="ui-state-info">{t.empty}</p> : null}
+        {filteredItems.length === 0 && !loading ? <p className="ui-state-info">{t.empty}</p> : null}
 
-        {items.map((item) => (
-          <article key={item.id} className="admin-item">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="grid gap-2 text-sm text-brand-800">
-                <p className="flex flex-wrap items-center gap-2 font-medium text-brand-900">
-                  <span>#{item.bookingNo}</span>
-                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
+        {filteredItems.map((item) => (
+          <article key={item.id} className="rounded-[1.6rem] border border-brand-100 bg-white/92 p-4 shadow-[0_12px_28px_rgba(120,25,55,0.05)]">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <div className="grid flex-1 gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-semibold tracking-[0.12em] text-brand-900">#{item.bookingNo}</span>
+                  <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass(item.status)}`}>
                     {statusLabel(lang, item.status)}
                   </span>
-                </p>
-                <p>{t.customer}: {item.customer.name} ({item.customer.email})</p>
-                <p>
-                  {t.time}: {new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "zh-CN", {
-                    dateStyle: "medium",
-                    timeStyle: "short"
-                  }).format(new Date(item.startAt))}
-                  {" - "}
-                  {new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "zh-CN", {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                  }).format(new Date(item.endAt))}
-                </p>
-                <p>
-                  {t.service}: {item.package.name}
-                  {item.addons.length ? ` (+ ${item.addons.map((a) => a.name).join(", ")})` : ""}
-                </p>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.customer}</p>
+                    <p className="mt-2 text-sm font-semibold text-brand-900">{item.customer.name}</p>
+                    <p className="text-sm text-brand-700">{item.customer.email}</p>
+                  </div>
+                  <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.time}</p>
+                    <p className="mt-2 text-sm font-semibold text-brand-900">
+                      {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.startAt))}
+                    </p>
+                    <p className="text-sm text-brand-700">
+                      {new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(new Date(item.endAt))}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.service}</p>
+                    <p className="mt-2 text-sm font-semibold text-brand-900">{item.package.name}</p>
+                  </div>
+                  <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.addons}</p>
+                    <p className="mt-2 text-sm text-brand-800">{item.addons.length ? item.addons.map((addon) => addon.name).join(", ") : t.noAddons}</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 xl:max-w-[15rem] xl:justify-end">
                 {item.status === "pending" ? (
-                  <button
-                    type="button"
-                    className="admin-btn-primary min-h-10 px-3 py-2"
-                    onClick={() => void doPatch(`/api/admin/appointments/${item.id}/confirm`)}
-                  >
+                  <button type="button" className="admin-btn-primary min-h-10 px-3 py-2" onClick={() => void doPatch(`/api/admin/appointments/${item.id}/confirm`)}>
                     {t.confirm}
                   </button>
                 ) : null}
@@ -315,11 +419,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 ) : null}
 
                 {item.status === "confirmed" ? (
-                  <button
-                    type="button"
-                    className="admin-btn-primary min-h-10 bg-brand-800 px-3 py-2 hover:bg-brand-900"
-                    onClick={() => openComplete(item)}
-                  >
+                  <button type="button" className="admin-btn-primary min-h-10 bg-brand-800 px-3 py-2 hover:bg-brand-900" onClick={() => openComplete(item)}>
                     {t.complete}
                   </button>
                 ) : null}
@@ -338,33 +438,18 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 <div className="grid gap-3 md:grid-cols-2">
                   <label className="grid gap-1 text-sm text-brand-800">
                     <span>{t.actualPaid}</span>
-                    <input
-                      className="admin-input-sm"
-                      inputMode="numeric"
-                      value={completeDraft.actualPaidJpy}
-                      onChange={(event) => setCompleteDraft((prev) => ({ ...prev, actualPaidJpy: event.target.value }))}
-                    />
+                    <input className="admin-input-sm" inputMode="numeric" value={completeDraft.actualPaidJpy} onChange={(event) => setCompleteDraft((prev) => ({ ...prev, actualPaidJpy: event.target.value }))} />
                   </label>
 
                   <label className="grid gap-1 text-sm text-brand-800">
                     <span>{t.usePoints}</span>
-                    <input
-                      className="admin-input-sm"
-                      inputMode="numeric"
-                      value={completeDraft.usePoints}
-                      onChange={(event) => setCompleteDraft((prev) => ({ ...prev, usePoints: event.target.value }))}
-                    />
+                    <input className="admin-input-sm" inputMode="numeric" value={completeDraft.usePoints} onChange={(event) => setCompleteDraft((prev) => ({ ...prev, usePoints: event.target.value }))} />
                   </label>
                 </div>
 
                 <label className="grid gap-1 text-sm text-brand-800">
                   <span>{t.note}</span>
-                  <textarea
-                    className="admin-input min-h-24"
-                    value={completeDraft.note}
-                    onChange={(event) => setCompleteDraft((prev) => ({ ...prev, note: event.target.value }))}
-                    placeholder={t.notePlaceholder}
-                  />
+                  <textarea className="admin-input min-h-24" value={completeDraft.note} onChange={(event) => setCompleteDraft((prev) => ({ ...prev, note: event.target.value }))} placeholder={t.notePlaceholder} />
                 </label>
 
                 <div className="flex flex-wrap gap-2">

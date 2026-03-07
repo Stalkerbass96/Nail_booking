@@ -114,6 +114,7 @@ CRON_SECRET=replace-with-random-cron-secret
 ADMIN_AUTH_SECRET=replace-with-long-random-secret
 ADMIN_SEED_PASSWORD=replace-with-strong-admin-password
 AUTO_CANCEL_INTERVAL_MS=300000
+APP_BASE_URL=http://127.0.0.1:3000
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
 LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.

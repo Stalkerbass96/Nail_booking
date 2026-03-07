@@ -18,11 +18,16 @@ const ADMIN_PASSWORD =
   process.env.ADMIN_SEED_PASSWORD ||
   envFile.ADMIN_SEED_PASSWORD ||
   "dev-only-change-me";
-const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || envFile.LINE_CHANNEL_SECRET || "";
+const APP_BASE_URL = process.env.APP_BASE_URL || envFile.APP_BASE_URL || BASE_URL;
+const RAW_LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET || envFile.LINE_CHANNEL_SECRET || "";
+const FALLBACK_LINE_CHANNEL_SECRET = "acceptance-test-secret";
 const SERVER_START_TIMEOUT_MS = Number(process.env.E2E_SERVER_START_TIMEOUT_MS || 45000);
 const SERVER_POLL_INTERVAL_MS = 500;
 const RUN_ID = `${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
 const TEST_PREFIX = `e2e-${RUN_ID}`;
+const INITIAL_TEST_POINTS = 10;
+const COMPLETE_ACTUAL_PAID_JPY = 12340;
+const COMPLETE_USE_POINTS = 10;
 
 function readEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return {};
@@ -37,7 +42,7 @@ function readEnvFile(filePath) {
     const key = trimmed.slice(0, eq).trim();
     let value = trimmed.slice(eq + 1).trim();
     if (
-      (value.startsWith("\"") && value.endsWith("\"")) ||
+      (value.startsWith('"') && value.endsWith('"')) ||
       (value.startsWith("'") && value.endsWith("'"))
     ) {
       value = value.slice(1, -1);
@@ -117,14 +122,25 @@ async function stopProcessTree(pid) {
 
 async function ensureServerRunning() {
   if (await isServerReachable()) {
-    return { startedByScript: false, stop: async () => {} };
+    return {
+      startedByScript: false,
+      stop: async () => {},
+      lineChannelSecret: RAW_LINE_CHANNEL_SECRET,
+      appBaseUrl: process.env.APP_BASE_URL || envFile.APP_BASE_URL || ""
+    };
   }
 
   const serverLogPath = path.join(ARTIFACT_DIR, "acceptance-server.log");
   const serverLog = fs.createWriteStream(serverLogPath, { flags: "w" });
+  const serverEnv = {
+    ...process.env,
+    LINE_CHANNEL_SECRET: RAW_LINE_CHANNEL_SECRET || FALLBACK_LINE_CHANNEL_SECRET,
+    APP_BASE_URL
+  };
+
   const serverProc = spawn("npm", ["run", "dev", "--", "--hostname", "127.0.0.1", "--port", "3000"], {
     stdio: ["ignore", "pipe", "pipe"],
-    env: process.env,
+    env: serverEnv,
     detached: process.platform !== "win32",
     shell: process.platform === "win32"
   });
@@ -147,7 +163,9 @@ async function ensureServerRunning() {
         stop: async () => {
           await stopProcessTree(serverProc.pid);
           serverLog.end();
-        }
+        },
+        lineChannelSecret: serverEnv.LINE_CHANNEL_SECRET,
+        appBaseUrl: serverEnv.APP_BASE_URL
       };
     }
 
@@ -165,7 +183,7 @@ async function assertJsonOk(res, label) {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error(`${label} returned non-JSON body: ${text.slice(0, 200)}`);
+    throw new Error(`${label} returned non-JSON body: ${text.slice(0, 400)}`);
   }
 
   if (!res.ok) {
@@ -181,6 +199,12 @@ function createWebhookSignature(body, secret) {
 
 function makeBookingNo() {
   return `NB-${RUN_ID.replace(/[^0-9a-z]/gi, "").slice(-12).toUpperCase()}`;
+}
+
+function jsonHeaders(cookie) {
+  return cookie
+    ? { "Content-Type": "application/json", cookie }
+    : { "Content-Type": "application/json" };
 }
 
 async function loginAdmin() {
@@ -206,6 +230,24 @@ async function loginAdmin() {
   return cookie;
 }
 
+async function getPointRatios() {
+  const settings = await prisma.systemSetting.findMany({
+    where: {
+      key: { in: ["point_earn_ratio_jpy", "point_redeem_ratio_jpy"] }
+    },
+    select: { key: true, value: true }
+  });
+
+  const byKey = new Map(settings.map((item) => [item.key, item.value]));
+  const earnRatio = Number.parseInt(byKey.get("point_earn_ratio_jpy") || "100", 10);
+  const redeemRatio = Number.parseInt(byKey.get("point_redeem_ratio_jpy") || "100", 10);
+
+  return {
+    earnRatio: Number.isFinite(earnRatio) && earnRatio > 0 ? earnRatio : 100,
+    redeemRatio: Number.isFinite(redeemRatio) && redeemRatio > 0 ? redeemRatio : 100
+  };
+}
+
 async function findCleanTestDate() {
   const start = new Date();
   start.setUTCDate(start.getUTCDate() + 14);
@@ -226,37 +268,40 @@ async function findCleanTestDate() {
   throw new Error("Unable to find a clean future date for acceptance testing");
 }
 
-async function runScheduleCase(result, adminCookie, packageId, cleanup) {
+async function createOpenSpecialDate(adminCookie, cleanup, note, openTime = "10:00", closeTime = "18:00") {
   const date = await findCleanTestDate();
-
-  const openPayload = {
+  const payload = {
     type: "specialDate",
     date,
     isOpen: true,
-    openTime: "10:00",
-    closeTime: "18:00",
-    note: TEST_PREFIX
+    openTime,
+    closeTime,
+    note
   };
 
-  const openRes = await fetch(`${BASE_URL}/api/admin/schedule`, {
+  const res = await fetch(`${BASE_URL}/api/admin/schedule`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      cookie: adminCookie
-    },
-    body: JSON.stringify(openPayload)
+    headers: jsonHeaders(adminCookie),
+    body: JSON.stringify(payload)
   });
-  const openData = await assertJsonOk(openRes, "Open special date");
-  const specialDate = (openData.specialDates || []).find((item) => item.date === date && item.note === TEST_PREFIX);
+  const data = await assertJsonOk(res, "Create special business date");
+  const specialDate = (data.specialDates || []).find((item) => item.date === date && item.note === note);
   if (!specialDate) {
     throw new Error("Created special business date was not returned by API");
   }
-  cleanup.specialDateId = specialDate.id;
 
-  const baseAvailabilityRes = await fetch(
-    `${BASE_URL}/api/public/availability?packageId=${packageId}&date=${date}`
-  );
-  const baseAvailability = await assertJsonOk(baseAvailabilityRes, "Base availability");
+  cleanup.specialDateIds.push(specialDate.id);
+  return date;
+}
+
+async function fetchAvailability(packageId, date) {
+  const res = await fetch(`${BASE_URL}/api/public/availability?packageId=${packageId}&date=${date}`);
+  return assertJsonOk(res, `Availability for ${date}`);
+}
+
+async function runScheduleCase(result, adminCookie, packageId, cleanup) {
+  const date = await createOpenSpecialDate(adminCookie, cleanup, `${TEST_PREFIX}-schedule`, "10:00", "18:00");
+  const baseAvailability = await fetchAvailability(packageId, date);
   if (!Array.isArray(baseAvailability.slots) || baseAvailability.slots.length < 2) {
     throw new Error(`Expected at least 2 baseline slots, got ${baseAvailability.slots?.length ?? "unknown"}`);
   }
@@ -265,30 +310,24 @@ async function runScheduleCase(result, adminCookie, packageId, cleanup) {
     type: "block",
     startAt: baseAvailability.slots[0].startAt,
     endAt: baseAvailability.slots[0].endAt,
-    reason: TEST_PREFIX
+    reason: `${TEST_PREFIX}-block`
   };
 
   const blockRes = await fetch(`${BASE_URL}/api/admin/schedule`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      cookie: adminCookie
-    },
+    headers: jsonHeaders(adminCookie),
     body: JSON.stringify(blockPayload)
   });
   const blockData = await assertJsonOk(blockRes, "Create booking block");
   const block = (blockData.bookingBlocks || []).find(
-    (item) => item.reason === TEST_PREFIX && item.startAt === blockPayload.startAt
+    (item) => item.reason === blockPayload.reason && item.startAt === blockPayload.startAt
   );
   if (!block) {
     throw new Error("Created booking block was not returned by API");
   }
-  cleanup.bookingBlockId = block.id;
+  cleanup.bookingBlockIds.push(block.id);
 
-  const blockedAvailabilityRes = await fetch(
-    `${BASE_URL}/api/public/availability?packageId=${packageId}&date=${date}`
-  );
-  const blockedAvailability = await assertJsonOk(blockedAvailabilityRes, "Blocked availability");
+  const blockedAvailability = await fetchAvailability(packageId, date);
   if (blockedAvailability.slots.length >= baseAvailability.slots.length) {
     throw new Error(
       `Expected blocked availability to shrink. before=${baseAvailability.slots.length}, after=${blockedAvailability.slots.length}`
@@ -300,27 +339,21 @@ async function runScheduleCase(result, adminCookie, packageId, cleanup) {
     headers: { cookie: adminCookie }
   });
   await assertJsonOk(deleteBlockRes, "Delete booking block");
-  cleanup.bookingBlockId = null;
+  cleanup.bookingBlockIds = cleanup.bookingBlockIds.filter((item) => item !== block.id);
 
   const closedRes = await fetch(`${BASE_URL}/api/admin/schedule`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      cookie: adminCookie
-    },
+    headers: jsonHeaders(adminCookie),
     body: JSON.stringify({
       type: "specialDate",
       date,
       isOpen: false,
-      note: `${TEST_PREFIX}-closed`
+      note: `${TEST_PREFIX}-schedule-closed`
     })
   });
   await assertJsonOk(closedRes, "Close special date");
 
-  const closedAvailabilityRes = await fetch(
-    `${BASE_URL}/api/public/availability?packageId=${packageId}&date=${date}`
-  );
-  const closedAvailability = await assertJsonOk(closedAvailabilityRes, "Closed availability");
+  const closedAvailability = await fetchAvailability(packageId, date);
   if (closedAvailability.slots.length !== 0) {
     throw new Error(`Expected closed day to have 0 slots, got ${closedAvailability.slots.length}`);
   }
@@ -333,10 +366,46 @@ async function runScheduleCase(result, adminCookie, packageId, cleanup) {
   };
 }
 
-async function runLineCase(result, bookingContext, cleanup) {
-  if (!LINE_CHANNEL_SECRET) {
+async function createLineFixture(servicePackage, cleanup) {
+  const customer = await prisma.customer.create({
+    data: {
+      name: `Acceptance ${TEST_PREFIX} Line`,
+      email: `${TEST_PREFIX}-line@example.com`
+    }
+  });
+  cleanup.customerIds.push(customer.id);
+
+  const startAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+  startAt.setUTCHours(1, 0, 0, 0);
+  const endAt = new Date(startAt.getTime() + servicePackage.durationMin * 60 * 1000);
+
+  const appointment = await prisma.appointment.create({
+    data: {
+      bookingNo: makeBookingNo(),
+      customerId: customer.id,
+      packageId: servicePackage.id,
+      styleNote: `${TEST_PREFIX}-line-style`,
+      customerNote: `${TEST_PREFIX}-line-note`,
+      startAt,
+      endAt,
+      status: AppointmentStatus.confirmed,
+      autoCancelAt: new Date(startAt.getTime() - 24 * 60 * 60 * 1000),
+      confirmedAt: new Date()
+    }
+  });
+  cleanup.appointmentIds.push(appointment.id);
+
+  return {
+    customerId: customer.id,
+    bookingNo: appointment.bookingNo,
+    email: customer.email
+  };
+}
+
+async function runLineCase(result, bookingContext, cleanup, lineChannelSecret) {
+  if (!lineChannelSecret) {
     result.status = "SKIP";
-    result.detail = "LINE_CHANNEL_SECRET is not configured in .env or environment";
+    result.detail = "LINE_CHANNEL_SECRET is not configured and the acceptance script did not manage the server process";
     return;
   }
 
@@ -350,9 +419,9 @@ async function runLineCase(result, bookingContext, cleanup) {
       isFollowing: true
     }
   });
-  cleanup.lineUserId = lineUser.id;
+  cleanup.lineUserIds.push(lineUser.id);
 
-  const session = await prisma.lineLinkSession.create({
+  await prisma.lineLinkSession.create({
     data: {
       sessionToken,
       lineUserId: lineUser.id,
@@ -360,11 +429,10 @@ async function runLineCase(result, bookingContext, cleanup) {
       expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     }
   });
-  cleanup.lineLinkSessionId = session.id;
 
   const verifyRes = await fetch(`${BASE_URL}/api/public/line/link`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(),
     body: JSON.stringify({
       sessionToken,
       bookingNo: bookingContext.bookingNo,
@@ -402,7 +470,7 @@ async function runLineCase(result, bookingContext, cleanup) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-line-signature": createWebhookSignature(webhookBody, LINE_CHANNEL_SECRET)
+      "x-line-signature": createWebhookSignature(webhookBody, lineChannelSecret)
     },
     body: webhookBody
   });
@@ -418,7 +486,6 @@ async function runLineCase(result, bookingContext, cleanup) {
   const token = await prisma.lineLinkToken.findFirst({
     where: { token: nonce },
     select: {
-      id: true,
       consumedAt: true
     }
   });
@@ -433,11 +500,9 @@ async function runLineCase(result, bookingContext, cleanup) {
     throw new Error("Line link token was not consumed after webhook");
   }
 
-  cleanup.lineLinkTokenId = token.id;
-
   const manageRes = await fetch(`${BASE_URL}/api/public/line/manage`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(),
     body: JSON.stringify({
       bookingNo: bookingContext.bookingNo,
       email: bookingContext.email
@@ -450,7 +515,7 @@ async function runLineCase(result, bookingContext, cleanup) {
 
   const unlinkRes = await fetch(`${BASE_URL}/api/public/line/manage`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
+    headers: jsonHeaders(),
     body: JSON.stringify({
       bookingNo: bookingContext.bookingNo,
       email: bookingContext.email
@@ -461,9 +526,6 @@ async function runLineCase(result, bookingContext, cleanup) {
     throw new Error(`Expected unlinkedCount=1, got ${unlinkData.unlinkedCount}`);
   }
 
-  cleanup.lineUserId = null;
-  await prisma.lineUser.delete({ where: { id: lineUser.id } });
-
   result.detail = {
     bookingNo: bookingContext.bookingNo,
     linkedLineUserId: lineUserId,
@@ -471,66 +533,182 @@ async function runLineCase(result, bookingContext, cleanup) {
   };
 }
 
-async function createBookingFixture(servicePackage) {
-  const customer = await prisma.customer.create({
-    data: {
-      name: `Acceptance ${TEST_PREFIX}`,
-      email: `${TEST_PREFIX}@example.com`
+async function runBookingLifecycleCase(result, adminCookie, servicePackage, cleanup) {
+  const ratios = await getPointRatios();
+  const date = await createOpenSpecialDate(adminCookie, cleanup, `${TEST_PREFIX}-booking`, "11:00", "19:00");
+  const availability = await fetchAvailability(servicePackage.id.toString(), date);
+  if (!availability.slots?.length) {
+    throw new Error(`No slots available for booking lifecycle on ${date}`);
+  }
+
+  const slot = availability.slots[0];
+  const email = `${TEST_PREFIX}-booking@example.com`;
+  const createPayload = {
+    name: `Lifecycle ${TEST_PREFIX}`,
+    email,
+    packageId: servicePackage.id.toString(),
+    addonIds: [],
+    startAt: slot.startAt,
+    styleNote: `${TEST_PREFIX}-style`,
+    customerNote: `${TEST_PREFIX}-customer-note`,
+    lang: "zh"
+  };
+
+  const createRes = await fetch(`${BASE_URL}/api/public/appointments`, {
+    method: "POST",
+    headers: jsonHeaders(),
+    body: JSON.stringify(createPayload)
+  });
+  const created = await assertJsonOk(createRes, "Public create appointment");
+
+  const appointment = await prisma.appointment.findUnique({
+    where: { bookingNo: created.bookingNo },
+    include: {
+      customer: {
+        select: { id: true, email: true, currentPoints: true }
+      }
     }
   });
+  if (!appointment) {
+    throw new Error("Created appointment could not be found in database");
+  }
+  cleanup.appointmentIds.push(appointment.id);
+  cleanup.customerIds.push(appointment.customer.id);
 
-  const startAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
-  startAt.setUTCHours(1, 0, 0, 0);
-  const endAt = new Date(startAt.getTime() + servicePackage.durationMin * 60 * 1000);
+  const pendingLookupRes = await fetch(
+    `${BASE_URL}/api/public/appointments/lookup?bookingNo=${encodeURIComponent(created.bookingNo)}&email=${encodeURIComponent(email)}`
+  );
+  const pendingLookup = await assertJsonOk(pendingLookupRes, "Lookup pending appointment");
+  if (pendingLookup.status !== "pending") {
+    throw new Error(`Expected pending lookup status, got ${pendingLookup.status}`);
+  }
 
-  const appointment = await prisma.appointment.create({
-    data: {
-      bookingNo: makeBookingNo(),
-      customerId: customer.id,
-      packageId: servicePackage.id,
-      styleNote: `${TEST_PREFIX}-style`,
-      customerNote: `${TEST_PREFIX}-note`,
-      startAt,
-      endAt,
-      status: AppointmentStatus.confirmed,
-      autoCancelAt: new Date(startAt.getTime() - 24 * 60 * 60 * 1000),
-      confirmedAt: new Date()
-    }
+  const adminListRes = await fetch(`${BASE_URL}/api/admin/appointments?date=${date}&status=pending&limit=200`, {
+    headers: { cookie: adminCookie }
+  });
+  const adminList = await assertJsonOk(adminListRes, "Admin appointments list");
+  const adminItem = (adminList.items || []).find((item) => item.bookingNo === created.bookingNo);
+  if (!adminItem) {
+    throw new Error("Created appointment did not appear in admin pending list");
+  }
+
+  const confirmRes = await fetch(`${BASE_URL}/api/admin/appointments/${adminItem.id}/confirm`, {
+    method: "PATCH",
+    headers: jsonHeaders(adminCookie),
+    body: JSON.stringify({})
+  });
+  const confirmed = await assertJsonOk(confirmRes, "Confirm appointment");
+  if (confirmed.status !== "confirmed") {
+    throw new Error(`Expected confirmed status, got ${confirmed.status}`);
+  }
+
+  const confirmedLookupRes = await fetch(
+    `${BASE_URL}/api/public/appointments/lookup?bookingNo=${encodeURIComponent(created.bookingNo)}&email=${encodeURIComponent(email)}`
+  );
+  const confirmedLookup = await assertJsonOk(confirmedLookupRes, "Lookup confirmed appointment");
+  if (confirmedLookup.status !== "confirmed") {
+    throw new Error(`Expected confirmed lookup status, got ${confirmedLookup.status}`);
+  }
+
+  await prisma.customer.update({
+    where: { id: appointment.customer.id },
+    data: { currentPoints: INITIAL_TEST_POINTS }
   });
 
-  return {
-    customerId: customer.id,
-    customerEmail: customer.email,
-    appointmentId: appointment.id,
-    bookingNo: appointment.bookingNo,
-    email: customer.email
+  const completeRes = await fetch(`${BASE_URL}/api/admin/appointments/${adminItem.id}/complete`, {
+    method: "PATCH",
+    headers: jsonHeaders(adminCookie),
+    body: JSON.stringify({
+      actualPaidJpy: COMPLETE_ACTUAL_PAID_JPY,
+      usePoints: COMPLETE_USE_POINTS,
+      note: `${TEST_PREFIX}-complete`
+    })
+  });
+  const completed = await assertJsonOk(completeRes, "Complete appointment");
+  const expectedEarnedPoints = Math.floor(COMPLETE_ACTUAL_PAID_JPY / ratios.earnRatio);
+  const expectedCurrentPoints = INITIAL_TEST_POINTS - COMPLETE_USE_POINTS + expectedEarnedPoints;
+  if (completed.status !== "completed") {
+    throw new Error(`Expected completed status, got ${completed.status}`);
+  }
+  if (completed.earnedPoints !== expectedEarnedPoints) {
+    throw new Error(`Expected earnedPoints=${expectedEarnedPoints}, got ${completed.earnedPoints}`);
+  }
+  if (completed.currentPoints !== expectedCurrentPoints) {
+    throw new Error(`Expected currentPoints=${expectedCurrentPoints}, got ${completed.currentPoints}`);
+  }
+
+  const completedLookupRes = await fetch(
+    `${BASE_URL}/api/public/appointments/lookup?bookingNo=${encodeURIComponent(created.bookingNo)}&email=${encodeURIComponent(email)}`
+  );
+  const completedLookup = await assertJsonOk(completedLookupRes, "Lookup completed appointment");
+  if (completedLookup.status !== "completed") {
+    throw new Error(`Expected completed lookup status, got ${completedLookup.status}`);
+  }
+
+  const customerId = appointment.customer.id.toString();
+  const ledgerRes = await fetch(`${BASE_URL}/api/admin/points/ledger?customerId=${customerId}&limit=20`, {
+    headers: { cookie: adminCookie }
+  });
+  const ledger = await assertJsonOk(ledgerRes, "Points ledger");
+  const earnItem = (ledger.items || []).find((item) => item.type === "earn" && item.appointmentId === adminItem.id);
+  const useItem = (ledger.items || []).find((item) => item.type === "use" && item.appointmentId === adminItem.id);
+  if (!earnItem || earnItem.points !== expectedEarnedPoints) {
+    throw new Error("Expected earn ledger entry was not found");
+  }
+  if (!useItem || useItem.points !== COMPLETE_USE_POINTS || useItem.jpyValue !== COMPLETE_USE_POINTS * ratios.redeemRatio) {
+    throw new Error("Expected use ledger entry was not found");
+  }
+
+  const customersRes = await fetch(`${BASE_URL}/api/admin/customers?q=${encodeURIComponent(email)}&limit=20`, {
+    headers: { cookie: adminCookie }
+  });
+  const customers = await assertJsonOk(customersRes, "Customers search");
+  const customerItem = (customers.items || []).find((item) => item.email === email);
+  if (!customerItem) {
+    throw new Error("Customer search did not return the booking customer");
+  }
+  if (customerItem.totalSpentJpy !== COMPLETE_ACTUAL_PAID_JPY || customerItem.currentPoints !== expectedCurrentPoints) {
+    throw new Error(
+      `Unexpected customer totals. spent=${customerItem.totalSpentJpy}, points=${customerItem.currentPoints}`
+    );
+  }
+
+  result.detail = {
+    bookingNo: created.bookingNo,
+    date,
+    startAt: slot.startAt,
+    earnedPoints: expectedEarnedPoints,
+    currentPoints: expectedCurrentPoints
   };
 }
 
 async function cleanupFixtures(cleanup) {
   try {
-    if (cleanup.bookingBlockId) {
-      await prisma.bookingBlock.delete({ where: { id: cleanup.bookingBlockId } }).catch(() => {});
+    for (const bookingBlockId of cleanup.bookingBlockIds.slice().reverse()) {
+      await prisma.bookingBlock.delete({ where: { id: BigInt(bookingBlockId) } }).catch(() => {});
     }
 
-    if (cleanup.specialDateId) {
-      await prisma.specialBusinessDate.delete({ where: { id: cleanup.specialDateId } }).catch(() => {});
+    for (const appointmentId of cleanup.appointmentIds.slice().reverse()) {
+      await prisma.pointLedger.deleteMany({ where: { appointmentId } }).catch(() => {});
+      await prisma.appointmentAddon.deleteMany({ where: { appointmentId } }).catch(() => {});
+      await prisma.appointment.delete({ where: { id: appointmentId } }).catch(() => {});
     }
 
-    if (cleanup.lineUserId) {
+    for (const lineUserId of cleanup.lineUserIds.slice().reverse()) {
       await prisma.lineUser.updateMany({
-        where: { id: cleanup.lineUserId },
+        where: { id: lineUserId },
         data: { customerId: null }
       }).catch(() => {});
-      await prisma.lineUser.delete({ where: { id: cleanup.lineUserId } }).catch(() => {});
+      await prisma.lineUser.delete({ where: { id: lineUserId } }).catch(() => {});
     }
 
-    if (cleanup.appointmentId) {
-      await prisma.appointment.delete({ where: { id: cleanup.appointmentId } }).catch(() => {});
+    for (const customerId of cleanup.customerIds.slice().reverse()) {
+      await prisma.pointLedger.deleteMany({ where: { customerId } }).catch(() => {});
+      await prisma.customer.delete({ where: { id: customerId } }).catch(() => {});
     }
 
-    if (cleanup.customerId) {
-      await prisma.customer.delete({ where: { id: cleanup.customerId } }).catch(() => {});
+    for (const specialDateId of cleanup.specialDateIds.slice().reverse()) {
+      await prisma.specialBusinessDate.delete({ where: { id: BigInt(specialDateId) } }).catch(() => {});
     }
   } finally {
     await prisma.$disconnect();
@@ -547,13 +725,11 @@ async function main() {
     cases: []
   };
   const cleanup = {
-    bookingBlockId: null,
-    specialDateId: null,
-    lineUserId: null,
-    lineLinkSessionId: null,
-    lineLinkTokenId: null,
-    appointmentId: null,
-    customerId: null
+    bookingBlockIds: [],
+    specialDateIds: [],
+    lineUserIds: [],
+    appointmentIds: [],
+    customerIds: []
   };
 
   const server = await ensureServerRunning();
@@ -570,9 +746,6 @@ async function main() {
     }
 
     const adminCookie = await loginAdmin();
-    const bookingFixture = await createBookingFixture(servicePackage);
-    cleanup.appointmentId = bookingFixture.appointmentId;
-    cleanup.customerId = bookingFixture.customerId;
 
     const scheduleCase = { name: "schedule-blocking", status: "PASS", detail: null };
     try {
@@ -583,14 +756,24 @@ async function main() {
     }
     summary.cases.push(scheduleCase);
 
+    const lineFixture = await createLineFixture(servicePackage, cleanup);
     const lineCase = { name: "line-self-linking", status: "PASS", detail: null };
     try {
-      await runLineCase(lineCase, bookingFixture, cleanup);
+      await runLineCase(lineCase, lineFixture, cleanup, server.lineChannelSecret);
     } catch (error) {
       lineCase.status = "FAIL";
       lineCase.detail = error instanceof Error ? error.message : String(error);
     }
     summary.cases.push(lineCase);
+
+    const bookingCase = { name: "booking-lifecycle", status: "PASS", detail: null };
+    try {
+      await runBookingLifecycleCase(bookingCase, adminCookie, servicePackage, cleanup);
+    } catch (error) {
+      bookingCase.status = "FAIL";
+      bookingCase.detail = error instanceof Error ? error.message : String(error);
+    }
+    summary.cases.push(bookingCase);
   } finally {
     await cleanupFixtures(cleanup);
     await server.stop();
