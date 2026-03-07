@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
 type AppointmentItem = {
@@ -106,7 +106,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     return qs.toString();
   }, [date, lang, status]);
 
-  async function fetchItems() {
+  const fetchItems = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -121,11 +121,11 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [queryString, t.loadFailed]);
 
   useEffect(() => {
     void fetchItems();
-  }, [queryString]);
+  }, [fetchItems]);
 
   async function doPatch(path: string, body?: unknown) {
     setError("");

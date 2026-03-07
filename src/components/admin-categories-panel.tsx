@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
 type CategoryItem = {
@@ -136,7 +136,7 @@ export default function AdminCategoriesPanel({ lang }: Props) {
     setSelectedIds(checked ? orderedItems.map((item) => item.id) : []);
   }
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -162,11 +162,11 @@ export default function AdminCategoriesPanel({ lang }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [editingId, t.loadFailed]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   function serializeForm(form: CategoryFormState) {
     return {
@@ -416,3 +416,4 @@ export default function AdminCategoriesPanel({ lang }: Props) {
     </section>
   );
 }
+

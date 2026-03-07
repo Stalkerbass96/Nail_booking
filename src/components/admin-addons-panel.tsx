@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
 type AddonItem = {
@@ -140,7 +140,7 @@ export default function AdminAddonsPanel({ lang }: Props) {
     };
   }
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -164,11 +164,11 @@ export default function AdminAddonsPanel({ lang }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [editingId, t.loadAddonFailed, t.loadFailed]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   async function createAddon(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -365,3 +365,4 @@ export default function AdminAddonsPanel({ lang }: Props) {
     </section>
   );
 }
+

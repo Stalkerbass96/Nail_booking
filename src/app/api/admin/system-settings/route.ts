@@ -3,9 +3,18 @@ import { DEFAULT_RUNTIME_SETTINGS, SETTING_KEYS, parseRuntimeSettingsSnapshot } 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+const slotMinutesSchema = z
+  .number()
+  .int()
+  .min(30)
+  .max(120)
+  .refine((value) => value % 30 === 0, {
+    message: "slotMinutes must be a multiple of 30"
+  });
+
 const updateSchema = z
   .object({
-    slotMinutes: z.number().int().min(5).max(120).optional(),
+    slotMinutes: slotMinutesSchema.optional(),
     pendingAutoCancelHours: z.number().int().min(1).max(168).optional(),
     cancelCutoffHours: z.number().int().min(0).max(168).optional(),
     pointEarnRatioJpy: z.number().int().min(1).max(100000).optional(),

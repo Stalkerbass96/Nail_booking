@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
 type CategoryItem = {
@@ -204,7 +204,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
     };
   }
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -255,11 +255,11 @@ export default function AdminPackagesPanel({ lang }: Props) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [editingId, t.loadAddonFailed, t.loadCategoryFailed, t.loadFailed, t.loadPackageFailed]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   async function createPackage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -531,3 +531,4 @@ export default function AdminPackagesPanel({ lang }: Props) {
     </section>
   );
 }
+

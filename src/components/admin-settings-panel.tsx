@@ -18,37 +18,110 @@ type Props = {
 const TEXT = {
   zh: {
     title: "系统设置",
-    desc: "维护预约与积分的核心业务参数。保存后立即生效。",
+    desc: "维护预约粒度、自动取消、取消限制和积分比例。当前版本的预约粒度仅支持 30 分钟的倍数。",
     slotMinutes: "预约粒度(分钟)",
     pendingAutoCancelHours: "待确认自动取消(小时)",
-    cancelCutoffHours: "取消截止(预约前X小时)",
+    cancelCutoffHours: "取消截止窗口(距开始前小时)",
     pointEarnRatioJpy: "积分累计比例(日元/1分)",
     pointRedeemRatioJpy: "积分抵扣比例(日元/1分)",
     loading: "加载中...",
     save: "保存设置",
-    saved: "保存成功",
+    saved: "设置已保存",
     loadFailed: "加载设置失败",
-    saveFailed: "保存失败"
+    saveFailed: "保存设置失败",
+    invalidNumber: "请填写合法的数字。",
+    invalidSlot: "预约粒度目前仅支持 30 分钟的倍数。",
+    invalidPending: "待确认自动取消必须在 1 到 168 小时之间。",
+    invalidCutoff: "取消截止窗口必须在 0 到 168 小时之间。",
+    invalidEarnRatio: "积分累计比例必须在 1 到 100000 之间。",
+    invalidRedeemRatio: "积分抵扣比例必须在 1 到 100000 之间。",
+    slotHint: "当前实现仅支持 30、60、90、120 这类 30 分钟倍数。"
   },
   ja: {
     title: "システム設定",
-    desc: "予約・ポイントの主要パラメータを管理します。保存後すぐ反映されます。",
-    slotMinutes: "予約スロット(分)",
-    pendingAutoCancelHours: "仮予約の自動キャンセル(時間)",
-    cancelCutoffHours: "キャンセル締切(開始X時間前)",
+    desc: "予約スロット、自動キャンセル、キャンセル制限、ポイント比率を管理します。現在の実装では予約粒度は 30 分単位のみサポートします。",
+    slotMinutes: "予約粒度(分)",
+    pendingAutoCancelHours: "未確認の自動キャンセル(時間)",
+    cancelCutoffHours: "キャンセル締切(開始前の時間)",
     pointEarnRatioJpy: "ポイント付与比率(円/1pt)",
     pointRedeemRatioJpy: "ポイント利用比率(円/1pt)",
     loading: "読み込み中...",
     save: "設定を保存",
-    saved: "保存しました",
+    saved: "設定を保存しました",
     loadFailed: "設定の読み込みに失敗しました",
-    saveFailed: "保存に失敗しました"
+    saveFailed: "設定の保存に失敗しました",
+    invalidNumber: "有効な数値を入力してください。",
+    invalidSlot: "予約粒度は現在 30 分単位のみサポートしています。",
+    invalidPending: "自動キャンセルは 1 から 168 時間の範囲で入力してください。",
+    invalidCutoff: "キャンセル締切は 0 から 168 時間の範囲で入力してください。",
+    invalidEarnRatio: "ポイント付与比率は 1 から 100000 の範囲で入力してください。",
+    invalidRedeemRatio: "ポイント利用比率は 1 から 100000 の範囲で入力してください。",
+    slotHint: "現在の実装では 30、60、90、120 のような 30 分の倍数のみ対応します。"
   }
 };
 
-function toInt(value: string, fallback: number): number {
+function parseWholeNumber(value: string): number | null {
+  if (!/^\d+$/.test(value.trim())) return null;
   const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function validateSettings(
+  values: {
+    slotMinutes: string;
+    pendingAutoCancelHours: string;
+    cancelCutoffHours: string;
+    pointEarnRatioJpy: string;
+    pointRedeemRatioJpy: string;
+  },
+  t: (typeof TEXT)[Lang]
+): { ok: true; body: SettingsDto } | { ok: false; message: string } {
+  const slotMinutes = parseWholeNumber(values.slotMinutes);
+  const pendingAutoCancelHours = parseWholeNumber(values.pendingAutoCancelHours);
+  const cancelCutoffHours = parseWholeNumber(values.cancelCutoffHours);
+  const pointEarnRatioJpy = parseWholeNumber(values.pointEarnRatioJpy);
+  const pointRedeemRatioJpy = parseWholeNumber(values.pointRedeemRatioJpy);
+
+  if (
+    slotMinutes === null ||
+    pendingAutoCancelHours === null ||
+    cancelCutoffHours === null ||
+    pointEarnRatioJpy === null ||
+    pointRedeemRatioJpy === null
+  ) {
+    return { ok: false, message: t.invalidNumber };
+  }
+
+  if (slotMinutes < 30 || slotMinutes > 120 || slotMinutes % 30 !== 0) {
+    return { ok: false, message: t.invalidSlot };
+  }
+
+  if (pendingAutoCancelHours < 1 || pendingAutoCancelHours > 168) {
+    return { ok: false, message: t.invalidPending };
+  }
+
+  if (cancelCutoffHours < 0 || cancelCutoffHours > 168) {
+    return { ok: false, message: t.invalidCutoff };
+  }
+
+  if (pointEarnRatioJpy < 1 || pointEarnRatioJpy > 100000) {
+    return { ok: false, message: t.invalidEarnRatio };
+  }
+
+  if (pointRedeemRatioJpy < 1 || pointRedeemRatioJpy > 100000) {
+    return { ok: false, message: t.invalidRedeemRatio };
+  }
+
+  return {
+    ok: true,
+    body: {
+      slotMinutes,
+      pendingAutoCancelHours,
+      cancelCutoffHours,
+      pointEarnRatioJpy,
+      pointRedeemRatioJpy
+    }
+  };
 }
 
 export default function AdminSettingsPanel({ lang }: Props) {
@@ -95,21 +168,30 @@ export default function AdminSettingsPanel({ lang }: Props) {
     event.preventDefault();
     setError("");
     setOk("");
+
+    const validated = validateSettings(
+      {
+        slotMinutes,
+        pendingAutoCancelHours,
+        cancelCutoffHours,
+        pointEarnRatioJpy,
+        pointRedeemRatioJpy
+      },
+      t
+    );
+
+    if (!validated.ok) {
+      setError(validated.message);
+      return;
+    }
+
     setSaving(true);
 
     try {
-      const body = {
-        slotMinutes: toInt(slotMinutes, 30),
-        pendingAutoCancelHours: toInt(pendingAutoCancelHours, 24),
-        cancelCutoffHours: toInt(cancelCutoffHours, 6),
-        pointEarnRatioJpy: toInt(pointEarnRatioJpy, 100),
-        pointRedeemRatioJpy: toInt(pointRedeemRatioJpy, 100)
-      };
-
       const res = await fetch("/api/admin/system-settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(validated.body)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || t.saveFailed);
@@ -138,27 +220,28 @@ export default function AdminSettingsPanel({ lang }: Props) {
       <form className="mt-5 grid gap-3 md:grid-cols-2" onSubmit={onSubmit}>
         <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-slot-minutes">
           <span>{t.slotMinutes}</span>
-          <input id="settings-slot-minutes" className="admin-input" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
+          <input id="settings-slot-minutes" className="admin-input" type="number" min="30" max="120" step="30" value={slotMinutes} onChange={(e) => setSlotMinutes(e.target.value)} />
+          <span className="text-xs text-brand-600">{t.slotHint}</span>
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-auto-cancel-hours">
           <span>{t.pendingAutoCancelHours}</span>
-          <input id="settings-auto-cancel-hours" className="admin-input" value={pendingAutoCancelHours} onChange={(e) => setPendingAutoCancelHours(e.target.value)} />
+          <input id="settings-auto-cancel-hours" className="admin-input" type="number" min="1" max="168" step="1" value={pendingAutoCancelHours} onChange={(e) => setPendingAutoCancelHours(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-cutoff-hours">
           <span>{t.cancelCutoffHours}</span>
-          <input id="settings-cutoff-hours" className="admin-input" value={cancelCutoffHours} onChange={(e) => setCancelCutoffHours(e.target.value)} />
+          <input id="settings-cutoff-hours" className="admin-input" type="number" min="0" max="168" step="1" value={cancelCutoffHours} onChange={(e) => setCancelCutoffHours(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-earn-ratio">
           <span>{t.pointEarnRatioJpy}</span>
-          <input id="settings-earn-ratio" className="admin-input" value={pointEarnRatioJpy} onChange={(e) => setPointEarnRatioJpy(e.target.value)} />
+          <input id="settings-earn-ratio" className="admin-input" type="number" min="1" max="100000" step="1" value={pointEarnRatioJpy} onChange={(e) => setPointEarnRatioJpy(e.target.value)} />
         </label>
 
         <label className="grid gap-1 text-sm text-brand-800" htmlFor="settings-redeem-ratio">
           <span>{t.pointRedeemRatioJpy}</span>
-          <input id="settings-redeem-ratio" className="admin-input" value={pointRedeemRatioJpy} onChange={(e) => setPointRedeemRatioJpy(e.target.value)} />
+          <input id="settings-redeem-ratio" className="admin-input" type="number" min="1" max="100000" step="1" value={pointRedeemRatioJpy} onChange={(e) => setPointRedeemRatioJpy(e.target.value)} />
         </label>
 
         <div className="flex items-end">

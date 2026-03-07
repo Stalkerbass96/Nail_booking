@@ -1,6 +1,18 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+
+type AddonWithLinks = {
+  id: bigint;
+  nameZh: string;
+  nameJa: string;
+  descZh: string | null;
+  descJa: string | null;
+  priceJpy: number;
+  durationIncreaseMin: number;
+  isActive: boolean;
+  packageLinks: Array<{ packageId: bigint }>;
+};
 
 const createAddonSchema = z.object({
   nameZh: z.string().trim().min(1).max(120),
@@ -22,7 +34,7 @@ export async function GET(request: NextRequest) {
   try {
     const lang = request.nextUrl.searchParams.get("lang") === "ja" ? "ja" : "zh";
 
-    const items = await prisma.serviceAddon.findMany({
+    const items: AddonWithLinks[] = await prisma.serviceAddon.findMany({
       include: {
         packageLinks: {
           select: { packageId: true }
