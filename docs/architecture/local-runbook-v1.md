@@ -1,49 +1,46 @@
-# 本地运行手册 V1
+﻿# Local Runbook V1
 
-- 适用：开发机（Windows / macOS / Linux）
-- 更新日期：2026-03-07
+更新时间：2026-03-07
 
-## 1. 前置要求
+本文档用于本地开发和功能验证，不是生产部署手册。
+
+## 1. 环境要求
 
 - Node.js 20+
 - npm 10+
-- PostgreSQL 16（可用 Docker 或本机服务）
+- Docker Desktop 或本机 PostgreSQL 16
 
-## 2. 初始化步骤
+## 2. 本地启动步骤
 
-1. 复制环境变量
+### 2.1 复制环境变量
 
 ```bash
 cp .env.example .env
 ```
 
-Windows PowerShell 可用：
+PowerShell：
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-2. 启动数据库（任选一种）
+### 2.2 启动数据库
 
-- Docker：
+如果使用 Docker：
 
 ```bash
 docker compose up -d
 ```
 
-- 本机服务：
+如果使用本机 PostgreSQL，请确认 `.env` 中的 `DATABASE_URL` 指向本机数据库，并手动启动 PostgreSQL 服务。
 
-```bash
-systemctl start postgresql
-```
-
-3. 安装依赖
+### 2.3 安装依赖
 
 ```bash
 npm install
 ```
 
-4. 初始化数据库结构与基础数据
+### 2.4 初始化数据库
 
 ```bash
 npm run prisma:migrate:deploy
@@ -51,51 +48,61 @@ npm run prisma:generate
 npm run db:seed
 ```
 
-## 3. 启动项目
+或者直接：
+
+```bash
+npm run db:setup
+```
+
+### 2.5 启动开发服务器
 
 ```bash
 npm run dev
 ```
 
-默认地址：
-
+访问地址：
 - 前台：`http://localhost:3000`
 - 后台登录：`http://localhost:3000/admin/login`
 
-## 4. 默认管理员账号
+默认种子账号：
+- Email: `owner@nail-booking.local`
+- Password: `.env` 中的 `ADMIN_SEED_PASSWORD`
 
-- Email：`owner@nail-booking.local`
-- Password：`.env` 中 `ADMIN_SEED_PASSWORD`（默认 `dev-only-change-me`）
-
-## 5. 常见排查
-
-- 数据库连接失败：
-  - Docker 模式下检查 `docker compose ps`
-  - 本机模式下检查 `systemctl status postgresql`
-- 迁移失败：检查 `.env` 的 `DATABASE_URL`。
-- 登录失败：重新执行 `npm run db:seed`。
-- 自动取消未生效：手动执行 `npm run job:auto-cancel` 验证。
-
-## 6. 测试与验证
+## 3. 本地验证命令
 
 ```bash
+npm run lint
 npm run build
 npm run test:e2e
 ```
 
-最近报告：`docs/testing/e2e-report-2026-03-07.md`
+说明：
+- `npm run test:e2e` 会尝试拉起本地开发服务并执行 smoke 测试
+- 测试产物在 `docs/testing/artifacts/`
 
-说明：`npm run test:e2e` 会先探测 `http://127.0.0.1:3000`，若未运行会自动拉起本地 dev server 并在测试后自动停止；日志与汇总写入 `docs/testing/artifacts/e2e-2026-03-07/`。
+## 4. 常见问题
 
-## 7. 开发常用命令
+### 数据库连不上
+
+检查：
+- Docker 容器是否启动：`docker compose ps`
+- `.env` 中 `DATABASE_URL` 是否正确
+- PostgreSQL 端口是否被占用
+
+### 种子账号无法登录
+
+重新执行：
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run prisma:generate
-npm run prisma:migrate:deploy
 npm run db:seed
-npm run test:e2e
+```
+
+并确认 `.env` 中的 `ADMIN_SEED_PASSWORD` 与你输入的一致。
+
+### 自动取消没有生效
+
+本地可手动执行一次：
+
+```bash
 npm run job:auto-cancel
 ```

@@ -1,39 +1,45 @@
-# 文档总览
+﻿# Docs Index
 
-本目录用于沉淀 Nail Booking 项目需求、架构、测试、部署与运维知识。
+本文档目录按两个主线组织：
+- 产品与需求
+- 开发、运行、部署与接手
 
-## 阅读顺序（建议）
+## 建议阅读顺序
 
-1. `requirements/requirements-v1.1.md`：需求冻结与业务规则来源
-2. `prd/prd-v2.md`：可开发版产品范围与验收标准
-3. `architecture/implementation-v3.md`：技术实现与当前完成度
-4. `architecture/agent-handoff-v1.md`：给新 AI/开发者的接手文档
-5. `architecture/api-endpoints-v1.md`：接口清单
-6. `architecture/frontend-routes-v1.md`：页面与路由清单
-7. `architecture/local-runbook-v1.md`：本地运行手册
-8. `testing/e2e-report-2026-03-07.md`：最新 E2E 测试报告
-9. `deployment/deployment-v1.md`：部署手册（生产/预发）
-10. `operations/notes-v1.md`：备注、已知限制、后续建议
-11. `CHANGELOG.md`：版本更新说明
+1. [requirements/requirements-v1.1.md](requirements/requirements-v1.1.md)
+2. [prd/prd-v2.md](prd/prd-v2.md)
+3. [architecture/implementation-v3.md](architecture/implementation-v3.md)
+4. [architecture/agent-handoff-v1.md](architecture/agent-handoff-v1.md)
+5. [architecture/api-endpoints-v1.md](architecture/api-endpoints-v1.md)
+6. [architecture/frontend-routes-v1.md](architecture/frontend-routes-v1.md)
+7. [architecture/local-runbook-v1.md](architecture/local-runbook-v1.md)
+8. [deployment/deployment-v1.md](deployment/deployment-v1.md)
+9. [deployment/deployment-checklist-v1.md](deployment/deployment-checklist-v1.md)
+10. [operations/notes-v1.md](operations/notes-v1.md)
+11. [testing/e2e-report-2026-03-07.md](testing/e2e-report-2026-03-07.md)
+12. [CHANGELOG.md](CHANGELOG.md)
 
-## 文档维护约定
+## 给人看的入口
 
-- 文档编码统一 UTF-8。
-- 需求变化先更新 `requirements` 与 `prd`，再更新 `architecture`。
-- UI/测试相关变更同步更新 `testing` 与 `operations`。
-- 每次发布前至少核对：
-  - 环境变量文档
-  - API 清单
-  - 部署步骤
-  - 测试报告
-  - 已知限制
+- 想理解需求边界：看 `requirements` 和 `prd`
+- 想继续开发：看 `agent-handoff`、`implementation`、API/route 文档
+- 想本地启动：看 `local-runbook`
+- 想上 Ubuntu 云主机：看 `deployment-v1`
 
-## 当前文档版本快照（2026-03-07）
+## 给 AI agent 的最低接手集合
 
-- 需求：V1.1
-- PRD：V2
-- 实施清单：V3（已含系统设置与安全修复）
-- AI 接手文档：V1（已按当前代码状态刷新）
-- 部署文档：V1
-- 运维备注：V1（已更新）
-- E2E 报告：2026-03-07（修复后 5/5 PASS）
+最少读这 5 份：
+1. `docs/architecture/agent-handoff-v1.md`
+2. `docs/architecture/implementation-v3.md`
+3. `docs/architecture/api-endpoints-v1.md`
+4. `docs/architecture/frontend-routes-v1.md`
+5. `docs/deployment/deployment-v1.md`
+
+## 文档维护规则
+
+任何影响运行或部署的改动，提交时至少同步更新下面文档中的一项：
+- 运行方式变更：`architecture/local-runbook-v1.md`
+- 部署方式变更：`deployment/deployment-v1.md`
+- API 或页面结构变更：`architecture/api-endpoints-v1.md` 或 `frontend-routes-v1.md`
+- 需求边界变更：`requirements/` 或 `prd/`
+

@@ -1,162 +1,234 @@
-# 部署手册 V1
+﻿# Ubuntu Single-Host Deployment V1
 
-- 适用环境：预发 / 生产
-- 更新日期：2026-03-07
+更新时间：2026-03-07
 
-本手册目标：在 Linux 主机上，通过 Docker Compose 一次性启动应用、数据库与自动取消任务，并完成上线验证。
+这份文档面向全新 Ubuntu 云主机，目标是让你在一台服务器上部署：
+- Next.js 前后端应用
+- PostgreSQL 数据库
+- 自动取消待确认预约的 worker
 
-## 1. 部署方式选择
+本方案默认：
+- Ubuntu 22.04 / 24.04
+- 单机部署
+- 数据库与应用在同一主机
+- 使用 Docker Compose
+- 暂时直接暴露 `3000` 端口，不强制要求反向代理
 
-- 推荐：Docker Compose 一体部署（应用 + PostgreSQL + 自动取消 worker）
-- 备用：手工 Node.js 部署（见文末）
+## 1. 最终效果
 
-## 2. 主机前置条件（推荐方案）
+部署完成后，你可以访问：
+- 前台：`http://<服务器IP>:3000`
+- 后台登录：`http://<服务器IP>:3000/admin/login`
 
-- Linux 主机（Ubuntu 22.04+ 推荐）
-- 已安装 Docker
-- 已安装 Docker Compose（`docker compose` 命令可用）
-- 能访问仓库代码
-- 3000 端口可访问（或通过反向代理转发）
+默认种子账号：
+- Email: `owner@nail-booking.local`
+- Password: `.env.deploy` 中的 `ADMIN_SEED_PASSWORD`
 
-## 3. 一体部署（推荐）
+## 2. 主机准备
 
-### 3.1 拉代码
+### 2.1 安装系统依赖
 
 ```bash
-git clone <your-repo-url>
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl git
+```
+
+### 2.2 安装 Docker Engine 和 Compose Plugin
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo $VERSION_CODENAME) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+### 2.3 验证 Docker
+
+```bash
+docker --version
+docker compose version
+```
+
+如果你希望当前用户免 `sudo`：
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+## 3. 获取代码
+
+```bash
+git clone https://github.com/Stalkerbass96/Nail_booking.git
 cd Nail_booking
 ```
 
-### 3.2 配置部署环境变量
+## 4. 配置部署环境变量
+
+### 4.1 复制模板
 
 ```bash
 cp .env.deploy.example .env.deploy
 ```
 
-至少修改以下值（必需）：
-
-- `ADMIN_AUTH_SECRET`：随机强密钥（32+ 位）
-- `ADMIN_SEED_PASSWORD`：后台初始密码
-- `CRON_SECRET`：随机字符串（系统任务鉴权）
-- `DATABASE_URL`：保持 compose 网络可访问配置
-
-### 3.3 方式 A：直接命令部署
+### 4.2 编辑 `.env.deploy`
 
 ```bash
-docker compose -f docker-compose.deploy.yml up -d --build
+vim .env.deploy
 ```
 
-### 3.4 方式 B：脚本部署（推荐）
+至少修改这些值：
+- `POSTGRES_PASSWORD`
+- `ADMIN_AUTH_SECRET`
+- `ADMIN_SEED_PASSWORD`
+- `CRON_SECRET`
+
+建议也检查：
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `APP_PORT`
+- `AUTO_CANCEL_INTERVAL_MS`
+
+推荐配置示例：
+
+```env
+APP_PORT=3000
+POSTGRES_DB=nail_booking
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=replace-with-strong-password
+CRON_SECRET=replace-with-random-cron-secret
+ADMIN_AUTH_SECRET=replace-with-long-random-secret
+ADMIN_SEED_PASSWORD=replace-with-strong-admin-password
+AUTO_CANCEL_INTERVAL_MS=300000
+```
+
+## 5. 启动服务
+
+### 5.1 给脚本执行权限
 
 ```bash
 chmod +x scripts/deploy-docker.sh
-./scripts/deploy-docker.sh
 ```
 
-首次需要 seed：
+### 5.2 首次部署并写入种子数据
 
 ```bash
 ./scripts/deploy-docker.sh --seed
 ```
 
-### 3.5 首次初始化基础数据（仅首次）
+这个命令会完成：
+- 使用 `.env.deploy` 构建应用镜像
+- 先启动 `postgres`
+- 等待数据库健康检查通过
+- 执行 `prisma migrate deploy`
+- 首次部署时执行数据库种子脚本
+- 最后启动 `app` 和 `auto-cancel-worker`
 
-若你未使用 `--seed`，执行：
+## 6. 验证部署结果
 
-```bash
-docker compose -f docker-compose.deploy.yml exec app npm run db:seed
-```
-
-### 3.6 验收
-
-会启动：
-
-- `postgres`：数据库
-- `app`：Next.js 应用（启动时自动执行 `prisma migrate deploy`）
-- `auto-cancel-worker`：周期执行待确认超时取消
-
-访问：
-
-- `http://<your-host-ip>:3000`
-- `http://<your-host-ip>:3000/admin/login`
-
-默认管理员账号：
-
-- Email: `owner@nail-booking.local`
-- Password: `.env.deploy` 中 `ADMIN_SEED_PASSWORD`
-
-## 4. 上线后检查清单（建议）
-
-1. 后台登录正常：`/admin/login`
-2. 系统设置页可访问并可保存：`/admin/settings`
-3. 创建预约、查询预约流程可用
-4. 自动取消 worker 日志正常
-5. 执行一次测试：
+### 6.1 查看容器状态
 
 ```bash
-# 在应用容器内
-npm run build
-npm run test:e2e
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 ```
 
-## 5. 日常升级发布
+### 6.2 查看应用日志
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f app
+```
+
+### 6.3 查看 worker 日志
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f auto-cancel-worker
+```
+
+### 6.4 检查接口是否可访问
+
+```bash
+curl http://127.0.0.1:3000/api/public/categories
+```
+
+如果你的云厂商有安全组或防火墙，还需要放行 `APP_PORT` 对应端口，默认是 `3000/tcp`。
+
+如果主机启用了 UFW：
+
+```bash
+sudo ufw allow 3000/tcp
+sudo ufw status
+```
+
+## 7. 日常运维
+
+### 查看状态
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+```
+
+### 重启服务
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
+```
+
+### 查看日志
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f app
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f postgres
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f auto-cancel-worker
+```
+
+### 手动执行一次自动取消任务
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec app npm run job:auto-cancel
+```
+
+## 8. 更新版本
+
+推荐执行：
 
 ```bash
 git pull
-docker compose -f docker-compose.deploy.yml up -d --build
+./scripts/deploy-docker.sh
 ```
 
 说明：
+- 推荐更新时继续使用 `./scripts/deploy-docker.sh`，由脚本统一处理启动顺序
+- 正常更新不需要重复 `db:seed`
 
-- 应用容器启动会自动执行迁移命令。
-- `db:seed` 不建议每次发布都执行，避免重置管理员密码。
+## 9. 备份与恢复
 
-## 6. 运维常用命令
-
-查看状态：
-
-```bash
-docker compose -f docker-compose.deploy.yml ps
-```
-
-查看日志：
+### 9.1 备份数据库
 
 ```bash
-docker compose -f docker-compose.deploy.yml logs -f app
-docker compose -f docker-compose.deploy.yml logs -f auto-cancel-worker
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres pg_dump -U postgres nail_booking > backup.sql
 ```
 
-手动执行一次自动取消：
+### 9.2 恢复数据库
 
 ```bash
-docker compose -f docker-compose.deploy.yml exec app npm run job:auto-cancel
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres psql -U postgres nail_booking < backup.sql
 ```
 
-## 7. 反向代理建议
+## 10. 推荐的下一步
 
-生产环境建议用 Nginx/Caddy 反向代理到 `127.0.0.1:3000` 并启用 HTTPS。
+当前文档保证你在 Ubuntu 单机上直接跑起来。进入线上阶段时，建议再补这三项：
+1. Nginx 或 Caddy 反向代理
+2. HTTPS 证书
+3. 定期数据库备份与监控
 
-## 8. 回滚建议
-
-- 代码回滚：切换到上一个 commit/tag 后执行 `docker compose ... up -d --build`
-- 数据库回滚：优先前向修复，不建议直接回滚已执行迁移
-- 高风险发布前先备份数据库卷
-
-## 9. 安全注意事项
-
-- 禁止使用默认 `ADMIN_SEED_PASSWORD`
-- 禁止把 `.env.deploy` 提交到仓库
-- 定期轮换 `ADMIN_AUTH_SECRET` 与 `CRON_SECRET`
-- 仅开放必要端口；管理接口通过登录态控制
-
-## 10. 备用方案：手工 Node.js 部署
-
-如果不使用 Docker，请参考：
-
-- `docs/architecture/local-runbook-v1.md`
-
-并额外保证：
-
-- 进程守护（systemd/pm2）
-- 自动取消任务定时执行
-- 反向代理 + HTTPS
+补充检查清单：
+- `docs/deployment/deployment-checklist-v1.md`

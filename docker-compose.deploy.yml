@@ -1,16 +1,15 @@
-services:
+﻿services:
   postgres:
     image: postgres:16
-    container_name: nail-booking-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: nail_booking
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-nail_booking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d nail_booking"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-nail_booking}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -19,29 +18,30 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nail-booking-app
     restart: unless-stopped
-    env_file:
-      - .env.deploy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nail_booking?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-nail_booking}?schema=public
+      CRON_SECRET: ${CRON_SECRET:-change-me-cron-secret}
+      ADMIN_AUTH_SECRET: ${ADMIN_AUTH_SECRET:-change-me-admin-secret}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-change-me-admin-password}
+      AUTO_CANCEL_INTERVAL_MS: ${AUTO_CANCEL_INTERVAL_MS:-300000}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
 
   auto-cancel-worker:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nail-booking-auto-cancel
     restart: unless-stopped
-    env_file:
-      - .env.deploy
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/nail_booking?schema=public
-      AUTO_CANCEL_INTERVAL_MS: "300000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-nail_booking}?schema=public
+      CRON_SECRET: ${CRON_SECRET:-change-me-cron-secret}
+      ADMIN_AUTH_SECRET: ${ADMIN_AUTH_SECRET:-change-me-admin-secret}
+      ADMIN_SEED_PASSWORD: ${ADMIN_SEED_PASSWORD:-change-me-admin-password}
+      AUTO_CANCEL_INTERVAL_MS: ${AUTO_CANCEL_INTERVAL_MS:-300000}
     command: ["node", "scripts/auto-cancel-loop.cjs"]
     depends_on:
       postgres:

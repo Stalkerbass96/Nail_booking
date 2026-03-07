@@ -1,8 +1,8 @@
-# Frontend Routes V1
+﻿# Frontend Routes V1
 
-- 更新日期：2026-03-07
+更新时间：2026-03-07
 
-## 1. Public
+## 1. Public Routes
 
 - `/`
 - `/services`
@@ -11,7 +11,7 @@
 - `/booking/success/{bookingNo}`
 - `/booking/lookup`
 
-## 2. Admin
+## 2. Admin Routes
 
 - `/admin/login`
 - `/admin`
@@ -23,18 +23,20 @@
 - `/admin/points`
 - `/admin/settings`
 
-## 3. 访问与鉴权说明
+## 3. 访问控制
 
-- Public 页面无需登录。
-- Admin 页面需登录（除 `/admin/login`）。
-- 未登录访问 admin 页面会自动跳转到 `/admin/login?next=...`。
-- `/admin/*` 与 `/api/admin/*` 都受中间件保护。
+- Public 页面默认可匿名访问。
+- Admin 页面需要登录，未登录会跳转到 `/admin/login`。
+- 访问受保护页面时，系统会保留 `next` 参数，登录后跳回原页面。
+- `/admin/*` 与 `/api/admin/*` 均受 middleware 保护。
 
 ## 4. 多语言说明
 
-- 前后台页面均支持 `?lang=zh|ja`。
-- 管理端导航会自动保留并传递当前 `lang` 参数。
+- 当前通过 URL 参数 `?lang=zh|ja` 控制语言。
+- 页面间跳转时会尽量保留当前 `lang` 参数。
+- 公共页面和管理页面都支持中日双语。
 
 ## 5. 备注
 
-- 后台视觉已做统一商品化改造（仅样式与交互层，不改业务逻辑）。
+- 当前前台主要以预约闭环和服务展示为目标。
+- 当前后台主要以店长单人运营为目标，不涉及复杂权限模型。

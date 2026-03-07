@@ -1,84 +1,89 @@
-# API Endpoints V1
+﻿# API Endpoints V1
 
-- 更新日期：2026-03-07
-- 基础路径：同 Next.js 应用域名
-- 返回格式：JSON
+更新时间：2026-03-07
+
+说明：
+- 所有接口均由 Next.js Route Handlers 提供。
+- 返回格式默认 JSON。
+- 管理端接口需要登录态；公开接口不需要登录。
 
 ## 1. Public APIs
 
-### 分类与服务
+### 服务目录
 
 - `GET /api/public/categories`
-  - query: `lang=zh|ja`（可选）
+  - query:
+    - `lang=zh|ja`（可选）
 
 - `GET /api/public/packages`
-  - query: `lang=zh|ja`（可选）, `categoryId`（可选）
+  - query:
+    - `lang=zh|ja`（可选）
+    - `categoryId`（可选）
 
 - `GET /api/public/packages/{id}`
-  - query: `lang=zh|ja`（可选）
+  - query:
+    - `lang=zh|ja`（可选）
 
 - `GET /api/public/packages/{id}/addons`
-  - query: `lang=zh|ja`（可选）
+  - query:
+    - `lang=zh|ja`（可选）
 
 ### 预约
 
 - `GET /api/public/availability`
   - query:
     - `packageId`（必填）
-    - `date`（必填，`YYYY-MM-DD`）
-    - `addonIds`（可选，逗号分隔）
+    - `date`（必填，格式 `YYYY-MM-DD`）
+    - `addonIds`（可选，多值）
 
 - `POST /api/public/appointments`
-  - 创建预约（状态 `pending`）
-  - 已加入并发防护（事务内 advisory lock + 冲突校验）
+  - 创建预约，默认状态为 `pending`
+  - 创建时会进行营业时间校验、冲突校验、档期占用与自动取消时间计算
 
 - `GET /api/public/appointments/lookup`
-  - 使用 `email + bookingNo` 查询预约
+  - 使用 `email + bookingNo` 查询预约状态
 
-## 2. Admin APIs（需登录）
+## 2. Admin APIs
 
-### 鉴权
+### 认证
 
 - `POST /api/admin/auth/login`
 - `POST /api/admin/auth/logout`
 - `GET /api/admin/auth/me`
 
-### 预约
+### 预约管理
 
 - `GET /api/admin/appointments`
 - `PATCH /api/admin/appointments/{id}/confirm`
 - `PATCH /api/admin/appointments/{id}/cancel`
 - `PATCH /api/admin/appointments/{id}/complete`
 
-### 分类
+### 分类管理
 
 - `GET /api/admin/categories`
 - `POST /api/admin/categories`
 - `PATCH /api/admin/categories/{id}`
 - `POST /api/admin/categories/batch`
-  - `action=setActive`：批量启停
-  - `action=setSortOrder`：批量更新排序
+  - `action=setActive`
+  - `action=setSortOrder`
 
-### 套餐
+### 套餐管理
 
 - `GET /api/admin/packages`
 - `POST /api/admin/packages`
 - `PATCH /api/admin/packages/{id}`
 
-### 加项
+### 加项管理
 
 - `GET /api/admin/addons`
 - `POST /api/admin/addons`
 - `PATCH /api/admin/addons/{id}`
 
-### 客户
+### 客户与积分
 
 - `GET /api/admin/customers`
 - `GET /api/admin/customers/{id}`
-- `GET /api/admin/customers/{id}/points`
-
-### 积分
-
+- `POST /api/admin/customers/{id}/points`
 - `GET /api/admin/points/ledger`
 - `POST /api/admin/points/use`
 
@@ -86,22 +91,16 @@
 
 - `GET /api/admin/system-settings`
 - `PATCH /api/admin/system-settings`
-  - 字段：
-    - `slotMinutes`
-    - `pendingAutoCancelHours`
-    - `cancelCutoffHours`
-    - `pointEarnRatioJpy`
-    - `pointRedeemRatioJpy`
 
-## 3. System APIs
+当前支持的关键设置：
+- `slotMinutes`
+- `pendingAutoCancelHours`
+- `cancelCutoffHours`
+- `pointEarnRatioJpy`
+- `pointRedeemRatioJpy`
 
-- `POST /api/system/jobs/auto-cancel-pending`
-  - 功能：取消所有超时 `pending` 预约
-  - 当前策略：`CRON_SECRET` 为必需；未配置返回 503
-  - 请求头：`x-cron-secret`
+## 3. System Job API
 
-## 4. 安全与备注
-
-- `/admin/*` 与 `/api/admin/*` 均由中间件鉴权。
-- `ADMIN_AUTH_SECRET` 现在为必需（未配置直接 fail-closed）。
-- 支持 `?lang=zh|ja` 的接口会返回本地化显示字段（同时保留中/日文字段）。
+- `GET /api/system/jobs/auto-cancel-pending`
+  - 用于执行一次待确认预约自动取消
+  - 应配合 `CRON_SECRET` 使用，不应公开暴露

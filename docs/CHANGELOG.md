@@ -1,32 +1,31 @@
-# CHANGELOG
+﻿# CHANGELOG
 
 ## 2026-03-07
 
-### ✨ 功能与体验
-- 新增系统设置后台页：`/admin/settings`
-- 新增系统设置 API：`GET/PATCH /api/admin/system-settings`
-- 前后台完成两轮 UI 商品化改造（卡片、按钮、输入、状态反馈统一）
-- 移动端交互与可访问性完成一轮精修（focus/disabled/状态反馈）
+### 文档与部署
+- 重写根目录 `README.md`，明确本地开发、Ubuntu 单机部署和文档入口。
+- 重写 `docs/deployment/deployment-v1.md`，补全 Ubuntu 22.04/24.04 从零部署步骤。
+- 重写 `docs/README.md`、`docs/architecture/agent-handoff-v1.md`、`docs/architecture/local-runbook-v1.md`。
+- 清理并重写实现架构、API 路由、前端路由文档，移除乱码。
+- 新增 `.gitattributes`，固定 shell 脚本与部署文件使用 LF 行尾。
 
-### 🔐 安全与稳定性
-- 管理鉴权改为 fail-closed：`ADMIN_AUTH_SECRET` 未配置直接拒绝
-- 系统任务接口强制鉴权：`CRON_SECRET` 未配置返回 503
-- 预约创建加入并发防重保护（事务内锁 + 冲突校验）
+### 部署链路
+- 修复 Docker 镜像构建时过早设置 NODE_ENV=production 导致缺少 Tailwind 构建依赖的问题。
+- 去掉部署 compose 中固定 container_name，避免同主机重复部署时命名冲突。
+- 调整部署脚本顺序为 postgres -> migrate/seed -> app + worker，消除首次部署竞态。
+- `docker-compose.deploy.yml` 改为从 `.env.deploy` 读取数据库、端口和部署参数。
+- `Dockerfile` 改为显式绑定 `0.0.0.0`，确保容器能从宿主机端口访问。
+- `.env.deploy.example` 扩展为单机部署所需的完整变量集合。
+- `scripts/deploy-docker.sh` 改为统一使用 `--env-file .env.deploy`，并在启动后输出访问地址。
 
-### 🧪 测试
-- 新增 E2E 测试流程与产物目录
-- 修复测试环境后，E2E 最新结果：**5/5 PASS**
-- 报告：`docs/testing/e2e-report-2026-03-07.md`
-
-### 📚 文档
-- 全量刷新 README / 架构 / 运行手册 / 运维说明
-- 更新部署手册（加入系统设置与上线检查项）
-
----
+### 验证
+- `npm run build` 通过。
+- `docker compose --env-file .env.deploy.example -f docker-compose.deploy.yml config` 通过。
 
 ## 2026-03-06
 
-### 🧱 基础能力
-- 完成 MVP 主体：前台预约、后台管理、自动取消、积分体系
-- 完成 Admin 鉴权、核心 API、数据库 schema 与 seed
-- 完成 Docker 一体部署基础方案
+### MVP 第一轮实现
+- 完成单店美甲预约的核心数据模型。
+- 完成公开预约流程与后台基础管理页面。
+- 接入后台登录鉴权、自动取消任务、种子数据与基础部署文档。
+

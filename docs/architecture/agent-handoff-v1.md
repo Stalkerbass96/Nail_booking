@@ -1,79 +1,107 @@
-# AI 接手文档 V1
+﻿# AI Agent Handoff V1
 
-- 目标：让新的 AI coding agent 在 5 分钟内进入可开发状态。
-- 更新日期：2026-03-07
+更新时间：2026-03-07
 
-## 1. 项目定位
+这份文档给新的 AI coding agent 或新开发者使用，目标是 5 分钟内建立足够上下文并继续开发。
 
-单店美甲预约系统（MVP）。
+## 1. 项目是什么
 
-- 前台：服务展示、预约创建、预约查询。
-- 后台：预约流转、分类/套餐/加项管理、客户与积分管理、系统设置管理。
-- 规则：默认 30 分钟粒度，待确认占位，超时自动取消，积分比例可配置。
+这是一个单店美甲预约系统，角色只有两类：
+- 顾客
+- 店长/美甲师（当前只有 1 人）
 
-## 2. 当前已完成
+系统分为两部分：
+- 前台：套餐展示、预约创建、预约查询
+- 后台：预约管理、分类/套餐/加项管理、客户与积分管理、系统设置
 
-- API：Public/Admin/System 主流程已打通。
-- Admin 鉴权：Cookie Session + Middleware（已禁默认密钥回退）。
-- 管理端页面：预约、分类、套餐、加项、客户、积分、系统设置。
-- 中日双语：核心页面支持 `?lang=zh|ja`。
-- 自动取消任务：脚本与 API 均可执行（CRON 密钥强制鉴权）。
-- 部署：已提供 Docker 部署方案（`docker-compose.deploy.yml`）。
-- E2E：已落地并有通过报告（2026-03-07）。
+## 2. 当前已经完成的模块
 
-## 3. 当前未完成（优先级）
+- 前台套餐分类展示
+- 套餐详情页
+- 预约创建 API 与页面
+- 预约查询页
+- 后台登录（cookie session）
+- 后台预约列表
+- 分类管理
+- 套餐管理
+- 加项管理
+- 客户查询与积分面板
+- 系统设置面板
+- 自动取消待确认预约 worker
+- Docker 单机部署链路
 
-1. P1：邮件通知（预约创建/确认/取消）。
-2. P1：在线支付与回调闭环。
-3. P1：统一 i18n 资源文件（减少组件内硬编码文案）。
-4. P2：补齐并发与异常场景的自动化测试覆盖。
+## 3. 当前已知边界
 
-## 4. 本地开发最短路径
+- 单店，不支持多门店
+- 不支持在线支付，线下收款
+- 不支持指定美甲师，因为当前店长就是唯一美甲师
+- 邮件/LINE 通知属于后续阶段
+- 积分目前以展示、后台扣减为主
+
+## 4. 最关键的代码入口
+
+业务规则：
+- `src/lib/booking-rules.ts`
+- `src/lib/business-hours.ts`
+- `src/lib/system-settings.ts`
+- `src/lib/points.ts`
+
+后台鉴权：
+- `src/lib/admin-auth.ts`
+- `src/middleware.ts`
+
+Public API：
+- `src/app/api/public/*`
+
+Admin API：
+- `src/app/api/admin/*`
+
+定时任务：
+- `scripts/auto-cancel-pending.cjs`
+- `scripts/auto-cancel-loop.cjs`
+
+部署链路：
+- `Dockerfile`
+- `docker-compose.deploy.yml`
+- `scripts/deploy-docker.sh`
+- `docs/deployment/deployment-v1.md`
+
+## 5. 接手后先做什么
+
+建议顺序：
+1. `npm install`
+2. `npm run lint`
+3. `npm run build`
+4. 阅读 `implementation-v3`、API 路由文档、前端路由文档
+5. 再进入具体 feature 开发
+
+如果需要本地完整跑通：
+1. `cp .env.example .env`
+2. `docker compose up -d`
+3. `npm run db:setup`
+4. `npm run dev`
+
+## 6. 变更规则
+
+- 变更 Prisma schema 后，必须同步验证迁移与 seed
+- 变更预约规则后，至少检查预约创建、可用时间、自动取消三处逻辑
+- 变更部署方式后，必须同步更新 `docs/deployment/deployment-v1.md`
+- 提交前至少运行：
 
 ```bash
-cp .env.example .env
-# 任选：docker compose up -d 或 systemctl start postgresql
-npm install
-npm run prisma:migrate:deploy
-npm run prisma:generate
-npm run db:seed
-npm run dev
+npm run lint
+npm run build
 ```
 
-## 5. 关键代码位置
-
-- 预约规则：`src/lib/booking-rules.ts`
-- 业务时间计算：`src/lib/business-hours.ts`
-- 积分计算：`src/lib/points.ts`
-- 系统设置解析：`src/lib/system-settings.ts`
-- Admin 鉴权：`src/lib/admin-auth.ts`、`middleware.ts`
-- Public API：`src/app/api/public/*`
-- Admin API：`src/app/api/admin/*`
-- 自动取消：`scripts/auto-cancel-pending.cjs`、`scripts/auto-cancel-loop.cjs`
-- E2E 报告：`docs/testing/e2e-report-2026-03-07.md`
-
-## 6. 开发约束（建议遵守）
-
-- 保持 Prisma schema 与 API 行为同步更新。
-- 涉及预约状态与积分时，优先使用事务。
-- 涉及时间冲突与时段算法改动时，先补测试再改逻辑。
-- 文案改动需同步中日两套。
-
-## 7. 提交前检查
+如果改到主流程，额外运行：
 
 ```bash
-npm run build
 npm run test:e2e
 ```
 
-至少保证 build 通过，且 E2E 不回归。
+## 7. 当前优先级建议
 
-## 8. 文档同步要求
-
-涉及以下改动时必须更新文档：
-
-- 新 API / 变更 API：更新 `docs/architecture/api-endpoints-v1.md`
-- 新页面 / 路由：更新 `docs/architecture/frontend-routes-v1.md`
-- 部署方式变化：更新 `docs/deployment/deployment-v1.md`
-- 需求边界变化：更新 `docs/requirements/` 与 `docs/prd/`
-- 测试基线变化：更新 `docs/testing/*`
+1. 管理端预约完成流程改成正式表单，不再使用 `prompt`
+2. 管理端预约页剩余文案与交互打磨
+3. 增加更多业务测试覆盖
+4. 接入邮件通知/LINE 集成（二期）
