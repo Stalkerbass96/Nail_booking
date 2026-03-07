@@ -1,4 +1,4 @@
-import { parseSingleBigInt } from "@/lib/booking-rules";
+﻿import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import {
   createLineLinkToken,
@@ -56,12 +56,13 @@ export async function POST(
     const linkUrl = `${config.appBaseUrl}/line/link?session=${encodeURIComponent(sessionToken)}`;
     const manageUrl = `${config.appBaseUrl}/line/manage`;
     const message = [
-      "??????????????",
-      "??????????? LINE ??????????",
+      "美甲预约系统 LINE 绑定链接",
+      "请打开下面的链接，完成本次预约与 LINE 账号绑定：",
       linkUrl,
       "",
-      "??????????????",
-      "???????????????",
+      "绑定完成后，你可以在 LINE 中接收店铺通知，",
+      "也可以继续通过 LINE 与店长进行 1 对 1 沟通。",
+      "绑定管理页面：",
       manageUrl
     ].join("\n");
 
