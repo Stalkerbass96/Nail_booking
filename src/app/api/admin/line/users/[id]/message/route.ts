@@ -31,7 +31,8 @@ export async function POST(
           direction: LineMessageDirection.outgoing,
           status: LineMessageStatus.sent,
           messageType: "text",
-          text: payload.text
+          text: payload.text,
+          readAt: new Date()
         }
       });
 
@@ -42,7 +43,8 @@ export async function POST(
           status: message.status,
           messageType: message.messageType,
           text: message.text,
-          createdAt: message.createdAt.toISOString()
+          createdAt: message.createdAt.toISOString(),
+          readAt: message.readAt?.toISOString() ?? null
         }
       });
     } catch (lineError) {
@@ -53,6 +55,7 @@ export async function POST(
           status: LineMessageStatus.failed,
           messageType: "text",
           text: payload.text,
+          readAt: new Date(),
           rawJson: {
             error: lineError instanceof Error ? lineError.message : "Unknown LINE error"
           }
@@ -69,7 +72,8 @@ export async function POST(
             status: message.status,
             messageType: message.messageType,
             text: message.text,
-            createdAt: message.createdAt.toISOString()
+            createdAt: message.createdAt.toISOString(),
+            readAt: message.readAt?.toISOString() ?? null
           }
         },
         { status: 502 }

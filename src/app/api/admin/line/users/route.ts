@@ -1,4 +1,5 @@
-﻿import { prisma } from "@/lib/db";
+import { LineMessageDirection } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { getLineConfig } from "@/lib/line";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -31,13 +32,30 @@ export async function GET(request: NextRequest) {
             text: true,
             messageType: true,
             direction: true,
-            createdAt: true
+            createdAt: true,
+            readAt: true
           }
         }
       },
       orderBy: [{ lastSeenAt: "desc" }, { updatedAt: "desc" }],
       take: 80
     });
+
+    const unreadCounts = items.length
+      ? await prisma.lineMessage.groupBy({
+          by: ["lineUserId"],
+          where: {
+            lineUserId: { in: items.map((item) => item.id) },
+            direction: LineMessageDirection.incoming,
+            readAt: null
+          },
+          _count: { _all: true }
+        })
+      : [];
+
+    const unreadByLineUserId = new Map(
+      unreadCounts.map((item) => [item.lineUserId.toString(), item._count._all])
+    );
 
     const config = getLineConfig();
 
@@ -54,6 +72,7 @@ export async function GET(request: NextRequest) {
         isFollowing: item.isFollowing,
         linkedAt: item.linkedAt?.toISOString() ?? null,
         lastSeenAt: item.lastSeenAt?.toISOString() ?? null,
+        unreadCount: unreadByLineUserId.get(item.id.toString()) ?? 0,
         customer: item.customer
           ? {
               id: item.customer.id.toString(),
@@ -66,7 +85,8 @@ export async function GET(request: NextRequest) {
               text: item.messages[0].text,
               messageType: item.messages[0].messageType,
               direction: item.messages[0].direction,
-              createdAt: item.messages[0].createdAt.toISOString()
+              createdAt: item.messages[0].createdAt.toISOString(),
+              readAt: item.messages[0].readAt?.toISOString() ?? null
             }
           : null
       }))

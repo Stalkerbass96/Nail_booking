@@ -1,3 +1,4 @@
+import { LineMessageDirection } from "@prisma/client";
 import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,28 +11,39 @@ export async function GET(
     const params = await context.params;
     const id = parseSingleBigInt(params.id, "id");
 
-    const lineUser = await prisma.lineUser.findUnique({
-      where: { id },
-      include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
+    const lineUser = await prisma.$transaction(async (tx) => {
+      await tx.lineMessage.updateMany({
+        where: {
+          lineUserId: id,
+          direction: LineMessageDirection.incoming,
+          readAt: null
         },
-        messages: {
-          orderBy: { createdAt: "asc" },
-          take: 200,
-          include: {
-            sentByAdmin: {
-              select: {
-                displayName: true
+        data: { readAt: new Date() }
+      });
+
+      return tx.lineUser.findUnique({
+        where: { id },
+        include: {
+          customer: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          messages: {
+            orderBy: { createdAt: "asc" },
+            take: 200,
+            include: {
+              sentByAdmin: {
+                select: {
+                  displayName: true
+                }
               }
             }
           }
         }
-      }
+      });
     });
 
     if (!lineUser) {
@@ -60,6 +72,7 @@ export async function GET(
         messageType: item.messageType,
         text: item.text,
         createdAt: item.createdAt.toISOString(),
+        readAt: item.readAt?.toISOString() ?? null,
         sentByAdminName: item.sentByAdmin?.displayName ?? null
       }))
     });

@@ -402,7 +402,7 @@ async function createLineFixture(servicePackage, cleanup) {
   };
 }
 
-async function runLineCase(result, bookingContext, cleanup, lineChannelSecret) {
+async function runLineCase(result, adminCookie, bookingContext, cleanup, lineChannelSecret) {
   if (!lineChannelSecret) {
     result.status = "SKIP";
     result.detail = "LINE_CHANNEL_SECRET is not configured and the acceptance script did not manage the server process";
@@ -447,7 +447,7 @@ async function runLineCase(result, bookingContext, cleanup, lineChannelSecret) {
     throw new Error(`LINE redirect URL missing nonce: ${verifyData.redirectUrl}`);
   }
 
-  const webhookBody = JSON.stringify({
+  const accountLinkBody = JSON.stringify({
     destination: "acceptance-test",
     events: [
       {
@@ -466,15 +466,15 @@ async function runLineCase(result, bookingContext, cleanup, lineChannelSecret) {
     ]
   });
 
-  const webhookRes = await fetch(`${BASE_URL}/api/line/webhook`, {
+  const accountLinkRes = await fetch(`${BASE_URL}/api/line/webhook`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-line-signature": createWebhookSignature(webhookBody, lineChannelSecret)
+      "x-line-signature": createWebhookSignature(accountLinkBody, lineChannelSecret)
     },
-    body: webhookBody
+    body: accountLinkBody
   });
-  await assertJsonOk(webhookRes, "LINE webhook accountLink");
+  await assertJsonOk(accountLinkRes, "LINE webhook accountLink");
 
   const linkedUser = await prisma.lineUser.findUnique({
     where: { id: lineUser.id },
@@ -513,6 +513,65 @@ async function runLineCase(result, bookingContext, cleanup, lineChannelSecret) {
     throw new Error("Public line manage did not return the linked LINE account");
   }
 
+  const incomingMessageBody = JSON.stringify({
+    destination: "acceptance-test",
+    events: [
+      {
+        type: "message",
+        mode: "active",
+        timestamp: Date.now(),
+        source: {
+          type: "user",
+          userId: lineUserId
+        },
+        message: {
+          id: `msg-${RUN_ID}`,
+          type: "text",
+          text: "Acceptance unread check"
+        }
+      }
+    ]
+  });
+
+  const incomingRes = await fetch(`${BASE_URL}/api/line/webhook`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-line-signature": createWebhookSignature(incomingMessageBody, lineChannelSecret)
+    },
+    body: incomingMessageBody
+  });
+  await assertJsonOk(incomingRes, "LINE webhook message");
+
+  const usersBeforeReadRes = await fetch(`${BASE_URL}/api/admin/line/users`, {
+    headers: { cookie: adminCookie }
+  });
+  const usersBeforeRead = await assertJsonOk(usersBeforeReadRes, "Admin line users before read");
+  const beforeReadItem = (usersBeforeRead.items || []).find((item) => item.lineUserId === lineUserId);
+  if (!beforeReadItem || beforeReadItem.unreadCount < 1) {
+    throw new Error("Unread count did not increase after incoming LINE message");
+  }
+
+  const messagesRes = await fetch(`${BASE_URL}/api/admin/line/users/${beforeReadItem.id}/messages`, {
+    headers: { cookie: adminCookie }
+  });
+  const messagesData = await assertJsonOk(messagesRes, "Admin line messages");
+  const unreadMessage = (messagesData.messages || []).find(
+    (item) => item.direction === "incoming" && item.text === "Acceptance unread check"
+  );
+  if (!unreadMessage) {
+    throw new Error("Incoming LINE message did not appear in conversation history");
+  }
+
+  const usersAfterReadRes = await fetch(`${BASE_URL}/api/admin/line/users`, {
+    headers: { cookie: adminCookie }
+  });
+  const usersAfterRead = await assertJsonOk(usersAfterReadRes, "Admin line users after read");
+  const afterReadItem = (usersAfterRead.items || []).find((item) => item.lineUserId === lineUserId);
+  if (!afterReadItem || afterReadItem.unreadCount !== 0) {
+    throw new Error("Unread count was not cleared after opening the LINE conversation");
+  }
+
   const unlinkRes = await fetch(`${BASE_URL}/api/public/line/manage`, {
     method: "DELETE",
     headers: jsonHeaders(),
@@ -529,7 +588,8 @@ async function runLineCase(result, bookingContext, cleanup, lineChannelSecret) {
   result.detail = {
     bookingNo: bookingContext.bookingNo,
     linkedLineUserId: lineUserId,
-    redirectUrl: verifyData.redirectUrl
+    redirectUrl: verifyData.redirectUrl,
+    unreadBeforeRead: beforeReadItem.unreadCount
   };
 }
 
@@ -759,7 +819,7 @@ async function main() {
     const lineFixture = await createLineFixture(servicePackage, cleanup);
     const lineCase = { name: "line-self-linking", status: "PASS", detail: null };
     try {
-      await runLineCase(lineCase, lineFixture, cleanup, server.lineChannelSecret);
+      await runLineCase(lineCase, adminCookie, lineFixture, cleanup, server.lineChannelSecret);
     } catch (error) {
       lineCase.status = "FAIL";
       lineCase.detail = error instanceof Error ? error.message : String(error);

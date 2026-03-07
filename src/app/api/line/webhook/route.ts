@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
             status: LineMessageStatus.received,
             messageType: "follow",
             text: "User followed the LINE official account",
+            readAt: new Date(),
             rawJson: event
           }
         });
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
             status: LineMessageStatus.received,
             messageType: "accountLink",
             text: `Account link event: ${result || "unknown"}`,
+            readAt: new Date(),
             rawJson: event
           }
         });

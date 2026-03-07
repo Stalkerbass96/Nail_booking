@@ -261,12 +261,14 @@ model LineMessage {
   text          String?
   rawJson       Json?                @map("raw_json")
   sentByAdminId BigInt?              @map("sent_by_admin_id")
+  readAt        DateTime?            @map("read_at") @db.Timestamptz(6)
   createdAt     DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
 
   lineUser    LineUser @relation(fields: [lineUserId], references: [id], onDelete: Cascade)
   sentByAdmin Admin?   @relation(fields: [sentByAdminId], references: [id])
 
   @@index([lineUserId, createdAt(sort: Desc)])
+  @@index([lineUserId, readAt])
   @@index([createdAt(sort: Desc)])
   @@map("line_messages")
 }

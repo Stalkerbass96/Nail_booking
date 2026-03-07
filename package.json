@@ -17,7 +17,9 @@
     "job:auto-cancel": "node scripts/auto-cancel-pending.cjs",
     "job:auto-cancel:loop": "node scripts/auto-cancel-loop.cjs",
     "test:e2e": "node e2e/smoke.cjs",
-    "test:e2e:acceptance": "node e2e/acceptance.cjs"
+    "test:e2e:acceptance": "node e2e/acceptance.cjs",
+    "clean": "node scripts/clean-next.cjs",
+    "verify": "node scripts/verify.cjs"
   },
   "prisma": {
     "seed": "node scripts/seed.cjs"

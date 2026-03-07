@@ -121,6 +121,7 @@ npm run prisma:migrate:deploy
 npm run db:seed
 npm run test:e2e
 npm run test:e2e:acceptance
+npm run verify
 npm run job:auto-cancel
 npm run job:auto-cancel:loop
 ```

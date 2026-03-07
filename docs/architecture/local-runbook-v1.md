@@ -74,6 +74,7 @@ npm run dev
 npm run lint
 npm run build
 npm run test:e2e
+npm run verify
 ```
 
 说明：
