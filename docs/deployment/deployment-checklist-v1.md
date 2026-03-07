@@ -1,25 +1,25 @@
-﻿# Deployment Checklist V1
+# Deployment Checklist V1
 
-更新时间：2026-03-07
+?????2026-03-07
 
-这份清单用于两种场景：
-- 你第一次把项目部署到 Ubuntu 单机
-- 新的 AI agent 接手后，想快速验证部署文档是否仍然可用
+????????????
+- ?????? Ubuntu ?????
+- ?? AI agent ???????????????
 
-## 1. 部署前检查
+## 1. ?????
 
-- [ ] 主机系统为 Ubuntu 22.04 或 24.04
-- [ ] 已安装 Docker Engine
-- [ ] 已安装 Docker Compose Plugin
-- [ ] 云安全组或防火墙已放行应用端口（默认 `3000/tcp`）
-- [ ] 已获取仓库代码
-- [ ] 已复制 `.env.deploy.example` 为 `.env.deploy`
-- [ ] 已修改 `.env.deploy` 中的敏感值
+- [ ] ????? Ubuntu 22.04 ? 24.04
+- [ ] ??????? `22/tcp`
+- [ ] ??????? `3000/tcp`
+- [ ] ???? SSH ?????
+- [ ] ??? Docker Engine
+- [ ] ??? Docker Compose Plugin
+- [ ] ???????
+- [ ] ??? `.env.deploy.example` ? `.env.deploy`
 
-## 2. 配置检查
+## 2. `.env.deploy` ?????
 
-`.env.deploy` 至少确认这些值：
-
+??????????????
 - [ ] `APP_PORT`
 - [ ] `POSTGRES_DB`
 - [ ] `POSTGRES_USER`
@@ -28,96 +28,128 @@
 - [ ] `ADMIN_AUTH_SECRET`
 - [ ] `ADMIN_SEED_PASSWORD`
 - [ ] `AUTO_CANCEL_INTERVAL_MS`
+- [ ] `APP_BASE_URL`
 
-## 3. 首次部署命令
+?????
+- [ ] `APP_BASE_URL` ?? `127.0.0.1` ? `localhost`??????????????
+- [ ] ??????????????? `change-me-*` ???
 
-按顺序执行：
+## 3. ??????
+
+??????
 
 ```bash
 chmod +x scripts/deploy-docker.sh
 ./scripts/deploy-docker.sh --seed
 ```
 
-执行后应满足：
-- [ ] `postgres` 容器启动
-- [ ] `app` 容器启动
-- [ ] `auto-cancel-worker` 容器启动
-- [ ] 数据迁移执行成功
-- [ ] 种子数据写入成功
+?????????
+- [ ] compose ??????
+- [ ] ??????
+- [ ] `postgres is healthy`
+- [ ] migration ????
+- [ ] seed ????
+- [ ] `http ready`
+- [ ] `stack started`
 
-## 4. 部署后验证
+## 4. ?????
 
-### 4.1 容器状态
+### 4.1 ????
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 ```
 
-- [ ] 三个服务状态均为 `Up`
+- [ ] `postgres` ? `Up` ? `healthy`
+- [ ] `app` ? `Up` ? `healthy`
+- [ ] `auto-cancel-worker` ? `Up`
 
-### 4.2 应用日志
-
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 app
-```
-
-- [ ] 没有数据库连接失败
-- [ ] 没有 Next.js 启动失败
-
-### 4.3 Worker 日志
-
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 auto-cancel-worker
-```
-
-- [ ] worker 已启动
-- [ ] worker 没有持续报错
-
-### 4.4 接口验证
+### 4.2 ??????
 
 ```bash
 curl http://127.0.0.1:3000/api/public/categories
 curl http://127.0.0.1:3000/api/public/packages
 ```
 
-- [ ] categories 返回 200
-- [ ] packages 返回 200
+- [ ] categories ?? 200
+- [ ] packages ?? 200
 
-### 4.5 页面验证
+### 4.3 ????
 
-浏览器访问：
-- `http://<服务器IP>:3000`
-- `http://<服务器IP>:3000/admin/login`
+??????
+- `http://<???IP>:3000`
+- `http://<???IP>:3000/admin/login`
 
-- [ ] 前台页面能打开
-- [ ] 后台登录页能打开
-- [ ] 种子账号可以登录
+- [ ] ???????
+- [ ] ????????
+- [ ] ?????????
 
-## 5. 更新版本检查
+### 4.4 ????????
 
-推荐执行：
+- [ ] `/admin/schedule` ???
+- [ ] `/admin/line` ???
+- [ ] `/admin/appointments` ???
+
+## 5. ??????
+
+????????
+
+### 5.1 ?????
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+```
+
+### 5.2 ?????
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 app
+```
+
+### 5.3 ??????
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 postgres
+```
+
+### 5.4 ? worker ??
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 auto-cancel-worker
+```
+
+### 5.5 ???????
+
+- [ ] ??????? `3000/tcp`
+- [ ] ????? UFW???? `sudo ufw allow 3000/tcp`
+- [ ] ????? `curl http://127.0.0.1:3000/api/public/categories` ???
+
+## 6. ??????
+
+???
 
 ```bash
 git pull
 ./scripts/deploy-docker.sh
 ```
 
-更新后确认：
-- [ ] 站点仍可访问
-- [ ] 数据未丢失
-- [ ] 后台仍可登录
-- [ ] worker 仍在运行
+??????
+- [ ] ??????
+- [ ] ??????
+- [ ] ?????
+- [ ] worker ????
 
-## 6. 本仓库当前已完成的模拟验证
+## 7. ???????????
 
-2026-03-07 本地已做过以下检查：
-- [x] `npm run build` 通过
-- [x] `docker compose --env-file .env.deploy.example -f docker-compose.deploy.yml config` 通过
-- [x] `scripts/deploy-docker.sh` 已确认是 LF 行尾，适合 Ubuntu bash 执行
-- [x] 本地容器模拟部署已跑通（独立端口 `3300` 与独立 compose project）
-- [x] 模拟部署中已验证 `migrate -> seed -> app -> worker` 顺序可用
-- [x] `GET /api/public/categories` 返回 200
-- [x] `GET /api/public/packages` 返回 200
+2026-03-07 ????
+- [x] `npm run build` ??
+- [x] `npm run verify` ??
+- [x] `docker compose --env-file .env.deploy.example -f docker-compose.deploy.yml config` ??
+- [x] `scripts/deploy-docker.sh` ? LF ??????? Ubuntu bash ??
+- [x] ??????? env ???compose ?????????HTTP ????
+- [x] ????????????
+- [x] `GET /api/public/categories` ?? 200
+- [x] `GET /api/public/packages` ?? 200
 
-如果你准备上真正的 Ubuntu 云主机，优先参考：
+??? Ubuntu ??????
 - `docs/deployment/deployment-v1.md`

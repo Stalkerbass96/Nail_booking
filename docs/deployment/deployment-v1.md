@@ -1,45 +1,64 @@
-﻿# Ubuntu Single-Host Deployment V1
+# Ubuntu Single-Host Deployment V1
 
-更新时间：2026-03-07
+?????2026-03-07
 
-这份文档面向全新 Ubuntu 云主机，目标是让你在一台服务器上部署：
-- Next.js 前后端应用
-- PostgreSQL 数据库
-- 自动取消待确认预约的 worker
+???????????
+- ???????? Ubuntu ???
+- ???????
+- ??? Nail Booking ?????????
 
-本方案默认：
+??????
 - Ubuntu 22.04 / 24.04
-- 单机部署
-- 数据库与应用在同一主机
-- 使用 Docker Compose
-- 暂时直接暴露 `3000` 端口，不强制要求反向代理
+- ????
+- PostgreSQL?Next.js ???worker ???????
+- ?? Docker Compose
+- ????????? `3000` ??
 
-## 1. 最终效果
+?????????? HTTPS????
+- `docs/deployment/nginx-https-v1.md`
 
-部署完成后，你可以访问：
-- 前台：`http://<服务器IP>:3000`
-- 后台登录：`http://<服务器IP>:3000/admin/login`
-- 后台排班页：`http://<服务器IP>:3000/admin/schedule`
-- 后台 LINE 页：`http://<服务器IP>:3000/admin/line`
+## 1. ??????????
 
-默认种子账号：
+?????????????
+- ???`http://<???IP>:3000`
+- ?????`http://<???IP>:3000/admin/login`
+- ????`http://<???IP>:3000/admin/schedule`
+- LINE ??`http://<???IP>:3000/admin/line`
+
+???????
 - Email: `owner@nail-booking.local`
-- Password: `.env.deploy` 中的 `ADMIN_SEED_PASSWORD`
+- Password: `.env.deploy` ?? `ADMIN_SEED_PASSWORD`
 
-## 2. 主机准备
+## 2. ???????
 
-### 2.1 安装系统依赖
+### 2.1 ????
+
+?????????
+- `22/tcp`
+- `3000/tcp`
+
+??????? Nginx/HTTPS???????
+- `80/tcp`
+- `443/tcp`
+
+### 2.2 ?????
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl git
+ssh ubuntu@<???IP>
 ```
 
-### 2.2 安装 Docker Engine 和 Compose Plugin
+## 3. ?? Docker
+
+### 3.1 ??????
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg
+sudo apt-get install -y ca-certificates curl git gnupg
+```
+
+### 3.2 ?? Docker Engine ? Compose Plugin
+
+```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -53,57 +72,53 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-### 2.3 验证 Docker
+### 3.3 ?? Docker
 
 ```bash
 docker --version
 docker compose version
 ```
 
-如果你希望当前用户免 `sudo`：
+### 3.4 ????? sudo????
 
 ```bash
 sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-## 3. 获取代码
+## 4. ????
 
 ```bash
 git clone https://github.com/Stalkerbass96/Nail_booking.git
 cd Nail_booking
 ```
 
-## 4. 配置部署环境变量
+## 5. ????????
 
-### 4.1 复制模板
+### 5.1 ????
 
 ```bash
 cp .env.deploy.example .env.deploy
 ```
 
-### 4.2 编辑 `.env.deploy`
+### 5.2 ????
 
 ```bash
-vim .env.deploy
+nano .env.deploy
 ```
 
-至少修改这些值：
+????????
 - `POSTGRES_PASSWORD`
+- `CRON_SECRET`
 - `ADMIN_AUTH_SECRET`
 - `ADMIN_SEED_PASSWORD`
-- `CRON_SECRET`
+- `APP_BASE_URL`
 
-建议也检查：
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `APP_PORT`
-- `AUTO_CANCEL_INTERVAL_MS`
-- `LINE_CHANNEL_SECRET`（如需接入 LINE）
-- `LINE_CHANNEL_ACCESS_TOKEN`（如需接入 LINE）
-- `LINE_AUTO_REPLY_TEXT`（可选）
+????????????
 
-推荐配置示例：
+### 5.3 ? IP ?????
+
+????????????????????????
 
 ```env
 APP_PORT=3000
@@ -114,90 +129,175 @@ CRON_SECRET=replace-with-random-cron-secret
 ADMIN_AUTH_SECRET=replace-with-long-random-secret
 ADMIN_SEED_PASSWORD=replace-with-strong-admin-password
 AUTO_CANCEL_INTERVAL_MS=300000
-APP_BASE_URL=http://127.0.0.1:3000
+APP_BASE_URL=http://<???IP>:3000
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
 LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
 ```
 
-## 5. 启动服务
+???
+- `APP_BASE_URL` ?????? `127.0.0.1` ? `localhost`
+- ???????????????????????????????
 
-### 5.1 给脚本执行权限
+### 5.4 ?????
+
+?????????????? HTTPS?
+
+```env
+APP_PORT=3000
+POSTGRES_DB=nail_booking
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=replace-with-strong-password
+CRON_SECRET=replace-with-random-cron-secret
+ADMIN_AUTH_SECRET=replace-with-long-random-secret
+ADMIN_SEED_PASSWORD=replace-with-strong-admin-password
+AUTO_CANCEL_INTERVAL_MS=300000
+APP_BASE_URL=https://your-domain.com
+LINE_CHANNEL_SECRET=
+LINE_CHANNEL_ACCESS_TOKEN=
+LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
+```
+
+## 6. ????
+
+### 6.1 ??????????
 
 ```bash
 chmod +x scripts/deploy-docker.sh
 ```
 
-### 5.2 首次部署并写入种子数据
+### 6.2 ???????????
 
 ```bash
 ./scripts/deploy-docker.sh --seed
 ```
 
-这个命令会完成：
-- 使用 `.env.deploy` 构建应用镜像
-- 先启动 `postgres`
-- 等待数据库健康检查通过
-- 执行 `prisma migrate deploy`
-- 首次部署时执行数据库种子脚本
-- 最后启动 `app` 和 `auto-cancel-worker`
+??????????
+- ?? `docker`?`docker compose`?`curl`
+- ?? `.env.deploy` ???
+- ?? compose ??????
+- ??????
+- ?? PostgreSQL
+- ?? PostgreSQL healthcheck ??
+- ?? `prisma migrate deploy`
+- ??? `--seed`???????
+- ?? `app` ? `auto-cancel-worker`
+- ? `http://127.0.0.1:${APP_PORT}/api/public/categories` ?????
 
-## 6. 验证部署结果
+??????????????????????
+- `postgres is healthy`
+- `http ready`
+- `stack started`
 
-### 6.1 查看容器状态
+## 7. ?????
+
+### 7.1 ?????
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 ```
 
-### 6.2 查看应用日志
+?????
+- `postgres` ? `healthy` ? `Up`
+- `app` ? `healthy` ? `Up`
+- `auto-cancel-worker` ? `Up`
+
+### 7.2 ?????
 
 ```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f app
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 app
 ```
 
-### 6.3 查看 worker 日志
+???????
+- ?????????
+- ?? Prisma migration ??
+- ?? Next.js ????
+
+### 7.3 ? worker ??
 
 ```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f auto-cancel-worker
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 auto-cancel-worker
 ```
 
-### 6.4 检查接口是否可访问
+### 7.4 ?????????
+
+```bash
+curl http://127.0.0.1:3000/api/public/categories
+curl http://127.0.0.1:3000/api/public/packages
+```
+
+???? JSON??????????????
+
+### 7.5 ???????????
+
+??????
+- `http://<???IP>:3000`
+- `http://<???IP>:3000/admin/login`
+
+????????????
+
+## 8. ???????????????
+
+### 8.1 ?????????
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
+```
+
+### 8.2 ?????????????
 
 ```bash
 curl http://127.0.0.1:3000/api/public/categories
 ```
 
-如果你的云厂商有安全组或防火墙，还需要放行 `APP_PORT` 对应端口，默认是 `3000/tcp`。
+### 8.3 ???????????
 
-如果你要启用 LINE：
-- Webhook URL 配置为 `https://<你的域名>/api/line/webhook`
-- 纯测试环境也可以暂时用 `http://<服务器IP>:3000/api/line/webhook`
-- 需要在 `.env.deploy` 中配置 `LINE_CHANNEL_SECRET` 和 `LINE_CHANNEL_ACCESS_TOKEN`
-- 管理后台新增页面：`/admin/line`
+?????
+- ???????? `3000/tcp`
+- Ubuntu ??????? `3000/tcp`
 
-如果主机启用了 UFW：
+???? UFW?
 
 ```bash
 sudo ufw allow 3000/tcp
 sudo ufw status
 ```
 
-## 7. 日常运维
+### 8.4 ???????
 
-### 查看状态
+??????
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 postgres
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 app
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=100 auto-cancel-worker
+```
+
+### 8.5 ?? LINE ??????
+
+?? `.env.deploy` ???
+
+```env
+APP_BASE_URL=
+```
+
+???????
+- `http://<???IP>:3000`
+- ???? `https://your-domain.com`
+
+????
+- `http://127.0.0.1:3000`
+- `http://localhost:3000`
+
+## 9. ????
+
+### ????
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 ```
 
-### 重启服务
-
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
-```
-
-### 查看日志
+### ????
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f app
@@ -205,48 +305,89 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f postg
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs -f auto-cancel-worker
 ```
 
-### 手动执行一次自动取消任务
+### ?????
+
+```bash
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
+```
+
+### ????????????
 
 ```bash
 docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec app npm run job:auto-cancel
 ```
 
-## 8. 更新版本
+## 10. ????
 
-推荐执行：
+??????????????
 
 ```bash
 git pull
 ./scripts/deploy-docker.sh
 ```
 
-说明：
-- 推荐更新时继续使用 `./scripts/deploy-docker.sh`，由脚本统一处理启动顺序
-- 正常更新不需要重复 `db:seed`
+???
+- ?????????? `--seed`
+- `--seed` ??????????
 
-## 9. 备份与恢复
+## 11. ?????
 
-### 9.1 备份数据库
-
-```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres pg_dump -U postgres nail_booking > backup.sql
-```
-
-### 9.2 恢复数据库
+### 11.1 ?????
 
 ```bash
-docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres psql -U postgres nail_booking < backup.sql
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
+  pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > backup-$(date +%F).sql
 ```
 
-## 10. 推荐的下一步
+????? shell ???? `.env.deploy`????????????
 
-当前文档保证你在 Ubuntu 单机上直接跑起来。进入线上阶段时，建议再补这三项：
-1. Nginx 或 Caddy 反向代理
-2. HTTPS 证书
-3. 定期数据库备份与监控
+```bash
+set -a
+source .env.deploy
+set +a
+```
 
-补充检查清单：
+### 11.2 ?????
+
+```bash
+set -a
+source .env.deploy
+set +a
+
+docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postgres \
+  psql -U "$POSTGRES_USER" "$POSTGRES_DB" < backup.sql
+```
+
+## 12. LINE ????
+
+????????????????????
+- `LINE_CHANNEL_SECRET`
+- `LINE_CHANNEL_ACCESS_TOKEN`
+
+?????????????????????????
+
+?????? LINE ??
+- `APP_BASE_URL` ??????????
+- Webhook URL ?????
+  - `https://your-domain.com/api/line/webhook`
+- ???????
+  - `/admin/line`
+
+## 13. ???????
+
+??????????????????
+
+1. ??????
+2. ???????
+3. ????
+4. ????? `/admin/schedule`
+5. ?? LINE ? `/admin/line`
+6. ????????
+7. ????????
+8. ???????????????
+
+## 14. ????
+
 - `docs/deployment/deployment-checklist-v1.md`
-
-域名与 HTTPS 文档：
 - `docs/deployment/nginx-https-v1.md`
+- `docs/architecture/local-runbook-v1.md`
