@@ -1,8 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
+import PublicSiteFrame from "@/components/public-site-frame";
 import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
-import { resolveLang } from "@/lib/lang";
+import { pickText, resolveLang } from "@/lib/lang";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -12,7 +13,6 @@ type Props = {
 export default async function ServiceDetailPage({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const lang = resolveLang(query?.lang);
-  const isJa = lang === "ja";
 
   let packageId: bigint;
   try {
@@ -43,47 +43,63 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
   const addons = servicePackage.addonLinks.filter((item) => item.addon.isActive);
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-      <div className="ui-card">
-        <p className="text-sm uppercase tracking-[0.14em] text-brand-700">
-          {isJa ? servicePackage.category.nameJa : servicePackage.category.nameZh}
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-brand-900 sm:text-3xl">
-          {isJa ? servicePackage.nameJa : servicePackage.nameZh}
-        </h1>
-        <p className="mt-3 text-brand-800">{isJa ? servicePackage.descJa || "-" : servicePackage.descZh || "-"}</p>
+    <PublicSiteFrame lang={lang}>
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+        <section className="detail-hero-panel">
+          <div className="detail-hero-copy">
+            <p className="section-eyebrow">{lang === "ja" ? servicePackage.category.nameJa : servicePackage.category.nameZh}</p>
+            <h1 className="section-title">{lang === "ja" ? servicePackage.nameJa : servicePackage.nameZh}</h1>
+            <p className="section-copy">
+              {lang === "ja"
+                ? servicePackage.descJa || pickText(lang, "适合想先确认完整内容再预约的顾客。", "内容をしっかり確認してから予約したい方向けです。")
+                : servicePackage.descZh || pickText(lang, "适合想先确认完整内容再预约的顾客。", "内容をしっかり確認してから予約したい方向けです。")}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="metric-pill">{servicePackage.priceJpy} JPY</span>
+              <span className="metric-pill metric-pill-soft">{servicePackage.durationMin} min</span>
+            </div>
+          </div>
 
-        <p className="mt-4 text-brand-900">{servicePackage.priceJpy} JPY / {servicePackage.durationMin} min</p>
+          <div className="detail-hero-media" style={servicePackage.imageUrl ? { backgroundImage: `linear-gradient(135deg, rgba(64,30,42,0.16), rgba(255,255,255,0.08)), url(${servicePackage.imageUrl})` } : undefined}>
+            {!servicePackage.imageUrl ? <span>{pickText(lang, "精品指尖设计", "シグネチャーネイル")}</span> : null}
+          </div>
+        </section>
 
-        <h2 className="mt-8 text-lg font-semibold text-brand-900">{isJa ? "追加オプション" : "可选加项"}</h2>
-        <div className="mt-3 grid gap-2">
-          {addons.length === 0 ? (
-            <p className="text-sm text-brand-700">{isJa ? "追加オプションなし" : "暂无可选加项"}</p>
-          ) : (
-            addons.map((item) => (
-              <div
-                key={item.addon.id.toString()}
-                className="rounded-lg border border-brand-100 px-3 py-2 text-sm text-brand-800"
-              >
-                {(isJa ? item.addon.nameJa : item.addon.nameZh)} (+{item.addon.priceJpy} JPY / +
-                {item.addon.durationIncreaseMin} min)
-              </div>
-            ))
-          )}
-        </div>
+        <section className="section-panel">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-brand-950">{pickText(lang, "可搭配加项", "追加オプション")}</h2>
+            <span className="metric-pill metric-pill-soft">{addons.length}</span>
+          </div>
 
-        <div className="mt-8 grid gap-3 sm:flex">
-          <Link
-            className="ui-btn-primary"
-            href={`/booking?packageId=${servicePackage.id.toString()}&lang=${lang}`}
-          >
-            {isJa ? "このメニューを予約" : "预约此套餐"}
-          </Link>
-          <Link className="ui-btn-secondary" href={`/services?lang=${lang}`}>
-            {isJa ? "メニュー一覧" : "返回列表"}
-          </Link>
-        </div>
-      </div>
-    </main>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {addons.length === 0 ? (
+              <p className="ui-state-info mt-0">{pickText(lang, "当前套餐没有可选加项。", "このメニューには追加オプションがありません。")}</p>
+            ) : (
+              addons.map((item) => (
+                <article key={item.addon.id.toString()} className="detail-addon-card">
+                  <div>
+                    <strong>{lang === "ja" ? item.addon.nameJa : item.addon.nameZh}</strong>
+                    <p>{lang === "ja" ? item.addon.descJa || "-" : item.addon.descZh || "-"}</p>
+                  </div>
+                  <div className="text-right text-sm font-medium text-brand-800">
+                    <div>+{item.addon.priceJpy} JPY</div>
+                    <div>+{item.addon.durationIncreaseMin} min</div>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link className="ui-btn-primary" href={`/booking?packageId=${servicePackage.id.toString()}&lang=${lang}`}>
+              {pickText(lang, "预约这个套餐", "このメニューを予約")}
+            </Link>
+            <Link className="ui-btn-secondary" href={`/services?lang=${lang}`}>
+              {pickText(lang, "返回服务列表", "メニュー一覧へ戻る")}
+            </Link>
+          </div>
+        </section>
+      </main>
+    </PublicSiteFrame>
   );
 }

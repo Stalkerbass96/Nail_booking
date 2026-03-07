@@ -1,7 +1,7 @@
-import Link from "next/link";
+﻿import PublicSiteFrame from "@/components/public-site-frame";
 import BookingForm from "@/components/booking-form";
 import { prisma } from "@/lib/db";
-import { resolveLang } from "@/lib/lang";
+import { pickText, resolveLang } from "@/lib/lang";
 
 type Props = {
   searchParams: Promise<{
@@ -13,7 +13,6 @@ type Props = {
 export default async function BookingPage({ searchParams }: Props) {
   const query = await searchParams;
   const lang = resolveLang(query?.lang);
-  const isJa = lang === "ja";
 
   const packages = await prisma.servicePackage.findMany({
     where: { isActive: true },
@@ -54,28 +53,18 @@ export default async function BookingPage({ searchParams }: Props) {
   }));
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-5 sm:py-8 md:px-8 md:py-10">
-      <section className="ui-card mb-5 bg-white/80 backdrop-blur sm:mb-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">
-              {isJa ? "Nail Booking" : "Nail Booking"}
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold text-brand-900 sm:text-3xl md:text-4xl">{isJa ? "予約" : "在线预约"}</h1>
-          </div>
+    <PublicSiteFrame lang={lang}>
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+        <section className="section-panel">
+          <p className="section-eyebrow">Reserve Your Slot</p>
+          <h1 className="section-title">{pickText(lang, "确认套餐、时间和备注，完成一次清晰的预约。", "メニュー、時間、要望を確認して、迷わず予約を完了。")}</h1>
+          <p className="section-copy">
+            {pickText(lang, "系统会自动计算可用时段，并拦截重复预约。待确认预约也会占用档期，所以看到的时段就是当前可预约的时段。", "空き時間は自動計算され、重複予約は自動で防止されます。未確認予約も枠を占有するため、表示される時間がそのまま現在の予約可能枠です。")}
+          </p>
+        </section>
 
-          <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
-            <Link className="ui-btn-secondary rounded-full px-4 py-2" href={`/services?lang=${lang}`}>
-              {isJa ? "メニュー" : "套餐列表"}
-            </Link>
-            <Link className="ui-btn-secondary rounded-full px-4 py-2" href={`/booking/lookup?lang=${lang}`}>
-              {isJa ? "予約照会" : "查询预约"}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <BookingForm lang={lang} packages={packageOptions} initialPackageId={query?.packageId} />
-    </main>
+        <BookingForm lang={lang} packages={packageOptions} initialPackageId={query?.packageId} />
+      </main>
+    </PublicSiteFrame>
   );
 }

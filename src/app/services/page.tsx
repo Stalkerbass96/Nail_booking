@@ -1,6 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
+import PublicSiteFrame from "@/components/public-site-frame";
 import { prisma } from "@/lib/db";
-import { resolveLang } from "@/lib/lang";
+import { pickText, resolveLang } from "@/lib/lang";
 
 type Props = {
   searchParams: Promise<{
@@ -11,7 +12,6 @@ type Props = {
 export default async function ServicesPage({ searchParams }: Props) {
   const query = await searchParams;
   const lang = resolveLang(query?.lang);
-  const isJa = lang === "ja";
 
   const categories = await prisma.serviceCategory.findMany({
     where: { isActive: true },
@@ -25,57 +25,77 @@ export default async function ServicesPage({ searchParams }: Props) {
   });
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-5 sm:py-8 md:px-8 md:py-10">
-      <section className="ui-card mb-5 sm:mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-brand-900 sm:text-3xl md:text-4xl">{isJa ? "メニュー" : "服务套餐"}</h1>
-          <Link
-            className="ui-btn-secondary rounded-full"
-            href={lang === "ja" ? "/services?lang=zh" : "/services?lang=ja"}
-          >
-            {lang === "ja" ? "中文" : "日本語"}
-          </Link>
-        </div>
-      </section>
-
-      <div className="grid gap-8">
-        {categories.map((category) => (
-          <section
-            key={category.id.toString()}
-            className="rounded-3xl border border-brand-100/80 bg-white/90 p-4 shadow-[0_14px_36px_rgba(120,25,55,0.07)] sm:p-5"
-          >
-            <h2 className="text-xl font-semibold text-brand-900">
-              {isJa ? category.nameJa : category.nameZh}
-            </h2>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {category.packages.map((pkg) => (
-                <article key={pkg.id.toString()} className="rounded-2xl border border-brand-100 bg-white p-4 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                  <h3 className="text-lg font-semibold text-brand-900">{isJa ? pkg.nameJa : pkg.nameZh}</h3>
-                  <p className="mt-1 line-clamp-2 text-sm text-brand-700">{isJa ? pkg.descJa || "-" : pkg.descZh || "-"}</p>
-                  <p className="mt-3 inline-flex rounded-full bg-brand-50 px-2.5 py-1 text-sm font-medium text-brand-800">
-                    {pkg.priceJpy} JPY / {pkg.durationMin} min
-                  </p>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <Link
-                      className="ui-btn-secondary min-h-10 px-3 py-2"
-                      href={`/services/${pkg.id.toString()}?lang=${lang}`}
-                    >
-                      {isJa ? "詳細" : "详情"}
-                    </Link>
-                    <Link
-                      className="ui-btn-primary min-h-10 px-3 py-2"
-                      href={`/booking?packageId=${pkg.id.toString()}&lang=${lang}`}
-                    >
-                      {isJa ? "予約" : "预约"}
-                    </Link>
-                  </div>
-                </article>
-              ))}
+    <PublicSiteFrame lang={lang}>
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
+        <section className="section-panel">
+          <p className="section-eyebrow">Service Catalog</p>
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="section-title">{pickText(lang, "选择适合的套餐，再细调加项。", "まずメニューを選び、必要なら追加オプションで調整。")}</h1>
+              <p className="section-copy">
+                {pickText(lang, "所有启用中的分类和套餐都会在这里展示。你可以先比较价格和时长，再进入详情或直接预约。", "有効なカテゴリとメニューを一覧で表示します。価格と所要時間を比較し、詳細確認またはそのまま予約へ進めます。")}
+              </p>
             </div>
+            <Link className="ui-btn-secondary" href={`/booking/lookup?lang=${lang}`}>
+              {pickText(lang, "查询已有预约", "予約確認")}
+            </Link>
+          </div>
+        </section>
+
+        {categories.length === 0 ? (
+          <section className="ui-card">
+            <p className="ui-state-info mt-0">{pickText(lang, "当前还没有可展示的服务。", "現在表示できるメニューがありません。")}</p>
           </section>
-        ))}
-      </div>
-    </main>
+        ) : null}
+
+        <div className="grid gap-8">
+          {categories.map((category) => (
+            <section key={category.id.toString()} className="section-panel">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="section-eyebrow">{pickText(lang, "分类", "カテゴリ")}</p>
+                  <h2 className="text-2xl font-semibold text-brand-900">{lang === "ja" ? category.nameJa : category.nameZh}</h2>
+                </div>
+                <span className="metric-pill">{category.packages.length} {pickText(lang, "个套餐", "メニュー")}</span>
+              </div>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {category.packages.map((pkg, index) => (
+                  <article key={pkg.id.toString()} className="product-card">
+                    <div className="product-card-media" style={pkg.imageUrl ? { backgroundImage: `linear-gradient(135deg, rgba(52,30,40,0.16), rgba(255,255,255,0.1)), url(${pkg.imageUrl})` } : undefined}>
+                      {!pkg.imageUrl ? <span>{pickText(lang, "精品护理", "シグネチャーケア")} #{index + 1}</span> : null}
+                    </div>
+                    <div className="mt-4 flex flex-col gap-3">
+                      <div>
+                        <h3 className="text-xl font-semibold text-brand-900">{lang === "ja" ? pkg.nameJa : pkg.nameZh}</h3>
+                        <p className="mt-2 line-clamp-3 text-sm text-brand-700">
+                          {lang === "ja"
+                            ? pkg.descJa || pickText(lang, "详情页可查看完整说明。", "詳細ページで説明を確認できます。")
+                            : pkg.descZh || pickText(lang, "详情页可查看完整说明。", "詳細ページで説明を確認できます。")}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <span className="metric-pill">{pkg.priceJpy} JPY</span>
+                        <span className="metric-pill metric-pill-soft">{pkg.durationMin} min</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Link className="ui-btn-secondary" href={`/services/${pkg.id.toString()}?lang=${lang}`}>
+                          {pickText(lang, "查看详情", "詳細を見る")}
+                        </Link>
+                        <Link className="ui-btn-primary" href={`/booking?packageId=${pkg.id.toString()}&lang=${lang}`}>
+                          {pickText(lang, "立即预约", "予約する")}
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
+    </PublicSiteFrame>
   );
 }
