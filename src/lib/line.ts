@@ -1,6 +1,7 @@
 ﻿import { createHmac, randomBytes } from "node:crypto";
 
 const LINE_API_BASE = "https://api.line.me";
+const LINE_LINK_BASE = "https://access.line.me/dialog/bot/accountLink";
 
 export type LineProfile = {
   displayName?: string;
@@ -15,6 +16,7 @@ export function getLineConfig() {
     autoReplyText:
       process.env.LINE_AUTO_REPLY_TEXT?.trim() ||
       "Message received. The salon owner will reply to you shortly.",
+    appBaseUrl: process.env.APP_BASE_URL?.trim().replace(/\/$/, "") || "",
     enabled:
       Boolean(process.env.LINE_CHANNEL_SECRET?.trim()) &&
       Boolean(process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim())
@@ -27,6 +29,10 @@ export function verifyLineSignature(rawBody: string, signature: string): boolean
 
   const expected = createHmac("sha256", channelSecret).update(rawBody).digest("base64");
   return expected === signature;
+}
+
+export function buildLineSignature(rawBody: string, channelSecret: string): string {
+  return createHmac("sha256", channelSecret).update(rawBody).digest("base64");
 }
 
 async function lineApiFetch(path: string, init: RequestInit = {}) {
@@ -51,6 +57,23 @@ async function lineApiFetch(path: string, init: RequestInit = {}) {
 
   if (response.status === 204) return null;
   return response.json();
+}
+
+export async function issueLineLinkToken(userId: string): Promise<string> {
+  const response = await lineApiFetch(`/v2/bot/user/${encodeURIComponent(userId)}/linkToken`, {
+    method: "POST",
+    body: JSON.stringify({})
+  });
+
+  if (!response || typeof response.linkToken !== "string") {
+    throw new Error("LINE issue link token response is invalid");
+  }
+
+  return response.linkToken;
+}
+
+export function buildLineAccountLinkUrl(linkToken: string, nonce: string) {
+  return `${LINE_LINK_BASE}?linkToken=${encodeURIComponent(linkToken)}&nonce=${encodeURIComponent(nonce)}`;
 }
 
 export async function getLineProfile(userId: string): Promise<LineProfile | null> {

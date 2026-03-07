@@ -62,6 +62,7 @@ export default function PublicSiteFrame({ lang, children }: Props) {
           <div className="site-footer-links">
             <Link href={`/services?lang=${lang}`}>{pickText(lang, "浏览服务", "メニュー一覧")}</Link>
             <Link href={`/booking/lookup?lang=${lang}`}>{pickText(lang, "查询预约", "予約確認")}</Link>
+            <Link href={`/line/manage?lang=${lang}`}>{pickText(lang, "LINE 管理", "LINE 管理")}</Link>
             <Link href={`/admin/login?lang=${lang}`}>{pickText(lang, "后台登录", "管理ログイン")}</Link>
           </div>
         </div>

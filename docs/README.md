@@ -18,7 +18,8 @@
 10. [deployment/nginx-https-v1.md](deployment/nginx-https-v1.md)
 11. [operations/notes-v1.md](operations/notes-v1.md)
 12. [testing/e2e-report-2026-03-07.md](testing/e2e-report-2026-03-07.md)
-13. [CHANGELOG.md](CHANGELOG.md)
+13. [testing/acceptance-v1.md](testing/acceptance-v1.md)
+14. [CHANGELOG.md](CHANGELOG.md)
 
 ## 给人看的入口
 

@@ -1,4 +1,4 @@
-﻿import { LineMessageDirection, LineMessageStatus } from "@prisma/client";
+import { LineMessageDirection, LineMessageStatus } from "@prisma/client";
 import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import { pushLineTextMessage } from "@/lib/line";

@@ -1,4 +1,4 @@
-﻿import { parseSingleBigInt } from "@/lib/booking-rules";
+import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";

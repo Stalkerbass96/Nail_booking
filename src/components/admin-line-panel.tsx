@@ -27,7 +27,6 @@ type LineMessageItem = {
   messageType: string;
   text?: string | null;
   createdAt: string;
-  sentByAdminName?: string | null;
 };
 
 type CustomerItem = {
@@ -46,13 +45,17 @@ const TEXT = {
     desc: "接收顾客的 LINE 消息，在后台查看 1 对 1 对话，并把 LINE 账号绑定到顾客记录。",
     configOn: "LINE 已配置",
     configOff: "LINE 未配置",
+    appBaseOk: "APP_BASE_URL 已配置",
+    appBaseMissing: "APP_BASE_URL 未配置",
     searchPlaceholder: "搜索 LINE 昵称、ID、顾客姓名或邮箱",
     search: "查询",
     loadFailed: "加载 LINE 数据失败",
     loadMessagesFailed: "加载对话失败",
     bindFailed: "绑定失败",
     sendFailed: "发送失败",
+    linkFailed: "发送绑定链接失败",
     bind: "绑定顾客",
+    sendLink: "发送绑定链接",
     unbind: "解除绑定",
     linkedCustomer: "已绑定顾客",
     unlinked: "未绑定顾客",
@@ -78,21 +81,27 @@ const TEXT = {
     customerBound: "绑定成功",
     customerUnbound: "已解除绑定",
     sent: "发送成功",
+    linkSent: "已发送绑定链接",
     webhookHint: "Webhook 路径：/api/line/webhook",
-    linkedAt: "绑定时间"
+    linkedAt: "绑定时间",
+    linkHelp: "顾客收到链接后，会用预约号 + 邮箱自行完成绑定。"
   },
   ja: {
     title: "LINE 会話と紐付け",
     desc: "お客様からの LINE メッセージを受け取り、1対1の会話を管理し、LINE アカウントを顧客情報に紐付けます。",
     configOn: "LINE 設定済み",
     configOff: "LINE 未設定",
+    appBaseOk: "APP_BASE_URL 設定済み",
+    appBaseMissing: "APP_BASE_URL 未設定",
     searchPlaceholder: "LINE名、ID、顧客名、メールで検索",
     search: "検索",
     loadFailed: "LINE データの読み込みに失敗しました",
     loadMessagesFailed: "会話の読み込みに失敗しました",
     bindFailed: "紐付けに失敗しました",
     sendFailed: "送信に失敗しました",
+    linkFailed: "連携リンク送信に失敗しました",
     bind: "顧客に紐付け",
+    sendLink: "連携リンク送信",
     unbind: "紐付け解除",
     linkedCustomer: "紐付け済み顧客",
     unlinked: "未紐付け",
@@ -118,8 +127,10 @@ const TEXT = {
     customerBound: "紐付けました",
     customerUnbound: "紐付けを解除しました",
     sent: "送信しました",
+    linkSent: "連携リンクを送りました",
     webhookHint: "Webhook パス: /api/line/webhook",
-    linkedAt: "紐付け日時"
+    linkedAt: "紐付け日時",
+    linkHelp: "お客様は受け取ったリンクで、予約番号 + メール確認を行って自分で連携できます。"
   }
 } as const;
 
@@ -130,12 +141,14 @@ export default function AdminLinePanel({ lang }: Props) {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<LineUserItem[]>([]);
   const [configEnabled, setConfigEnabled] = useState(false);
+  const [appBaseUrlConfigured, setAppBaseUrlConfigured] = useState(false);
   const [activeUserId, setActiveUserId] = useState("");
   const [messages, setMessages] = useState<LineMessageItem[]>([]);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [linking, setLinking] = useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
   const [customerResults, setCustomerResults] = useState<CustomerItem[]>([]);
   const [searchingCustomers, setSearchingCustomers] = useState(false);
@@ -157,6 +170,7 @@ export default function AdminLinePanel({ lang }: Props) {
         if (!res.ok) throw new Error(data?.error || t.loadFailed);
         setUsers(data.items ?? []);
         setConfigEnabled(Boolean(data.config?.enabled));
+        setAppBaseUrlConfigured(Boolean(data.config?.appBaseUrlConfigured));
         setActiveUserId((prev) => prev || data.items?.[0]?.id || "");
       } catch (err) {
         setError(err instanceof Error ? err.message : t.loadFailed);
@@ -222,24 +236,28 @@ export default function AdminLinePanel({ lang }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || t.bindFailed);
-      setUsers((prev) =>
-        prev.map((item) =>
-          item.id === activeUserId
-            ? {
-                ...item,
-                customer: data.user.customer
-              }
-            : item
-        )
-      );
-      if (customerId) {
-        setSelectedCustomerId(customerId);
-      } else {
-        setSelectedCustomerId("");
-      }
+      setUsers((prev) => prev.map((item) => (item.id === activeUserId ? { ...item, customer: data.user.customer } : item)));
+      setSelectedCustomerId(customerId ?? "");
       setOk(customerId ? t.customerBound : t.customerUnbound);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.bindFailed);
+    }
+  }
+
+  async function sendLinkRequest() {
+    if (!activeUserId) return;
+    setLinking(true);
+    setError("");
+    setOk("");
+    try {
+      const res = await fetch(`/api/admin/line/users/${activeUserId}/link-request`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.details || data?.error || t.linkFailed);
+      setOk(t.linkSent);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.linkFailed);
+    } finally {
+      setLinking(false);
     }
   }
 
@@ -285,6 +303,9 @@ export default function AdminLinePanel({ lang }: Props) {
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${configEnabled ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
             {configEnabled ? t.configOn : t.configOff}
           </span>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${appBaseUrlConfigured ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+            {appBaseUrlConfigured ? t.appBaseOk : t.appBaseMissing}
+          </span>
           <span className="text-xs text-brand-700">{t.webhookHint}</span>
         </div>
       </div>
@@ -316,9 +337,7 @@ export default function AdminLinePanel({ lang }: Props) {
                   <div>
                     <p className="font-medium text-brand-900">{item.displayName || item.lineUserId}</p>
                     <p className="text-xs text-brand-700">{item.lineUserId}</p>
-                    <p className="mt-1 text-xs text-brand-700">
-                      {item.customer ? `${t.linkedCustomer}: ${item.customer.name}` : t.unlinked}
-                    </p>
+                    <p className="mt-1 text-xs text-brand-700">{item.customer ? `${t.linkedCustomer}: ${item.customer.name}` : t.unlinked}</p>
                   </div>
                   <span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${item.isFollowing ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
                     {item.isFollowing ? t.following : t.notFollowing}
@@ -341,30 +360,22 @@ export default function AdminLinePanel({ lang }: Props) {
           ) : (
             <div className="grid gap-4">
               <div className="rounded-2xl border border-brand-100 bg-white p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-lg font-semibold text-brand-900">{activeUser.displayName || activeUser.lineUserId}</p>
                     <p className="text-sm text-brand-700">{t.lineUserId}: {activeUser.lineUserId}</p>
-                    <p className="text-sm text-brand-700">
-                      {activeUser.customer ? `${t.linkedCustomer}: ${activeUser.customer.name} (${activeUser.customer.email})` : t.unlinked}
-                    </p>
-                    {activeUser.linkedAt ? (
-                      <p className="text-sm text-brand-700">
-                        {t.linkedAt}: {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(activeUser.linkedAt))}
-                      </p>
-                    ) : null}
-                    {activeUser.lastSeenAt ? (
-                      <p className="text-sm text-brand-700">
-                        {t.lastSeen}: {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(activeUser.lastSeenAt))}
-                      </p>
-                    ) : null}
+                    <p className="text-sm text-brand-700">{activeUser.customer ? `${t.linkedCustomer}: ${activeUser.customer.name} (${activeUser.customer.email})` : t.unlinked}</p>
+                    {activeUser.linkedAt ? <p className="text-sm text-brand-700">{t.linkedAt}: {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(activeUser.linkedAt))}</p> : null}
+                    {activeUser.lastSeenAt ? <p className="text-sm text-brand-700">{t.lastSeen}: {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(activeUser.lastSeenAt))}</p> : null}
                   </div>
-                  {activeUser.customer ? (
-                    <button type="button" className="admin-btn-ghost" onClick={() => void bindCustomer(null)}>
-                      {t.unbind}
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="admin-btn-secondary" onClick={() => void sendLinkRequest()} disabled={!configEnabled || !appBaseUrlConfigured || linking}>
+                      {linking ? `${t.sendLink}...` : t.sendLink}
                     </button>
-                  ) : null}
+                    {activeUser.customer ? <button type="button" className="admin-btn-ghost" onClick={() => void bindCustomer(null)}>{t.unbind}</button> : null}
+                  </div>
                 </div>
+                <p className="field-hint mt-3">{t.linkHelp}</p>
               </div>
 
               <div className="grid gap-3 rounded-2xl border border-brand-100 bg-white p-4">
@@ -377,9 +388,7 @@ export default function AdminLinePanel({ lang }: Props) {
                 </div>
                 {searchingCustomers ? <p className="ui-state-info mt-0">{t.searchingCustomers}</p> : null}
                 <div className="grid gap-2">
-                  {!searchingCustomers && customerResults.length === 0 && customerQuery.trim() ? (
-                    <p className="ui-state-info mt-0">{t.noCustomers}</p>
-                  ) : null}
+                  {!searchingCustomers && customerResults.length === 0 && customerQuery.trim() ? <p className="ui-state-info mt-0">{t.noCustomers}</p> : null}
                   {customerResults.map((item) => (
                     <label key={item.id} className="choice-tile">
                       <input type="radio" checked={selectedCustomerId === item.id} onChange={() => setSelectedCustomerId(item.id)} />
@@ -390,12 +399,7 @@ export default function AdminLinePanel({ lang }: Props) {
                     </label>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  className="admin-btn-secondary w-full sm:w-auto"
-                  onClick={() => void bindCustomer(selectedCustomerId || null)}
-                  disabled={!selectedCustomerId}
-                >
+                <button type="button" className="admin-btn-secondary w-full sm:w-auto" onClick={() => void bindCustomer(selectedCustomerId || null)} disabled={!selectedCustomerId}>
                   {t.bind}
                 </button>
               </div>
@@ -406,15 +410,10 @@ export default function AdminLinePanel({ lang }: Props) {
                 <div className="grid max-h-[22rem] gap-2 overflow-auto">
                   {!loadingMessages && messages.length === 0 ? <p className="ui-state-info mt-0">{t.noMessages}</p> : null}
                   {messages.map((item) => (
-                    <article
-                      key={item.id}
-                      className={`rounded-2xl border px-3 py-2 text-sm ${item.direction === "incoming" ? "border-brand-100 bg-brand-50/40 text-brand-900" : item.direction === "outgoing" ? "border-emerald-100 bg-emerald-50/70 text-emerald-900" : "border-slate-100 bg-slate-50 text-slate-700"}`}
-                    >
+                    <article key={item.id} className={`rounded-2xl border px-3 py-2 text-sm ${item.direction === "incoming" ? "border-brand-100 bg-brand-50/40 text-brand-900" : item.direction === "outgoing" ? "border-emerald-100 bg-emerald-50/70 text-emerald-900" : "border-slate-100 bg-slate-50 text-slate-700"}`}>
                       <p className="text-xs font-semibold uppercase tracking-[0.14em]">{directionLabel(item.direction)}</p>
                       <p className="mt-1 whitespace-pre-wrap">{item.text || `[${item.messageType}]`}</p>
-                      <p className="mt-2 text-xs opacity-80">
-                        {new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}
-                      </p>
+                      <p className="mt-2 text-xs opacity-80">{new Intl.DateTimeFormat(locale, { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}</p>
                     </article>
                   ))}
                 </div>

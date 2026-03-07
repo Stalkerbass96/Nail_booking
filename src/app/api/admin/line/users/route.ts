@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
     const config = getLineConfig();
 
     return NextResponse.json({
-      config: { enabled: config.enabled },
+      config: {
+        enabled: config.enabled,
+        appBaseUrlConfigured: Boolean(config.appBaseUrl)
+      },
       items: items.map((item) => ({
         id: item.id.toString(),
         lineUserId: item.lineUserId,

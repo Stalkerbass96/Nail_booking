@@ -5,3 +5,4 @@ node_modules
 dist
 coverage
 .next-start.log
+docs/testing/artifacts/acceptance-*
