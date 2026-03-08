@@ -1,4 +1,4 @@
-﻿import { AppointmentStatus, Prisma } from "@prisma/client";
+import { AppointmentStatus, Prisma } from "@prisma/client";
 import { buildDateTimeWithOffset } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
@@ -54,7 +54,15 @@ export async function GET(request: NextRequest) {
         customer: {
           select: {
             name: true,
-            email: true
+            email: true,
+            customerType: true,
+            lineUser: {
+              select: {
+                lineUserId: true,
+                displayName: true,
+                isFollowing: true
+              }
+            }
           }
         },
         servicePackage: {
@@ -62,6 +70,13 @@ export async function GET(request: NextRequest) {
             id: true,
             nameZh: true,
             nameJa: true
+          }
+        },
+        showcaseItem: {
+          select: {
+            id: true,
+            titleZh: true,
+            titleJa: true
           }
         },
         addons: {
@@ -85,14 +100,29 @@ export async function GET(request: NextRequest) {
         status: item.status,
         startAt: item.startAt.toISOString(),
         endAt: item.endAt.toISOString(),
+        sourceChannel: item.sourceChannel,
         customer: {
           name: item.customer.name,
-          email: item.customer.email
+          email: item.customer.email,
+          customerType: item.customer.customerType,
+          lineUser: item.customer.lineUser
+            ? {
+                lineUserId: item.customer.lineUser.lineUserId,
+                displayName: item.customer.lineUser.displayName,
+                isFollowing: item.customer.lineUser.isFollowing
+              }
+            : null
         },
         package: {
           id: item.servicePackage.id.toString(),
           name: lang === "ja" ? item.servicePackage.nameJa : item.servicePackage.nameZh
         },
+        showcaseItem: item.showcaseItem
+          ? {
+              id: item.showcaseItem.id.toString(),
+              title: lang === "ja" ? item.showcaseItem.titleJa : item.showcaseItem.titleZh
+            }
+          : null,
         addons: item.addons.map((addon) => ({
           id: addon.addon.id.toString(),
           name: lang === "ja" ? addon.addon.nameJa : addon.addon.nameZh

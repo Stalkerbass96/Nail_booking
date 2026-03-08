@@ -1,5 +1,7 @@
-﻿import { LineMessageDirection, LineMessageStatus } from "@prisma/client";
+import { LineMessageDirection, LineMessageStatus } from "@prisma/client";
+import { ensureLineCustomer } from "@/lib/line-customers";
 import { prisma } from "@/lib/db";
+import { sendWelcomeHomeLink } from "@/lib/line-notifications";
 import { getLineConfig, getLineProfile, replyLineTextMessage, verifyLineSignature } from "@/lib/line";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -22,6 +24,14 @@ async function upsertLineUser(userId: string) {
       statusMessage: profile?.statusMessage,
       isFollowing: true,
       lastSeenAt: new Date()
+    },
+    select: {
+      id: true,
+      lineUserId: true,
+      customerId: true,
+      displayName: true,
+      homeEntryToken: true,
+      welcomeSentAt: true
     }
   });
 }
@@ -64,17 +74,40 @@ export async function POST(request: NextRequest) {
       }
 
       if (event.type === "follow") {
-        await prisma.lineMessage.create({
-          data: {
-            lineUserId: user.id,
-            direction: LineMessageDirection.system,
-            status: LineMessageStatus.received,
-            messageType: "follow",
-            text: "User followed the LINE official account",
-            readAt: new Date(),
-            rawJson: event
-          }
+        const ensured = await prisma.$transaction(async (tx) => {
+          await tx.lineMessage.create({
+            data: {
+              lineUserId: user.id,
+              direction: LineMessageDirection.system,
+              status: LineMessageStatus.received,
+              messageType: "follow",
+              text: "User followed the LINE official account",
+              readAt: new Date(),
+              rawJson: event
+            }
+          });
+
+          return ensureLineCustomer(tx, user);
         });
+
+        if (!ensured.welcomeSentAt && ensured.homeEntryToken && config.enabled && config.appBaseUrl) {
+          const sent = await sendWelcomeHomeLink(prisma, {
+            lineUserDbId: ensured.id,
+            linePlatformUserId: ensured.lineUserId,
+            entryToken: ensured.homeEntryToken
+          });
+
+          if (sent) {
+            await prisma.lineUser.update({
+              where: { id: ensured.id },
+              data: {
+                welcomeSentAt: new Date(),
+                lastHomeLinkSentAt: new Date()
+              }
+            });
+          }
+        }
+
         continue;
       }
 
@@ -159,4 +192,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

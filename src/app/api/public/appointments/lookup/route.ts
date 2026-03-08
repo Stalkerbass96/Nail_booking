@@ -1,4 +1,4 @@
-﻿import { normalizeEmail } from "@/lib/booking-rules";
+import { normalizeEmail } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    if (!appointment || normalizeEmail(appointment.customer.email) !== email) {
+    if (!appointment || !appointment.customer.email || normalizeEmail(appointment.customer.email) !== email) {
       return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
     }
 

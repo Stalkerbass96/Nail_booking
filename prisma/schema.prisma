@@ -20,6 +20,23 @@ enum PointTxType {
   adjust
 }
 
+enum CustomerType {
+  lead
+  active
+}
+
+enum CustomerCreatedFrom {
+  line
+  admin
+  legacy_web
+}
+
+enum AppointmentSourceChannel {
+  line_showcase
+  admin_manual
+  legacy_web
+}
+
 enum LineMessageDirection {
   incoming
   outgoing
@@ -49,14 +66,17 @@ model Admin {
 }
 
 model Customer {
-  id            BigInt   @id @default(autoincrement())
-  name          String   @db.VarChar(80)
-  email         String   @unique @db.VarChar(120)
+  id            BigInt              @id @default(autoincrement())
+  name          String              @db.VarChar(80)
+  email         String?             @db.VarChar(120)
   notes         String?
-  totalSpentJpy Int      @default(0) @map("total_spent_jpy")
-  currentPoints Int      @default(0) @map("current_points")
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  customerType  CustomerType        @default(lead) @map("customer_type")
+  createdFrom   CustomerCreatedFrom @default(legacy_web) @map("created_from")
+  firstBookedAt DateTime?           @map("first_booked_at") @db.Timestamptz(6)
+  totalSpentJpy Int                 @default(0) @map("total_spent_jpy")
+  currentPoints Int                 @default(0) @map("current_points")
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   appointments   Appointment[]
   pointLedgers   PointLedger[]
@@ -73,7 +93,8 @@ model ServiceCategory {
   sortOrder Int     @default(0) @map("sort_order")
   isActive  Boolean @default(true) @map("is_active")
 
-  packages ServicePackage[]
+  packages      ServicePackage[]
+  showcaseItems ShowcaseItem[]
 
   @@map("service_categories")
 }
@@ -90,9 +111,10 @@ model ServicePackage {
   durationMin Int     @map("duration_min")
   isActive    Boolean @default(true) @map("is_active")
 
-  category     ServiceCategory    @relation(fields: [categoryId], references: [id])
-  addonLinks   PackageAddonLink[]
-  appointments Appointment[]
+  category      ServiceCategory    @relation(fields: [categoryId], references: [id])
+  addonLinks    PackageAddonLink[]
+  appointments  Appointment[]
+  showcaseItems ShowcaseItem[]
 
   @@map("service_packages")
 }
@@ -126,31 +148,35 @@ model PackageAddonLink {
 }
 
 model Appointment {
-  id            BigInt            @id @default(autoincrement())
-  bookingNo     String            @unique @map("booking_no") @db.VarChar(40)
-  customerId    BigInt            @map("customer_id")
-  packageId     BigInt            @map("package_id")
-  styleNote     String?           @map("style_note")
-  customerNote  String?           @map("customer_note")
-  startAt       DateTime          @map("start_at") @db.Timestamptz(6)
-  endAt         DateTime          @map("end_at") @db.Timestamptz(6)
-  status        AppointmentStatus @default(pending)
-  autoCancelAt  DateTime          @map("auto_cancel_at") @db.Timestamptz(6)
-  cancelReason  String?           @map("cancel_reason")
-  confirmedAt   DateTime?         @map("confirmed_at") @db.Timestamptz(6)
-  completedAt   DateTime?         @map("completed_at") @db.Timestamptz(6)
-  actualPaidJpy Int?              @map("actual_paid_jpy")
-  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            BigInt                   @id @default(autoincrement())
+  bookingNo     String                   @unique @map("booking_no") @db.VarChar(40)
+  customerId    BigInt                   @map("customer_id")
+  packageId     BigInt                   @map("package_id")
+  showcaseItemId BigInt?                 @map("showcase_item_id")
+  sourceChannel AppointmentSourceChannel @default(legacy_web) @map("source_channel")
+  styleNote     String?                  @map("style_note")
+  customerNote  String?                  @map("customer_note")
+  startAt       DateTime                 @map("start_at") @db.Timestamptz(6)
+  endAt         DateTime                 @map("end_at") @db.Timestamptz(6)
+  status        AppointmentStatus        @default(pending)
+  autoCancelAt  DateTime                 @map("auto_cancel_at") @db.Timestamptz(6)
+  cancelReason  String?                  @map("cancel_reason")
+  confirmedAt   DateTime?                @map("confirmed_at") @db.Timestamptz(6)
+  completedAt   DateTime?                @map("completed_at") @db.Timestamptz(6)
+  actualPaidJpy Int?                     @map("actual_paid_jpy")
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  customer       Customer           @relation(fields: [customerId], references: [id])
-  servicePackage ServicePackage     @relation(fields: [packageId], references: [id])
+  customer       Customer         @relation(fields: [customerId], references: [id])
+  servicePackage ServicePackage   @relation(fields: [packageId], references: [id])
+  showcaseItem   ShowcaseItem?    @relation(fields: [showcaseItemId], references: [id])
   addons         AppointmentAddon[]
   pointLedgers   PointLedger[]
 
   @@index([startAt])
   @@index([status, startAt])
   @@index([customerId, createdAt(sort: Desc)])
+  @@index([showcaseItemId])
   @@map("appointments")
 }
 
@@ -231,18 +257,45 @@ model BookingBlock {
   @@map("booking_blocks")
 }
 
+model ShowcaseItem {
+  id               BigInt   @id @default(autoincrement())
+  categoryId       BigInt   @map("category_id")
+  servicePackageId BigInt   @map("service_package_id")
+  titleZh          String   @map("title_zh") @db.VarChar(120)
+  titleJa          String   @map("title_ja") @db.VarChar(120)
+  descriptionZh    String?  @map("description_zh")
+  descriptionJa    String?  @map("description_ja")
+  imageUrl         String   @map("image_url")
+  sortOrder        Int      @default(0) @map("sort_order")
+  isPublished      Boolean  @default(true) @map("is_published")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category       ServiceCategory @relation(fields: [categoryId], references: [id])
+  servicePackage ServicePackage  @relation(fields: [servicePackageId], references: [id])
+  appointments   Appointment[]
+
+  @@index([categoryId, sortOrder])
+  @@index([servicePackageId])
+  @@index([isPublished, sortOrder])
+  @@map("showcase_items")
+}
+
 model LineUser {
-  id            BigInt    @id @default(autoincrement())
-  lineUserId    String    @unique @map("line_user_id") @db.VarChar(120)
-  customerId    BigInt?   @unique @map("customer_id")
-  displayName   String?   @map("display_name") @db.VarChar(120)
-  pictureUrl    String?   @map("picture_url")
-  statusMessage String?   @map("status_message")
-  isFollowing   Boolean   @default(true) @map("is_following")
-  linkedAt      DateTime? @map("linked_at") @db.Timestamptz(6)
-  lastSeenAt    DateTime? @map("last_seen_at") @db.Timestamptz(6)
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                 BigInt    @id @default(autoincrement())
+  lineUserId         String    @unique @map("line_user_id") @db.VarChar(120)
+  customerId         BigInt?   @unique @map("customer_id")
+  displayName        String?   @map("display_name") @db.VarChar(120)
+  pictureUrl         String?   @map("picture_url")
+  statusMessage      String?   @map("status_message")
+  isFollowing        Boolean   @default(true) @map("is_following")
+  linkedAt           DateTime? @map("linked_at") @db.Timestamptz(6)
+  homeEntryToken     String?   @unique @map("home_entry_token") @db.VarChar(120)
+  welcomeSentAt      DateTime? @map("welcome_sent_at") @db.Timestamptz(6)
+  lastHomeLinkSentAt DateTime? @map("last_home_link_sent_at") @db.Timestamptz(6)
+  lastSeenAt         DateTime? @map("last_seen_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   customer     Customer?         @relation(fields: [customerId], references: [id])
   messages     LineMessage[]

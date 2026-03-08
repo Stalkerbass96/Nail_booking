@@ -2,10 +2,11 @@
 
 最后更新：2026-03-08
 
-这份文档的目标很直接：
+这份文档按 **2.0 LINE-first** 版本编写，目标是：
 - 你拿到一台全新的 Ubuntu 云主机
 - 按文档逐条执行
-- 最终把 Nail Booking 跑起来并可访问验证
+- 跑起前台、后台、PostgreSQL、自动取消 worker
+- 后续在同一台机器上继续接入 HTTPS 和 LINE Webhook
 
 本方案默认：
 - Ubuntu 22.04 / 24.04
@@ -17,13 +18,17 @@
 如果后面要接域名和 HTTPS，再看：
 - `docs/deployment/nginx-https-v1.md`
 
+如果后面要把 2.0 的 LINE 业务链路跑通，再看：
+- `docs/deployment/line-setup-v1.md`
+
 ## 1. 部署完成后的访问地址
 
 部署成功后，你应该能打开：
-- 前台：`http://<服务器IP>:3000`
+- 前台图墙首页：`http://<服务器IP>:3000`
 - 后台登录：`http://<服务器IP>:3000/admin/login`
-- 排班页：`http://<服务器IP>:3000/admin/schedule`
-- LINE 页：`http://<服务器IP>:3000/admin/line`
+- 图墙管理：`http://<服务器IP>:3000/admin/showcase`
+- 预约管理：`http://<服务器IP>:3000/admin/appointments`
+- LINE 会话：`http://<服务器IP>:3000/admin/line`
 
 默认种子账号：
 - Email: `owner@nail-booking.local`
@@ -130,12 +135,12 @@ AUTO_CANCEL_INTERVAL_MS=300000
 APP_BASE_URL=http://<服务器IP>:3000
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
-LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
+LINE_AUTO_REPLY_TEXT=Thanks for adding the salon LINE account. Please open the booking home page from the message link.
 ```
 
 注意：
-- `APP_BASE_URL` 不能继续保留 `127.0.0.1` 或 `localhost`
-- 否则系统生成的自助绑定链接只能服务器自己访问，外部用户无法打开
+- `APP_BASE_URL` 不能写 `127.0.0.1` 或 `localhost`
+- 否则系统生成的 LINE 主页链接或预约详情链接只能服务器自己访问
 
 ### 5.4 域名版示例
 
@@ -153,36 +158,27 @@ AUTO_CANCEL_INTERVAL_MS=300000
 APP_BASE_URL=https://your-domain.com
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
-LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
+LINE_AUTO_REPLY_TEXT=Thanks for adding the salon LINE account. Please open the booking home page from the message link.
 ```
 
-### 5.5 如果你准备在这次部署里同时接入 LINE
+### 5.5 2.0 版本里 LINE 不是“可有可无”的提醒
 
-你需要额外准备：
-- LINE Developers Console 中的 `Messaging API channel`
-- `LINE_CHANNEL_SECRET`
-- `LINE_CHANNEL_ACCESS_TOKEN`
-- 一个真实可访问的 `APP_BASE_URL`
+2.0 的主业务链路是：
+- 顾客加好友
+- LINE 首次欢迎消息
+- 图墙首页链接
+- 顾客从图墙预约
+- 待确认 / 已确认通知
+
+所以：
+- **系统可以先不配 LINE 启动起来**
+- 但 **没有 LINE 配置时，2.0 的主路径无法完整验证**
 
 推荐做法：
-1. 先完成基础部署，确认前后台都能打开
-2. 再把下面 3 个值写入 `.env.deploy`
-3. 重新执行 `./scripts/deploy-docker.sh`
-4. 最后去 LINE Developers Console 配置 Webhook URL
-
-`.env.deploy` 里实际要填：
-
-```env
-APP_BASE_URL=https://your-domain.com
-LINE_CHANNEL_SECRET=your-line-channel-secret
-LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
-LINE_AUTO_REPLY_TEXT=Message received. The salon owner will reply to you shortly.
-```
-
-注意：
-- 如果 `APP_BASE_URL` 还是 `localhost` 或 `127.0.0.1`，顾客收到的绑定链接无法从外网打开
-- LINE Webhook URL 必须配置成：`https://your-domain.com/api/line/webhook`
-- 详细的 LINE Console 配置步骤，直接看 `docs/deployment/line-setup-v1.md`
+1. 先按本文件把应用部署起来
+2. 确认前后台页面都能打开
+3. 再接域名 + HTTPS
+4. 最后按 `docs/deployment/line-setup-v1.md` 接入 LINE
 
 ## 6. 首次部署
 
@@ -198,7 +194,7 @@ chmod +x scripts/deploy-docker.sh
 ./scripts/deploy-docker.sh --seed
 ```
 
-这个脚本会自动执行：
+脚本会自动执行：
 - 校验 `docker`、`docker compose`、`curl`
 - 校验 `.env.deploy` 必填值
 - 检查 compose 配置是否合法
@@ -238,8 +234,8 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml logs --tail=1
 ### 7.4 在服务器本机测接口
 
 ```bash
+curl http://127.0.0.1:3000/api/public/showcase
 curl http://127.0.0.1:3000/api/public/categories
-curl http://127.0.0.1:3000/api/public/packages
 ```
 
 ### 7.5 从你自己的电脑打开网页
@@ -247,6 +243,7 @@ curl http://127.0.0.1:3000/api/public/packages
 浏览器访问：
 - `http://<服务器IP>:3000`
 - `http://<服务器IP>:3000/admin/login`
+- `http://<服务器IP>:3000/admin/showcase`
 
 ## 8. 如果页面打不开，按这个顺序排查
 
@@ -259,7 +256,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml ps
 ### 8.2 再确认服务器本机接口通不通
 
 ```bash
-curl http://127.0.0.1:3000/api/public/categories
+curl http://127.0.0.1:3000/api/public/showcase
 ```
 
 ### 8.3 如果本机通，但外网不通
@@ -366,33 +363,12 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postg
   psql -U "$POSTGRES_USER" "$POSTGRES_DB" < backup.sql
 ```
 
-## 12. LINE 接入说明
+## 12. 2.0 推荐验收顺序
 
-如果当前只是做云主机验证，可以先不填：
-- `LINE_CHANNEL_SECRET`
-- `LINE_CHANNEL_ACCESS_TOKEN`
-
-这不会影响预约、后台管理、排班、积分等核心功能。
-
-如果你准备正式接入 LINE，按这个顺序做：
-1. 确认 `APP_BASE_URL` 是外部可访问地址
-2. 在 `.env.deploy` 填入 `LINE_CHANNEL_SECRET` 与 `LINE_CHANNEL_ACCESS_TOKEN`
-3. 执行 `./scripts/deploy-docker.sh`
-4. 在 LINE Developers Console 中把 Webhook URL 配成 `https://your-domain.com/api/line/webhook`
-5. 打开后台 `/admin/line` 验证收发消息和绑定链接
-
-你还需要知道：
-- 没有 LINE 的顾客，仍然可以正常网页预约
-- 有 LINE 的顾客，才会用到绑定、消息和 1 对 1 会话
-- 详细步骤、截图位说明和排错建议在：`docs/deployment/line-setup-v1.md`
-
-## 13. 推荐验收顺序
-
-1. 打开前台首页
-2. 打开后台登录页
-3. 登录后台
-4. 打开排班页 `/admin/schedule`
-5. 打开 LINE 页 `/admin/line`
-6. 新建一个测试预约
-7. 在后台确认该预约
-8. 在后台完成该预约并检查积分变化
+1. 打开前台首页，确认看到图墙而不是旧式服务列表
+2. 登录后台
+3. 打开 `/admin/showcase`，确认能看到图墙管理页
+4. 打开 `/admin/appointments`，确认预约管理页可正常打开
+5. 打开 `/admin/customers`，确认顾客页可正常打开
+6. 如果暂未接入 LINE，至少确认公开接口和后台页面都可用
+7. 如果已接入 LINE，再按 `docs/deployment/line-setup-v1.md` 完成 follow / welcome / pending / confirmed 的验证

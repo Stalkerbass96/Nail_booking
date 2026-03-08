@@ -1,4 +1,4 @@
-﻿import { createHmac, randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 
 const LINE_API_BASE = "https://api.line.me";
 const LINE_LINK_BASE = "https://access.line.me/dialog/bot/accountLink";
@@ -127,4 +127,31 @@ export async function pushLineTextMessage(userId: string, text: string) {
 
 export function createLineLinkToken() {
   return randomBytes(24).toString("hex");
+}
+
+export function buildAppUrl(pathname: string, params?: Record<string, string | undefined | null>) {
+  const { appBaseUrl } = getLineConfig();
+  if (!appBaseUrl) return "";
+
+  const url = new URL(pathname.startsWith("/") ? pathname : `/${pathname}`, `${appBaseUrl}/`);
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      if (value) {
+        url.searchParams.set(key, value);
+      }
+    }
+  }
+
+  return url.toString();
+}
+
+export function buildLineHomeUrl(entryToken: string, lang = "zh") {
+  return buildAppUrl("/", { entry: entryToken, lang });
+}
+
+export function buildPublicBookingDetailUrl(bookingNo: string, entryToken?: string, lang = "zh") {
+  return buildAppUrl(`/booking/${encodeURIComponent(bookingNo)}`, {
+    entry: entryToken,
+    lang
+  });
 }

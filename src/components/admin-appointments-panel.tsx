@@ -9,14 +9,25 @@ type AppointmentItem = {
   status: "pending" | "confirmed" | "completed" | "canceled";
   startAt: string;
   endAt: string;
+  sourceChannel: "line_showcase" | "admin_manual" | "legacy_web";
   customer: {
     name: string;
-    email: string;
+    email: string | null;
+    customerType: "lead" | "active";
+    lineUser: {
+      lineUserId: string;
+      displayName: string | null;
+      isFollowing: boolean;
+    } | null;
   };
   package: {
     id: string;
     name: string;
   };
+  showcaseItem: {
+    id: string;
+    title: string;
+  } | null;
   addons: Array<{
     id: string;
     name: string;
@@ -155,6 +166,18 @@ function statusClass(status: AppointmentItem["status"]) {
   return "bg-slate-100 text-slate-700 border-slate-200";
 }
 
+function sourceChannelLabel(lang: Lang, sourceChannel: AppointmentItem["sourceChannel"]) {
+  if (lang === "ja") {
+    if (sourceChannel === "line_showcase") return "LINE \u30ae\u30e3\u30e9\u30ea\u30fc";
+    if (sourceChannel === "admin_manual") return "\u7ba1\u7406\u753b\u9762\u624b\u52d5";
+    return "\u65e7 Web";
+  }
+
+  if (sourceChannel === "line_showcase") return "LINE \u56fe\u5899";
+  if (sourceChannel === "admin_manual") return "\u540e\u53f0\u624b\u52a8";
+  return "\u65e7\u7f51\u9875";
+}
+
 export default function AdminAppointmentsPanel({ lang }: Props) {
   const t = TEXT[lang];
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
@@ -203,8 +226,11 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
       const haystack = [
         item.bookingNo,
         item.customer.name,
-        item.customer.email,
+        item.customer.email ?? "",
+        item.customer.lineUser?.displayName ?? "",
+        item.customer.lineUser?.lineUserId ?? "",
         item.package.name,
+        item.showcaseItem?.title ?? "",
         ...item.addons.map((addon) => addon.name)
       ]
         .join(" ")
@@ -374,7 +400,8 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.customer}</p>
                     <p className="mt-2 text-sm font-semibold text-brand-900">{item.customer.name}</p>
-                    <p className="text-sm text-brand-700">{item.customer.email}</p>
+                    <p className="text-sm text-brand-700">{item.customer.email || "-"}</p>
+                    <p className="text-xs text-brand-600">{lang === "ja" ? "LINE \u9867\u5ba2" : "LINE \u5ba2\u6237"}: {item.customer.lineUser?.displayName || item.customer.lineUser?.lineUserId || "-"}</p>
                   </div>
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.time}</p>
@@ -388,6 +415,8 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.service}</p>
                     <p className="mt-2 text-sm font-semibold text-brand-900">{item.package.name}</p>
+                    <p className="text-xs text-brand-600">{lang === "ja" ? "\u30ae\u30e3\u30e9\u30ea\u30fc\u7531\u6765" : "\u56fe\u5899\u6b3e\u5f0f"}: {item.showcaseItem?.title || (lang === "ja" ? "\u30ae\u30e3\u30e9\u30ea\u30fc\u7d4c\u7531\u3067\u306f\u306a\u3044" : "\u975e\u56fe\u5899\u6d41\u7a0b")}</p>
+                    <p className="text-xs text-brand-600">{lang === "ja" ? "\u4e88\u7d04\u5165\u53e3" : "\u9884\u7ea6\u5165\u53e3"}: {sourceChannelLabel(lang, item.sourceChannel)}</p>
                   </div>
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.addons}</p>

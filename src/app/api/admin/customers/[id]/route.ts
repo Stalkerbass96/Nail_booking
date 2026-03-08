@@ -13,6 +13,17 @@ export async function GET(
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
       include: {
+        lineUser: {
+          select: {
+            id: true,
+            lineUserId: true,
+            displayName: true,
+            isFollowing: true,
+            linkedAt: true,
+            lastSeenAt: true,
+            createdAt: true
+          }
+        },
         appointments: {
           orderBy: { createdAt: "desc" },
           take: 50,
@@ -23,7 +34,22 @@ export async function GET(
             startAt: true,
             endAt: true,
             actualPaidJpy: true,
-            createdAt: true
+            sourceChannel: true,
+            createdAt: true,
+            showcaseItem: {
+              select: {
+                id: true,
+                titleZh: true,
+                titleJa: true
+              }
+            },
+            servicePackage: {
+              select: {
+                id: true,
+                nameZh: true,
+                nameJa: true
+              }
+            }
           }
         }
       }
@@ -38,10 +64,24 @@ export async function GET(
       name: customer.name,
       email: customer.email,
       notes: customer.notes,
+      customerType: customer.customerType,
+      createdFrom: customer.createdFrom,
+      firstBookedAt: customer.firstBookedAt?.toISOString() ?? null,
       totalSpentJpy: customer.totalSpentJpy,
       currentPoints: customer.currentPoints,
       createdAt: customer.createdAt.toISOString(),
       updatedAt: customer.updatedAt.toISOString(),
+      lineUser: customer.lineUser
+        ? {
+            id: customer.lineUser.id.toString(),
+            lineUserId: customer.lineUser.lineUserId,
+            displayName: customer.lineUser.displayName,
+            isFollowing: customer.lineUser.isFollowing,
+            linkedAt: customer.lineUser.linkedAt?.toISOString() ?? null,
+            lastSeenAt: customer.lineUser.lastSeenAt?.toISOString() ?? null,
+            createdAt: customer.lineUser.createdAt.toISOString()
+          }
+        : null,
       appointments: customer.appointments.map((appt) => ({
         id: appt.id.toString(),
         bookingNo: appt.bookingNo,
@@ -49,6 +89,19 @@ export async function GET(
         startAt: appt.startAt.toISOString(),
         endAt: appt.endAt.toISOString(),
         actualPaidJpy: appt.actualPaidJpy,
+        sourceChannel: appt.sourceChannel,
+        package: {
+          id: appt.servicePackage.id.toString(),
+          nameZh: appt.servicePackage.nameZh,
+          nameJa: appt.servicePackage.nameJa
+        },
+        showcaseItem: appt.showcaseItem
+          ? {
+              id: appt.showcaseItem.id.toString(),
+              titleZh: appt.showcaseItem.titleZh,
+              titleJa: appt.showcaseItem.titleJa
+            }
+          : null,
         createdAt: appt.createdAt.toISOString()
       }))
     });

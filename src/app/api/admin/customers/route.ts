@@ -12,11 +12,29 @@ export async function GET(request: NextRequest) {
         ? {
             OR: [
               { name: { contains: keyword, mode: "insensitive" } },
-              { email: { contains: keyword, mode: "insensitive" } }
+              { email: { contains: keyword, mode: "insensitive" } },
+              {
+                lineUser: {
+                  is: {
+                    OR: [
+                      { displayName: { contains: keyword, mode: "insensitive" } },
+                      { lineUserId: { contains: keyword, mode: "insensitive" } }
+                    ]
+                  }
+                }
+              }
             ]
           }
         : undefined,
       include: {
+        lineUser: {
+          select: {
+            lineUserId: true,
+            displayName: true,
+            isFollowing: true,
+            lastSeenAt: true
+          }
+        },
         appointments: {
           select: { id: true }
         }
@@ -31,9 +49,20 @@ export async function GET(request: NextRequest) {
         name: item.name,
         email: item.email,
         notes: item.notes,
+        customerType: item.customerType,
+        createdFrom: item.createdFrom,
+        firstBookedAt: item.firstBookedAt?.toISOString() ?? null,
         totalSpentJpy: item.totalSpentJpy,
         currentPoints: item.currentPoints,
         appointmentCount: item.appointments.length,
+        lineUser: item.lineUser
+          ? {
+              lineUserId: item.lineUser.lineUserId,
+              displayName: item.lineUser.displayName,
+              isFollowing: item.lineUser.isFollowing,
+              lastSeenAt: item.lineUser.lastSeenAt?.toISOString() ?? null
+            }
+          : null,
         createdAt: item.createdAt.toISOString(),
         updatedAt: item.updatedAt.toISOString()
       }))

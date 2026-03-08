@@ -1,4 +1,4 @@
-﻿import { normalizeEmail } from "@/lib/booking-rules";
+import { normalizeEmail } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
 
 export async function findCustomerByBookingNoAndEmail(bookingNo: string, emailRaw: string) {
@@ -17,7 +17,7 @@ export async function findCustomerByBookingNoAndEmail(bookingNo: string, emailRa
     }
   });
 
-  if (!appointment || normalizeEmail(appointment.customer.email) !== email) {
+  if (!appointment || !appointment.customer.email || normalizeEmail(appointment.customer.email) !== email) {
     return null;
   }
 

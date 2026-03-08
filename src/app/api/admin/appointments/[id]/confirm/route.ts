@@ -1,6 +1,7 @@
 import { AppointmentStatus } from "@prisma/client";
 import { parseSingleBigInt } from "@/lib/booking-rules";
 import { prisma } from "@/lib/db";
+import { sendConfirmedBookingMessage } from "@/lib/line-notifications";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
@@ -13,7 +14,13 @@ export async function PATCH(
 
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },
-      select: { id: true, status: true }
+      include: {
+        customer: {
+          include: {
+            lineUser: true
+          }
+        }
+      }
     });
 
     if (!appointment) {
@@ -40,6 +47,16 @@ export async function PATCH(
         confirmedAt: true
       }
     });
+
+    if (appointment.customer.lineUser?.isFollowing) {
+      await sendConfirmedBookingMessage(prisma, {
+        lineUserDbId: appointment.customer.lineUser.id,
+        linePlatformUserId: appointment.customer.lineUser.lineUserId,
+        bookingNo: appointment.bookingNo,
+        entryToken: appointment.customer.lineUser.homeEntryToken,
+        lang: "zh"
+      });
+    }
 
     return NextResponse.json({
       id: updated.id.toString(),
