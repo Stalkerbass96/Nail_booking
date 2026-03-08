@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -189,7 +189,7 @@ function sourceChannelLabel(lang: Lang, sourceChannel: AppointmentItem["sourceCh
 export default function AdminAppointmentsPanel({ lang }: Props) {
   const t = TEXT[lang];
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
-  const openLineConversationLabel = lang === "ja" ? "LINE ?????" : "?? LINE ??";
+  const openLineConversationLabel = lang === "ja" ? "LINE \u4f1a\u8a71\u3092\u958b\u304f" : "\u6253\u5f00 LINE \u4f1a\u8bdd";
 
   const [date, setDate] = useState("");
   const [status, setStatus] = useState<(typeof STATUS_VALUES)[number]>("all");

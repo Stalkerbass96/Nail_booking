@@ -15,6 +15,7 @@ type PackageItem = {
   nameJa: string;
   priceJpy: number;
   durationMin: number;
+  isActive?: boolean;
 };
 
 type ShowcaseItem = {
@@ -77,6 +78,9 @@ const TEXT = {
     activePackageMissing: "\u5173\u8054\u5957\u9910\u5df2\u505c\u7528",
     moveUp: "\u4e0a\u79fb",
     moveDown: "\u4e0b\u79fb",
+    publishNow: "\u7acb\u5373\u4e0a\u67b6",
+    unpublishNow: "\u7acb\u5373\u4e0b\u67b6",
+    preview: "\u56fe\u7247\u9884\u89c8",
     sortHint: "\u4f18\u5148\u7528\u4e0a\u79fb / \u4e0b\u79fb\u8c03\u6574\u9996\u9875\u56fe\u5899\u987a\u5e8f\u3002"
   },
   ja: {
@@ -108,6 +112,9 @@ const TEXT = {
     activePackageMissing: "\u9023\u643a\u30e1\u30cb\u30e5\u30fc\u306f\u7121\u52b9\u3067\u3059",
     moveUp: "\u4e0a\u3078",
     moveDown: "\u4e0b\u3078",
+    publishNow: "\u3059\u3050\u516c\u958b",
+    unpublishNow: "\u975e\u516c\u958b\u306b\u3059\u308b",
+    preview: "\u753b\u50cf\u30d7\u30ec\u30d3\u30e5\u30fc",
     sortHint: "\u30db\u30fc\u30e0\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u9806\u756a\u306f\u4e0a\u3078 / \u4e0b\u3078\u3067\u7c21\u5358\u306b\u8abf\u6574\u3067\u304d\u307e\u3059\u3002"
   }
 } as const;
@@ -175,14 +182,15 @@ export default function AdminShowcasePanel({ lang }: Props) {
         throw new Error(showcaseData?.error || categoryData?.error || packageData?.error || t.loadFailed);
       }
 
-      const nextItems = showcaseData.items ?? [];
-      const nextCategories = categoryData.items ?? [];
-      const nextPackages = (packageData.items ?? []).map((item: any) => ({
+      const nextItems: ShowcaseItem[] = showcaseData.items ?? [];
+      const nextCategories: CategoryItem[] = categoryData.items ?? [];
+      const nextPackages: PackageItem[] = (packageData.items ?? []).map((item: any) => ({
         id: item.id,
         nameZh: item.nameZh,
         nameJa: item.nameJa,
         priceJpy: item.priceJpy,
-        durationMin: item.durationMin
+        durationMin: item.durationMin,
+        isActive: item.isActive
       }));
 
       setItems(nextItems);
@@ -195,7 +203,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
       }));
 
       if (editingId) {
-        const target = nextItems.find((item: ShowcaseItem) => item.id === editingId);
+        const target = nextItems.find((item) => item.id === editingId);
         if (target) {
           setEditForm(fromItem(target));
         } else {
@@ -323,6 +331,40 @@ export default function AdminShowcasePanel({ lang }: Props) {
     }
   }
 
+  async function togglePublish(item: ShowcaseItem) {
+    setError("");
+    setNotice("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/showcase/" + item.id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...serializeForm(fromItem(item)),
+          isPublished: !item.isPublished
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.updateFailed);
+      setNotice(t.saveSuccess);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.updateFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function renderPreview(imageUrl: string) {
+    if (!imageUrl) return null;
+    return (
+      <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50">
+        <p className="border-b border-brand-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.preview}</p>
+        <div className="aspect-[5/4] w-full bg-cover bg-center" style={{ backgroundImage: "url(" + imageUrl + ")" }} />
+      </div>
+    );
+  }
+
   return (
     <section className="admin-panel-shell">
       <div className="flex items-center justify-between gap-3">
@@ -350,7 +392,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
           </select>
           <select className="admin-input-sm" value={createForm.servicePackageId} onChange={(e) => patchCreateForm({ servicePackageId: e.target.value })}>
             {packages.map((item) => (
-              <option key={item.id} value={item.id}>{displayName(lang, item.nameZh, item.nameJa)} · {item.priceJpy} JPY</option>
+              <option key={item.id} value={item.id}>{displayName(lang, item.nameZh, item.nameJa)} / {item.priceJpy} JPY</option>
             ))}
           </select>
           <input className="admin-input-sm" placeholder={t.titleZh} value={createForm.titleZh} onChange={(e) => patchCreateForm({ titleZh: e.target.value })} />
@@ -368,6 +410,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
             {t.published}
           </label>
         </div>
+        {renderPreview(createForm.imageUrl)}
         <button className="admin-btn-primary w-fit" type="submit">{t.create}</button>
       </form>
 
@@ -383,13 +426,14 @@ export default function AdminShowcasePanel({ lang }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-lg font-semibold text-brand-900">{displayName(lang, item.titleZh, item.titleJa)}</p>
-                    <p className="text-sm text-brand-700">{displayName(lang, item.category.nameZh, item.category.nameJa)} · {displayName(lang, item.servicePackage.nameZh, item.servicePackage.nameJa)} · {item.servicePackage.priceJpy} JPY</p>
-                    <p className="text-sm text-brand-700">{item.isPublished ? t.published : t.unpublished} · {t.appointments} {item.appointmentCount} · #{item.sortOrder}</p>
+                    <p className="text-sm text-brand-700">{displayName(lang, item.category.nameZh, item.category.nameJa)} / {displayName(lang, item.servicePackage.nameZh, item.servicePackage.nameJa)} / {item.servicePackage.priceJpy} JPY</p>
+                    <p className="text-sm text-brand-700">{item.isPublished ? t.published : t.unpublished} / {t.appointments} {item.appointmentCount} / #{item.sortOrder}</p>
                     {!item.servicePackage.isActive ? <p className="text-sm text-amber-700">{t.activePackageMissing}</p> : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={index === 0 || saving}>{t.moveUp}</button>
                     <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={index === sortedItems.length - 1 || saving}>{t.moveDown}</button>
+                    <button className="admin-btn-ghost" onClick={() => void togglePublish(item)} type="button" disabled={saving}>{item.isPublished ? t.unpublishNow : t.publishNow}</button>
                     <button className="admin-btn-ghost" onClick={() => { setEditingId(item.id); setEditForm(fromItem(item)); }} type="button">{t.edit}</button>
                   </div>
                 </div>
@@ -407,7 +451,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
                   </select>
                   <select className="admin-input-sm" value={editForm.servicePackageId} onChange={(e) => patchEditForm({ servicePackageId: e.target.value })}>
                     {packages.map((pkg) => (
-                      <option key={pkg.id} value={pkg.id}>{displayName(lang, pkg.nameZh, pkg.nameJa)} · {pkg.priceJpy} JPY</option>
+                      <option key={pkg.id} value={pkg.id}>{displayName(lang, pkg.nameZh, pkg.nameJa)} / {pkg.priceJpy} JPY</option>
                     ))}
                   </select>
                   <input className="admin-input-sm" value={editForm.titleZh} onChange={(e) => patchEditForm({ titleZh: e.target.value })} />
@@ -425,6 +469,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     {t.published}
                   </label>
                 </div>
+                {renderPreview(editForm.imageUrl)}
                 <div className="flex gap-2">
                   <button className="admin-btn-primary px-3 py-1.5" type="submit">{t.save}</button>
                   <button className="admin-btn-ghost" type="button" onClick={() => setEditingId(null)}>{t.cancel}</button>
