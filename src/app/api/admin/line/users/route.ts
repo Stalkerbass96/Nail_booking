@@ -1,4 +1,4 @@
-import { LineMessageDirection } from "@prisma/client";
+import { LineMessageDirection, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getLineConfig } from "@/lib/line";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,17 +6,36 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   try {
     const keyword = (request.nextUrl.searchParams.get("q") ?? "").trim();
+    const userIdRaw = (request.nextUrl.searchParams.get("userId") ?? "").trim();
+
+    let parsedUserId: bigint | null = null;
+    if (userIdRaw) {
+      try {
+        parsedUserId = BigInt(userIdRaw);
+      } catch {
+        return NextResponse.json({ error: "Invalid userId" }, { status: 400 });
+      }
+    }
+
+    const keywordWhere: Prisma.LineUserWhereInput | undefined = keyword
+      ? {
+          OR: [
+            { lineUserId: { contains: keyword } },
+            { displayName: { contains: keyword, mode: Prisma.QueryMode.insensitive } },
+            { customer: { is: { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } } } },
+            { customer: { is: { email: { contains: keyword, mode: Prisma.QueryMode.insensitive } } } }
+          ]
+        }
+      : undefined;
+
+    const where: Prisma.LineUserWhereInput | undefined = parsedUserId
+      ? keywordWhere
+        ? { OR: [{ id: parsedUserId }, keywordWhere] }
+        : { id: parsedUserId }
+      : keywordWhere;
+
     const items = await prisma.lineUser.findMany({
-      where: keyword
-        ? {
-            OR: [
-              { lineUserId: { contains: keyword } },
-              { displayName: { contains: keyword, mode: "insensitive" } },
-              { customer: { is: { name: { contains: keyword, mode: "insensitive" } } } },
-              { customer: { is: { email: { contains: keyword, mode: "insensitive" } } } }
-            ]
-          }
-        : undefined,
+      where,
       include: {
         customer: {
           select: {

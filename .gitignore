@@ -1,5 +1,7 @@
 node_modules
 .next
+.next-verify-build
+.next-verify-e2e
 .env
 .env.deploy
 dist

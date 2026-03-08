@@ -42,6 +42,7 @@ type InboxFilter = "all" | "unread" | "linked";
 
 type Props = {
   lang: Lang;
+  initialUserId?: string;
 };
 
 const TEXT = {
@@ -169,7 +170,7 @@ function formatDateTime(value: string, locale: string) {
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
-export default function AdminLinePanel({ lang }: Props) {
+export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
   const t = TEXT[lang];
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
 
@@ -218,12 +219,13 @@ export default function AdminLinePanel({ lang }: Props) {
   const linkedTotal = useMemo(() => users.filter((item) => item.customer).length, [users]);
 
   const loadUsers = useCallback(
-    async (keyword = "") => {
+    async (keyword = "", preferredUserId = initialUserId) => {
       setLoadingUsers(true);
       setError("");
       try {
         const qs = new URLSearchParams();
         if (keyword.trim()) qs.set("q", keyword.trim());
+        if (preferredUserId) qs.set("userId", preferredUserId);
         const res = await fetch(`/api/admin/line/users${qs.toString() ? `?${qs.toString()}` : ""}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error || t.loadFailed);
@@ -241,7 +243,7 @@ export default function AdminLinePanel({ lang }: Props) {
         setLoadingUsers(false);
       }
     },
-    [t.loadFailed]
+    [initialUserId, t.loadFailed]
   );
 
   const loadMessages = useCallback(
@@ -276,8 +278,8 @@ export default function AdminLinePanel({ lang }: Props) {
   );
 
   useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
+    void loadUsers("", initialUserId);
+  }, [initialUserId, loadUsers]);
 
   useEffect(() => {
     if (!activeUserId) {
@@ -318,7 +320,7 @@ export default function AdminLinePanel({ lang }: Props) {
       setUsers((prev) => prev.map((item) => (item.id === activeUserId ? { ...item, customer: data.user.customer } : item)));
       setSelectedCustomerId(customerId ?? "");
       setOk(customerId ? t.customerBound : t.customerUnbound);
-      await loadUsers(query);
+      await loadUsers(query, activeUserId);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.bindFailed);
     }
@@ -358,7 +360,7 @@ export default function AdminLinePanel({ lang }: Props) {
       setMessages((prev) => [...prev, data.message]);
       setDraftMessage("");
       setOk(t.sent);
-      await loadUsers(query);
+      await loadUsers(query, activeUserId);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.sendFailed);
     } finally {
