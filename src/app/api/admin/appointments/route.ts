@@ -7,10 +7,19 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_STATUSES = new Set(Object.values(AppointmentStatus));
 const VALID_SOURCE_CHANNELS = new Set(["line_showcase", "admin_manual", "legacy_web"] as const);
 
+function parseBigIntOrThrow(value: string, fieldName: string) {
+  try {
+    return BigInt(value);
+  } catch {
+    throw new Error("Invalid " + fieldName);
+  }
+}
+
 function buildFilter(request: NextRequest): Prisma.AppointmentWhereInput {
   const statusRaw = request.nextUrl.searchParams.get("status");
   const dateRaw = request.nextUrl.searchParams.get("date");
   const sourceChannelRaw = request.nextUrl.searchParams.get("sourceChannel");
+  const showcaseItemIdRaw = (request.nextUrl.searchParams.get("showcaseItemId") ?? "").trim();
 
   const where: Prisma.AppointmentWhereInput = {};
 
@@ -26,6 +35,10 @@ function buildFilter(request: NextRequest): Prisma.AppointmentWhereInput {
       throw new Error("Invalid source channel");
     }
     where.sourceChannel = sourceChannelRaw as "line_showcase" | "admin_manual" | "legacy_web";
+  }
+
+  if (showcaseItemIdRaw) {
+    where.showcaseItemId = parseBigIntOrThrow(showcaseItemIdRaw, "showcaseItemId");
   }
 
   if (dateRaw) {

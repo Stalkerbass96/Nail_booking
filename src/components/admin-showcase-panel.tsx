@@ -44,6 +44,8 @@ type ShowcaseFormState = {
   isPublished: boolean;
 };
 
+type PublishFilter = "all" | "published" | "unpublished";
+
 type Props = {
   lang: Lang;
 };
@@ -81,6 +83,13 @@ const TEXT = {
     publishNow: "\u7acb\u5373\u4e0a\u67b6",
     unpublishNow: "\u7acb\u5373\u4e0b\u67b6",
     preview: "\u56fe\u7247\u9884\u89c8",
+    filtersTitle: "\u5feb\u901f\u7b5b\u9009",
+    category: "\u5206\u7c7b",
+    status: "\u72b6\u6001",
+    keyword: "\u5173\u952e\u8bcd",
+    keywordPlaceholder: "\u641c\u7d22\u56fe\u5899\u6807\u9898\u3001\u5206\u7c7b\u6216\u5957\u9910",
+    allCategories: "\u5168\u90e8\u5206\u7c7b",
+    allStatuses: "\u5168\u90e8\u72b6\u6001",
     sortHint: "\u4f18\u5148\u7528\u4e0a\u79fb / \u4e0b\u79fb\u8c03\u6574\u9996\u9875\u56fe\u5899\u987a\u5e8f\u3002"
   },
   ja: {
@@ -115,6 +124,13 @@ const TEXT = {
     publishNow: "\u3059\u3050\u516c\u958b",
     unpublishNow: "\u975e\u516c\u958b\u306b\u3059\u308b",
     preview: "\u753b\u50cf\u30d7\u30ec\u30d3\u30e5\u30fc",
+    filtersTitle: "\u30af\u30a4\u30c3\u30af\u7d5e\u308a\u8fbc\u307f",
+    category: "\u30ab\u30c6\u30b4\u30ea",
+    status: "\u72b6\u614b",
+    keyword: "\u30ad\u30fc\u30ef\u30fc\u30c9",
+    keywordPlaceholder: "\u30bf\u30a4\u30c8\u30eb\u3001\u30ab\u30c6\u30b4\u30ea\u3001\u30e1\u30cb\u30e5\u30fc\u3067\u691c\u7d22",
+    allCategories: "\u3059\u3079\u3066\u306e\u30ab\u30c6\u30b4\u30ea",
+    allStatuses: "\u3059\u3079\u3066\u306e\u72b6\u614b",
     sortHint: "\u30db\u30fc\u30e0\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u9806\u756a\u306f\u4e0a\u3078 / \u4e0b\u3078\u3067\u7c21\u5358\u306b\u8abf\u6574\u3067\u304d\u307e\u3059\u3002"
   }
 } as const;
@@ -163,6 +179,9 @@ export default function AdminShowcasePanel({ lang }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [publishFilter, setPublishFilter] = useState<PublishFilter>("all");
+  const [keyword, setKeyword] = useState("");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -223,6 +242,27 @@ export default function AdminShowcasePanel({ lang }: Props) {
   }, [refresh]);
 
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)), [items]);
+
+  const reorderLocked = categoryFilter !== "all" || publishFilter !== "all" || keyword.trim() !== "";
+
+  const filteredItems = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return sortedItems.filter((item) => {
+      if (categoryFilter !== "all" && item.category.id !== categoryFilter) return false;
+      if (publishFilter === "published" && !item.isPublished) return false;
+      if (publishFilter === "unpublished" && item.isPublished) return false;
+      if (!q) return true;
+      const haystack = [
+        item.titleZh,
+        item.titleJa,
+        item.category.nameZh,
+        item.category.nameJa,
+        item.servicePackage.nameZh,
+        item.servicePackage.nameJa
+      ].join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [categoryFilter, keyword, publishFilter, sortedItems]);
 
   function patchCreateForm(next: Partial<ShowcaseFormState>) {
     setCreateForm((prev) => ({ ...prev, ...next }));
@@ -382,6 +422,33 @@ export default function AdminShowcasePanel({ lang }: Props) {
       {loading ? <p className="ui-state-info">{t.loading}</p> : null}
       {saving ? <p className="ui-state-info">{t.saving}</p> : null}
 
+      <section className="admin-subsection">
+        <p className="font-medium text-brand-900">{t.filtersTitle}</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <label className="grid gap-1 text-sm text-brand-800">
+            <span>{t.category}</span>
+            <select className="admin-input-sm" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+              <option value="all">{t.allCategories}</option>
+              {categories.map((item) => (
+                <option key={item.id} value={item.id}>{displayName(lang, item.nameZh, item.nameJa)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm text-brand-800">
+            <span>{t.status}</span>
+            <select className="admin-input-sm" value={publishFilter} onChange={(e) => setPublishFilter(e.target.value as PublishFilter)}>
+              <option value="all">{t.allStatuses}</option>
+              <option value="published">{t.published}</option>
+              <option value="unpublished">{t.unpublished}</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm text-brand-800">
+            <span>{t.keyword}</span>
+            <input className="admin-input-sm" value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder={t.keywordPlaceholder} />
+          </label>
+        </div>
+      </section>
+
       <form className="admin-subsection" onSubmit={createItem}>
         <p className="font-medium text-brand-900">{t.createTitle}</p>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -415,8 +482,8 @@ export default function AdminShowcasePanel({ lang }: Props) {
       </form>
 
       <div className="mt-4 grid gap-3">
-        {!loading && sortedItems.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
-        {sortedItems.map((item, index) => (
+        {!loading && filteredItems.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
+        {filteredItems.map((item, index) => (
           <article key={item.id} className="admin-item">
             <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
               <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50">
@@ -431,8 +498,8 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     {!item.servicePackage.isActive ? <p className="text-sm text-amber-700">{t.activePackageMissing}</p> : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={index === 0 || saving}>{t.moveUp}</button>
-                    <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={index === sortedItems.length - 1 || saving}>{t.moveDown}</button>
+                    <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={reorderLocked || index === 0 || saving}>{t.moveUp}</button>
+                    <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={reorderLocked || index === filteredItems.length - 1 || saving}>{t.moveDown}</button>
                     <button className="admin-btn-ghost" onClick={() => void togglePublish(item)} type="button" disabled={saving}>{item.isPublished ? t.unpublishNow : t.publishNow}</button>
                     <button className="admin-btn-ghost" onClick={() => { setEditingId(item.id); setEditForm(fromItem(item)); }} type="button">{t.edit}</button>
                   </div>
