@@ -11,8 +11,9 @@ type LineUserItem = {
   isFollowing: boolean;
   linkedAt?: string | null;
   lastSeenAt?: string | null;
+  lastHomeLinkSentAt?: string | null;
   unreadCount: number;
-  customer: { id: string; name: string; email: string } | null;
+  customer: { id: string; name: string; email?: string | null } | null;
   lastMessage?: {
     text?: string | null;
     messageType: string;
@@ -35,7 +36,7 @@ type LineMessageItem = {
 type CustomerItem = {
   id: string;
   name: string;
-  email: string;
+  email?: string | null;
 };
 
 type InboxFilter = "all" | "unread" | "linked";
@@ -60,8 +61,10 @@ const TEXT = {
     bindFailed: "绑定顾客失败",
     sendFailed: "发送消息失败",
     linkFailed: "发送绑定链接失败",
+    galleryLinkFailed: "Failed to send gallery booking link",
     bind: "绑定顾客",
     sendLink: "发送绑定链接",
+    sendGalleryLink: "Send gallery booking link",
     unbind: "解除绑定",
     linkedCustomer: "已绑定顾客",
     unlinked: "未绑定顾客",
@@ -88,9 +91,15 @@ const TEXT = {
     customerUnbound: "已解除顾客绑定",
     sent: "消息已发送",
     linkSent: "绑定链接已发送",
+    galleryLinkSent: "Gallery booking link sent",
+    galleryLinkReady: "Link ready to copy",
+    copyGalleryLink: "Copy link",
+    galleryLinkCopied: "Gallery link copied",
     webhookHint: "Webhook 路径: /api/line/webhook",
     linkedAt: "绑定时间",
+    lastGalleryLinkSentAt: "Last gallery link sent",
     linkHelp: "给用户发送绑定链接后，对方可以用预约号和邮箱完成 LINE 绑定。",
+    galleryHelp: "Use this for existing LINE friends so they can enter the gallery booking flow directly.",
     unread: "未读",
     unreadMessages: "未读消息",
     inboxSummary: "收件箱概览",
@@ -119,8 +128,10 @@ const TEXT = {
     bindFailed: "顧客連携に失敗しました",
     sendFailed: "メッセージ送信に失敗しました",
     linkFailed: "連携リンクの送信に失敗しました",
+    galleryLinkFailed: "Failed to send gallery booking link",
     bind: "顧客を連携",
     sendLink: "連携リンク送信",
+    sendGalleryLink: "Send gallery booking link",
     unbind: "連携解除",
     linkedCustomer: "連携済み顧客",
     unlinked: "未連携",
@@ -147,9 +158,15 @@ const TEXT = {
     customerUnbound: "顧客連携を解除しました",
     sent: "メッセージを送信しました",
     linkSent: "連携リンクを送信しました",
+    galleryLinkSent: "Gallery booking link sent",
+    galleryLinkReady: "Link ready to copy",
+    copyGalleryLink: "Copy link",
+    galleryLinkCopied: "Gallery link copied",
     webhookHint: "Webhook パス: /api/line/webhook",
     linkedAt: "連携日時",
+    lastGalleryLinkSentAt: "Last gallery link sent",
     linkHelp: "連携リンクを送ると、ユーザーは予約番号とメールで LINE 連携を完了できます。",
+    galleryHelp: "Use this for existing LINE friends so they can enter the gallery booking flow directly.",
     unread: "未読",
     unreadMessages: "未読メッセージ",
     inboxSummary: "受信箱サマリー",
@@ -185,6 +202,8 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [linking, setLinking] = useState(false);
+  const [sendingGalleryLink, setSendingGalleryLink] = useState(false);
+  const [galleryLinkUrl, setGalleryLinkUrl] = useState("");
   const [customerQuery, setCustomerQuery] = useState("");
   const [customerResults, setCustomerResults] = useState<CustomerItem[]>([]);
   const [searchingCustomers, setSearchingCustomers] = useState(false);
@@ -341,6 +360,36 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
     } finally {
       setLinking(false);
     }
+  }
+
+  async function sendGalleryLinkRequest() {
+    if (!activeUserId) return;
+    setSendingGalleryLink(true);
+    setError("");
+    setOk("");
+    try {
+      const res = await fetch(`/api/admin/line/users/${activeUserId}/gallery-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lang })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.details || data?.error || t.galleryLinkFailed);
+      setGalleryLinkUrl(data?.galleryUrl || "");
+      setOk(data?.galleryUrl ? `${t.galleryLinkSent} / ${t.galleryLinkReady}` : t.galleryLinkSent);
+      await loadUsers(query, activeUserId);
+      await loadMessages(activeUserId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.galleryLinkFailed);
+    } finally {
+      setSendingGalleryLink(false);
+    }
+  }
+
+  async function copyGalleryLink() {
+    if (!galleryLinkUrl || typeof navigator === "undefined" || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(galleryLinkUrl);
+    setOk(t.galleryLinkCopied);
   }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -503,18 +552,34 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
                       {activeUser.unreadCount > 0 ? <span className="rounded-full bg-brand-700 px-2 py-0.5 text-xs font-semibold text-white">{t.unread} {activeUser.unreadCount}</span> : null}
                     </div>
                     <p className="text-sm text-brand-700">{t.lineUserId}: {activeUser.lineUserId}</p>
-                    <p className="text-sm text-brand-700">{activeUser.customer ? `${t.linkedCustomer}: ${activeUser.customer.name} (${activeUser.customer.email})` : t.unlinked}</p>
+                    <p className="text-sm text-brand-700">{activeUser.customer ? `${t.linkedCustomer}: ${activeUser.customer.name}${activeUser.customer.email ? ` (${activeUser.customer.email})` : ""}` : t.unlinked}</p>
                     {activeUser.linkedAt ? <p className="text-sm text-brand-700">{t.linkedAt}: {formatDateTime(activeUser.linkedAt, locale)}</p> : null}
                     {activeUser.lastSeenAt ? <p className="text-sm text-brand-700">{t.lastSeen}: {formatDateTime(activeUser.lastSeenAt, locale)}</p> : null}
+                    {activeUser.lastHomeLinkSentAt ? <p className="text-sm text-brand-700">{t.lastGalleryLinkSentAt}: {formatDateTime(activeUser.lastHomeLinkSentAt, locale)}</p> : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <button type="button" className="admin-btn-primary" onClick={() => void sendGalleryLinkRequest()} disabled={!configEnabled || !appBaseUrlConfigured || sendingGalleryLink}>
+                      {sendingGalleryLink ? `${t.sendGalleryLink}...` : t.sendGalleryLink}
+                    </button>
                     <button type="button" className="admin-btn-secondary" onClick={() => void sendLinkRequest()} disabled={!configEnabled || !appBaseUrlConfigured || linking}>
                       {linking ? `${t.sendLink}...` : t.sendLink}
                     </button>
                     {activeUser.customer ? <button type="button" className="admin-btn-ghost" onClick={() => void bindCustomer(null)}>{t.unbind}</button> : null}
                   </div>
                 </div>
-                <p className="field-hint mt-3">{t.linkHelp}</p>
+                <div className="mt-3 grid gap-2">
+                  <p className="field-hint mt-0">{t.galleryHelp}</p>
+                  <p className="field-hint mt-0">{t.linkHelp}</p>
+                  {galleryLinkUrl ? (
+                    <div className="rounded-2xl border border-brand-100 bg-brand-50/40 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">URL</p>
+                      <p className="mt-2 break-all text-sm text-brand-800">{galleryLinkUrl}</p>
+                      <button type="button" className="admin-btn-ghost mt-3" onClick={() => void copyGalleryLink()}>
+                        {t.copyGalleryLink}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="grid gap-3 rounded-2xl border border-brand-100 bg-white p-4">
@@ -555,7 +620,7 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
                       <input type="radio" checked={selectedCustomerId === item.id} onChange={() => setSelectedCustomerId(item.id)} />
                       <span className="choice-tile-main">
                         <strong>{item.name}</strong>
-                        <small>{item.email}</small>
+                        <small>{item.email || item.id}</small>
                       </span>
                     </label>
                   ))}

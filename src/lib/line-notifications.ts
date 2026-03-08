@@ -21,6 +21,16 @@ const TEXT = {
   confirmed: {
     zh: "\u4f60\u7684\u9884\u7ea6\u5df2\u786e\u8ba4\u3002\u671f\u5f85\u4f60\u7684\u5230\u6765\u3002",
     ja: "\u3054\u4e88\u7d04\u304c\u78ba\u5b9a\u3057\u307e\u3057\u305f\u3002\u3054\u6765\u5e97\u3092\u304a\u5f85\u3061\u3057\u3066\u3044\u307e\u3059\u3002"
+  },
+  gallery: {
+    zh: [
+      "\u8bf7\u70b9\u51fb\u4e0b\u65b9\u94fe\u63a5\u67e5\u770b\u56fe\u5899\u5e76\u9884\u7ea6\uff1a",
+      "\u8fdb\u5165\u540e\u53ef\u4ee5\u76f4\u63a5\u9009\u62e9\u540c\u6b3e\u548c\u65f6\u95f4\u3002"
+    ],
+    ja: [
+      "\u4e0b\u306e\u30ea\u30f3\u30af\u304b\u3089\u30ae\u30e3\u30e9\u30ea\u30fc\u3092\u898b\u3066\u3054\u4e88\u7d04\u304f\u3060\u3055\u3044\u3002",
+      "\u30c7\u30b6\u30a4\u30f3\u3068\u5e0c\u671b\u6642\u9593\u3092\u305d\u306e\u307e\u307e\u9078\u629e\u3067\u304d\u307e\u3059\u3002"
+    ]
   }
 } as const;
 
@@ -76,6 +86,38 @@ export async function sendWelcomeHomeLink(tx: Tx, input: {
       lineUserId: input.lineUserDbId,
       text,
       messageType: "welcome_home",
+      status: LineMessageStatus.failed
+    });
+    return false;
+  }
+}
+
+export async function sendGalleryHomeLink(tx: Tx, input: {
+  lineUserDbId: bigint;
+  linePlatformUserId: string;
+  entryToken: string;
+  lang: Lang;
+}) {
+  const homeUrl = buildLineHomeUrl(input.entryToken, input.lang);
+  if (!homeUrl) return false;
+
+  const copy = TEXT.gallery[input.lang];
+  const text = `${copy[0]}\n${homeUrl}\n\n${copy[1]}`;
+
+  try {
+    await pushLineTextMessage(input.linePlatformUserId, text);
+    await recordLineMessage(tx, {
+      lineUserId: input.lineUserDbId,
+      text,
+      messageType: "gallery_home",
+      status: LineMessageStatus.sent
+    });
+    return true;
+  } catch {
+    await recordLineMessage(tx, {
+      lineUserId: input.lineUserDbId,
+      text,
+      messageType: "gallery_home",
       status: LineMessageStatus.failed
     });
     return false;

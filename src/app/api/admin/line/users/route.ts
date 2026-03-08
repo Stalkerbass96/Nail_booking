@@ -91,6 +91,7 @@ export async function GET(request: NextRequest) {
         isFollowing: item.isFollowing,
         linkedAt: item.linkedAt?.toISOString() ?? null,
         lastSeenAt: item.lastSeenAt?.toISOString() ?? null,
+        lastHomeLinkSentAt: item.lastHomeLinkSentAt?.toISOString() ?? null,
         unreadCount: unreadByLineUserId.get(item.id.toString()) ?? 0,
         customer: item.customer
           ? {
