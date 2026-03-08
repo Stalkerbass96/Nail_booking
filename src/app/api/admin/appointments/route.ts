@@ -5,10 +5,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_STATUSES = new Set(Object.values(AppointmentStatus));
+const VALID_SOURCE_CHANNELS = new Set(["line_showcase", "admin_manual", "legacy_web"] as const);
 
 function buildFilter(request: NextRequest): Prisma.AppointmentWhereInput {
   const statusRaw = request.nextUrl.searchParams.get("status");
   const dateRaw = request.nextUrl.searchParams.get("date");
+  const sourceChannelRaw = request.nextUrl.searchParams.get("sourceChannel");
 
   const where: Prisma.AppointmentWhereInput = {};
 
@@ -17,6 +19,13 @@ function buildFilter(request: NextRequest): Prisma.AppointmentWhereInput {
       throw new Error("Invalid status");
     }
     where.status = statusRaw as AppointmentStatus;
+  }
+
+  if (sourceChannelRaw) {
+    if (!VALID_SOURCE_CHANNELS.has(sourceChannelRaw as "line_showcase" | "admin_manual" | "legacy_web")) {
+      throw new Error("Invalid source channel");
+    }
+    where.sourceChannel = sourceChannelRaw as "line_showcase" | "admin_manual" | "legacy_web";
   }
 
   if (dateRaw) {
@@ -58,6 +67,7 @@ export async function GET(request: NextRequest) {
             customerType: true,
             lineUser: {
               select: {
+                id: true,
                 lineUserId: true,
                 displayName: true,
                 isFollowing: true
@@ -107,6 +117,7 @@ export async function GET(request: NextRequest) {
           customerType: item.customer.customerType,
           lineUser: item.customer.lineUser
             ? {
+                id: item.customer.lineUser.id.toString(),
                 lineUserId: item.customer.lineUser.lineUserId,
                 displayName: item.customer.lineUser.displayName,
                 isFollowing: item.customer.lineUser.isFollowing

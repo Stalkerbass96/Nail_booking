@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
@@ -15,6 +16,7 @@ type AppointmentItem = {
     email: string | null;
     customerType: "lead" | "active";
     lineUser: {
+      id: string;
       lineUserId: string;
       displayName: string | null;
       isFollowing: boolean;
@@ -40,6 +42,8 @@ type CompleteDraft = {
   note: string;
 };
 
+type SourceFilter = "all" | AppointmentItem["sourceChannel"];
+
 type Props = {
   lang: Lang;
 };
@@ -50,8 +54,9 @@ const TEXT = {
     subtitle: "按日期、状态和关键词快速筛选预约，并在一个页面里完成确认、取消和完结。",
     date: "日期",
     status: "状态",
+    source: "预约入口",
     keyword: "关键词",
-    keywordPlaceholder: "搜索预约号、顾客姓名、邮箱或套餐",
+    keywordPlaceholder: "搜索预约号、顾客姓名、LINE 昵称、图墙款式或套餐",
     refresh: "刷新",
     reset: "重置筛选",
     pending: "待确认",
@@ -59,6 +64,7 @@ const TEXT = {
     completed: "已完成",
     canceled: "已取消",
     all: "全部",
+    allSources: "全部入口",
     customer: "顾客",
     time: "时间",
     service: "服务",
@@ -97,8 +103,9 @@ const TEXT = {
     subtitle: "日付、状態、キーワードで予約を絞り込み、確認・キャンセル・完了処理を一画面で進められます。",
     date: "日付",
     status: "状態",
+    source: "予約導線",
     keyword: "キーワード",
-    keywordPlaceholder: "予約番号、顧客名、メール、メニュー名で検索",
+    keywordPlaceholder: "予約番号、顧客名、LINE 名、ギャラリー名、メニュー名で検索",
     refresh: "再読込",
     reset: "条件をリセット",
     pending: "未確認",
@@ -106,6 +113,7 @@ const TEXT = {
     completed: "完了",
     canceled: "キャンセル",
     all: "すべて",
+    allSources: "すべての導線",
     customer: "顧客",
     time: "日時",
     service: "メニュー",
@@ -181,9 +189,11 @@ function sourceChannelLabel(lang: Lang, sourceChannel: AppointmentItem["sourceCh
 export default function AdminAppointmentsPanel({ lang }: Props) {
   const t = TEXT[lang];
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
+  const openLineConversationLabel = lang === "ja" ? "LINE ?????" : "?? LINE ??";
 
   const [date, setDate] = useState("");
   const [status, setStatus] = useState<(typeof STATUS_VALUES)[number]>("all");
+  const [sourceChannel, setSourceChannel] = useState<SourceFilter>("all");
   const [keyword, setKeyword] = useState("");
   const [items, setItems] = useState<AppointmentItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -195,8 +205,9 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     const qs = new URLSearchParams({ lang, limit: "200" });
     if (date) qs.set("date", date);
     if (status !== "all") qs.set("status", status);
+    if (sourceChannel !== "all") qs.set("sourceChannel", sourceChannel);
     return qs.toString();
-  }, [date, lang, status]);
+  }, [date, lang, sourceChannel, status]);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -306,6 +317,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   function resetFilters() {
     setDate("");
     setStatus("all");
+    setSourceChannel("all");
     setKeyword("");
   }
 
@@ -368,6 +380,15 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
               </select>
             </label>
             <label className="grid gap-1 text-sm text-brand-800">
+              <span>{t.source}</span>
+              <select value={sourceChannel} onChange={(event) => setSourceChannel(event.target.value as SourceFilter)} className="admin-input">
+                <option value="all">{t.allSources}</option>
+                <option value="line_showcase">{sourceChannelLabel(lang, "line_showcase")}</option>
+                <option value="admin_manual">{sourceChannelLabel(lang, "admin_manual")}</option>
+                <option value="legacy_web">{sourceChannelLabel(lang, "legacy_web")}</option>
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm text-brand-800">
               <span>{t.keyword}</span>
               <input className="admin-input" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={t.keywordPlaceholder} />
             </label>
@@ -402,6 +423,13 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                     <p className="mt-2 text-sm font-semibold text-brand-900">{item.customer.name}</p>
                     <p className="text-sm text-brand-700">{item.customer.email || "-"}</p>
                     <p className="text-xs text-brand-600">{lang === "ja" ? "LINE \u9867\u5ba2" : "LINE \u5ba2\u6237"}: {item.customer.lineUser?.displayName || item.customer.lineUser?.lineUserId || "-"}</p>
+                    {item.customer.lineUser ? (
+                      <div className="pt-2">
+                        <Link className="admin-btn-secondary inline-flex" href={"/admin/line?lang=" + lang + "&userId=" + item.customer.lineUser.id}>
+                          {openLineConversationLabel}
+                        </Link>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.time}</p>
