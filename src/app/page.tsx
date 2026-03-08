@@ -143,8 +143,8 @@ export default async function HomePage({ searchParams }: Props) {
             }
 
             return (
-              <article key={item.id.toString()} className="product-card overflow-hidden">
-                <div className="product-card-media min-h-[18rem] rounded-[1.4rem]" style={{ backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.08), rgba(47,29,39,0.28)), url(${item.imageUrl})` }}>
+              <article key={item.id.toString()} className="product-card mb-5 break-inside-avoid overflow-hidden">
+                <div className="product-card-media min-h-[18rem] rounded-[1.4rem] sm:min-h-[20rem]" style={{ backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.08), rgba(47,29,39,0.28)), url(${item.imageUrl})` }}>
                   <span>{lang === "ja" ? item.category.nameJa : item.category.nameZh}</span>
                 </div>
                 <div className="mt-4 flex flex-col gap-3">

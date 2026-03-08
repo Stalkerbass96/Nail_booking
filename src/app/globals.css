@@ -453,6 +453,10 @@ a:focus-visible {
     @apply mt-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700;
   }
 
+  .admin-success {
+    @apply mt-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-700;
+  }
+
   .admin-item {
     @apply rounded-2xl border border-brand-100/90 bg-white px-3.5 py-3 shadow-sm sm:px-4;
   }

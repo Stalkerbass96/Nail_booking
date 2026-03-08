@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
 type CustomerItem = {
@@ -25,6 +25,7 @@ type CustomerDetail = {
   id: string;
   name: string;
   email: string | null;
+  notes: string | null;
   totalSpentJpy: number;
   currentPoints: number;
   customerType: "lead" | "active";
@@ -67,6 +68,12 @@ type PointItem = {
   createdAt: string;
 };
 
+type EditDraft = {
+  name: string;
+  email: string;
+  notes: string;
+};
+
 type Props = {
   lang: Lang;
 };
@@ -80,6 +87,9 @@ const TEXT = {
     detailFailed: "\u52a0\u8f7d\u5ba2\u6237\u8be6\u60c5\u5931\u8d25",
     pointsFailed: "\u52a0\u8f7d\u79ef\u5206\u5931\u8d25",
     loadFailed: "\u52a0\u8f7d\u5931\u8d25",
+    saveFailed: "\u4fdd\u5b58\u5ba2\u6237\u4fe1\u606f\u5931\u8d25",
+    saveSuccess: "\u5ba2\u6237\u4fe1\u606f\u5df2\u66f4\u65b0",
+    invalidName: "\u5ba2\u6237\u59d3\u540d\u4e0d\u80fd\u4e3a\u7a7a",
     summary: "\u9884\u7ea6",
     spent: "\u6d88\u8d39",
     points: "\u79ef\u5206",
@@ -88,6 +98,7 @@ const TEXT = {
     recentAppointments: "\u6700\u8fd1\u9884\u7ea6",
     pointLedger: "\u79ef\u5206\u6d41\u6c34",
     loading: "\u52a0\u8f7d\u4e2d...",
+    saving: "\u4fdd\u5b58\u4e2d...",
     empty: "\u6682\u65e0\u5ba2\u6237\u8bb0\u5f55",
     noAppointments: "\u6682\u65e0\u9884\u7ea6\u8bb0\u5f55",
     noPoints: "\u6682\u65e0\u79ef\u5206\u6d41\u6c34",
@@ -109,13 +120,17 @@ const TEXT = {
     packageLabel: "\u5957\u9910",
     showcaseLabel: "\u6765\u81ea\u56fe\u5899",
     directBooking: "\u975e\u56fe\u5899\u6d41\u7a0b",
-    sourceChannel: "\u9884\u7ea6\u5165\u53e3",
     channelLine: "LINE \u56fe\u5899",
     channelAdmin: "\u540e\u53f0\u624b\u52a8",
     channelLegacy: "\u65e7\u7f51\u9875",
     connected: "\u5df2\u7ed1\u5b9a",
     disconnected: "\u672a\u7ed1\u5b9a",
-    createdAt: "\u5efa\u6863\u65f6\u95f4"
+    createdAt: "\u5efa\u6863\u65f6\u95f4",
+    editTitle: "\u5ba2\u6237\u7ef4\u62a4",
+    name: "\u59d3\u540d",
+    notes: "\u5907\u6ce8",
+    notesPlaceholder: "\u8bb0\u5f55\u5ba2\u6237\u504f\u597d\u3001\u6c9f\u901a\u91cd\u70b9\u6216\u5230\u5e97\u60c5\u51b5",
+    save: "\u4fdd\u5b58\u5ba2\u6237\u4fe1\u606f"
   },
   ja: {
     title: "\u9867\u5ba2\u3068 LINE \u30d7\u30ed\u30d5\u30a3\u30fc\u30eb",
@@ -125,6 +140,9 @@ const TEXT = {
     detailFailed: "\u9867\u5ba2\u8a73\u7d30\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
     pointsFailed: "\u30dd\u30a4\u30f3\u30c8\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
     loadFailed: "\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+    saveFailed: "\u9867\u5ba2\u60c5\u5831\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+    saveSuccess: "\u9867\u5ba2\u60c5\u5831\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f",
+    invalidName: "\u9867\u5ba2\u540d\u306f\u5fc5\u9808\u3067\u3059",
     summary: "\u4e88\u7d04",
     spent: "\u5229\u7528\u984d",
     points: "\u30dd\u30a4\u30f3\u30c8",
@@ -133,6 +151,7 @@ const TEXT = {
     recentAppointments: "\u6700\u8fd1\u306e\u4e88\u7d04",
     pointLedger: "\u30dd\u30a4\u30f3\u30c8\u5c65\u6b74",
     loading: "\u8aad\u307f\u8fbc\u307f\u4e2d...",
+    saving: "\u4fdd\u5b58\u4e2d...",
     empty: "\u9867\u5ba2\u30c7\u30fc\u30bf\u304c\u3042\u308a\u307e\u305b\u3093",
     noAppointments: "\u4e88\u7d04\u5c65\u6b74\u306f\u3042\u308a\u307e\u305b\u3093",
     noPoints: "\u30dd\u30a4\u30f3\u30c8\u5c65\u6b74\u306f\u3042\u308a\u307e\u305b\u3093",
@@ -154,13 +173,17 @@ const TEXT = {
     packageLabel: "\u30d1\u30c3\u30b1\u30fc\u30b8",
     showcaseLabel: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7531\u6765",
     directBooking: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7d4c\u7531\u3067\u306f\u306a\u3044",
-    sourceChannel: "\u4e88\u7d04\u5165\u53e3",
     channelLine: "LINE \u30ae\u30e3\u30e9\u30ea\u30fc",
     channelAdmin: "\u7ba1\u7406\u753b\u9762\u624b\u52d5",
     channelLegacy: "\u65e7 Web \u7d4c\u7531",
     connected: "\u9023\u643a\u6e08\u307f",
     disconnected: "\u672a\u9023\u643a",
-    createdAt: "\u4f5c\u6210\u65e5\u6642"
+    createdAt: "\u4f5c\u6210\u65e5\u6642",
+    editTitle: "\u9867\u5ba2\u30e1\u30f3\u30c6\u30ca\u30f3\u30b9",
+    name: "\u540d\u524d",
+    notes: "\u30e1\u30e2",
+    notesPlaceholder: "\u597d\u307f\u3001\u30d2\u30a2\u30ea\u30f3\u30b0\u5185\u5bb9\u3001\u6765\u5e97\u6642\u306e\u88dc\u8db3\u3092\u8a18\u9332",
+    save: "\u9867\u5ba2\u60c5\u5831\u3092\u4fdd\u5b58"
   }
 } as const;
 
@@ -183,6 +206,14 @@ function sourceChannelLabel(lang: Lang, sourceChannel: CustomerDetail["appointme
   return t.channelLegacy;
 }
 
+function createDraft(detail: CustomerDetail | null): EditDraft {
+  return {
+    name: detail?.name || "",
+    email: detail?.email || "",
+    notes: detail?.notes || ""
+  };
+}
+
 export default function AdminCustomersPanel({ lang }: Props) {
   const t = TEXT[lang];
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
@@ -192,11 +223,19 @@ export default function AdminCustomersPanel({ lang }: Props) {
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
   const [points, setPoints] = useState<PointItem[]>([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [activeCustomerId, setActiveCustomerId] = useState("");
+  const [draft, setDraft] = useState<EditDraft>(createDraft(null));
+
+  useEffect(() => {
+    setDraft(createDraft(detail));
+  }, [detail]);
 
   async function search() {
     setError("");
+    setNotice("");
     setLoading(true);
     try {
       const qs = new URLSearchParams({ q, limit: "100" });
@@ -216,6 +255,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
 
   async function openCustomer(customerId: string) {
     setError("");
+    setNotice("");
     setLoading(true);
     try {
       const [detailRes, pointsRes] = await Promise.all([
@@ -236,6 +276,47 @@ export default function AdminCustomersPanel({ lang }: Props) {
     }
   }
 
+  async function saveCustomer() {
+    if (!detail) return;
+    if (!draft.name.trim()) {
+      setError(t.invalidName);
+      return;
+    }
+
+    setError("");
+    setNotice("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/customers/" + detail.id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: draft.name,
+          email: draft.email,
+          notes: draft.notes
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.saveFailed);
+
+      setDetail((prev) => prev
+        ? {
+            ...prev,
+            name: data.name,
+            email: data.email,
+            notes: data.notes,
+            updatedAt: data.updatedAt
+          }
+        : prev);
+      setItems((prev) => prev.map((item) => item.id === detail.id ? { ...item, name: data.name, email: data.email } : item));
+      setNotice(t.saveSuccess);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.saveFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>
@@ -249,7 +330,9 @@ export default function AdminCustomersPanel({ lang }: Props) {
       </div>
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {notice ? <p className="admin-success" aria-live="polite">{notice}</p> : null}
       {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
+      {saving ? <p className="ui-state-info" aria-live="polite">{t.saving}</p> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-[0.92fr_1.08fr]">
         <div className="grid gap-2">
@@ -306,6 +389,27 @@ export default function AdminCustomersPanel({ lang }: Props) {
                     <p>{t.lastSeen}: {detail.lineUser.lastSeenAt ? new Date(detail.lineUser.lastSeenAt).toLocaleString(locale) : "-"}</p>
                   </div>
                 ) : <p className="mt-2 text-sm text-brand-700">{t.disconnected}</p>}
+              </div>
+
+              <div className="rounded-2xl border border-brand-100 bg-white p-3">
+                <p className="font-medium text-brand-900">{t.editTitle}</p>
+                <div className="mt-3 grid gap-3">
+                  <label className="grid gap-1 text-sm text-brand-800">
+                    <span>{t.name}</span>
+                    <input className="admin-input-sm" value={draft.name} onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))} />
+                  </label>
+                  <label className="grid gap-1 text-sm text-brand-800">
+                    <span>{t.email}</span>
+                    <input className="admin-input-sm" value={draft.email} onChange={(event) => setDraft((prev) => ({ ...prev, email: event.target.value }))} />
+                  </label>
+                  <label className="grid gap-1 text-sm text-brand-800">
+                    <span>{t.notes}</span>
+                    <textarea className="admin-input min-h-24" value={draft.notes} onChange={(event) => setDraft((prev) => ({ ...prev, notes: event.target.value }))} placeholder={t.notesPlaceholder} />
+                  </label>
+                  <button type="button" className="admin-btn-primary w-full sm:w-auto" onClick={() => void saveCustomer()}>
+                    {t.save}
+                  </button>
+                </div>
               </div>
 
               <div>
