@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { Lang } from "@/lib/lang";
@@ -484,7 +484,7 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
               <h3 className="font-semibold text-brand-900">{t.recentUsers}</h3>
               <p className="mt-1 text-xs text-brand-700">{t.filterLabel}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="admin-inline-actions">
               {([
                 ["all", t.filterAll],
                 ["unread", t.filterUnread],
@@ -557,7 +557,7 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
                     {activeUser.lastSeenAt ? <p className="text-sm text-brand-700">{t.lastSeen}: {formatDateTime(activeUser.lastSeenAt, locale)}</p> : null}
                     {activeUser.lastHomeLinkSentAt ? <p className="text-sm text-brand-700">{t.lastGalleryLinkSentAt}: {formatDateTime(activeUser.lastHomeLinkSentAt, locale)}</p> : null}
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="admin-inline-actions">
                     <button type="button" className="admin-btn-primary" onClick={() => void sendGalleryLinkRequest()} disabled={!configEnabled || !appBaseUrlConfigured || sendingGalleryLink}>
                       {sendingGalleryLink ? `${t.sendGalleryLink}...` : t.sendGalleryLink}
                     </button>

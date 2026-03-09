@@ -20,6 +20,11 @@ function buildHref(lang: string, entry: string | undefined, categoryId?: string)
   return qs ? `/?${qs}` : "/";
 }
 
+function clampText(value: string | null | undefined) {
+  const text = value?.trim();
+  return text && text.length > 0 ? text : null;
+}
+
 export default async function HomePage({ searchParams }: Props) {
   const query = await searchParams;
   const lang = resolveLang(query?.lang);
@@ -60,34 +65,38 @@ export default async function HomePage({ searchParams }: Props) {
 
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-        <section className="section-panel py-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 sm:px-6 sm:py-7">
+        <section className="compact-shell compact-shell-sticky">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-2">
+              <p className="section-eyebrow">{pickText(lang, "LINE-first booking", "LINE-first booking")}</p>
               <h1 className="text-2xl font-semibold text-brand-900 sm:text-3xl">
-                {pickText(lang, "图墙预约", "ギャラリー予約")}
+                {pickText(lang, "选款后直接预约", "デザインを選んでそのまま予約")}
               </h1>
-              <p className="mt-2 text-sm text-brand-700">
-                {pickText(lang, "点击喜欢的款式后选择时间提交预约。", "気になるデザインを選んで、そのまま予約時間を決めてください。")}
+              <p className="text-sm leading-7 text-brand-700 sm:text-[15px]">
+                {pickText(lang, "先看图，再选时间。客户只需要完成这一条主路径。", "ギャラリーから選び、そのまま空き時間を決めるだけです。")}
               </p>
             </div>
-            {entryUser?.customer ? (
-              <span className="metric-pill">
-                {pickText(lang, "当前顾客", "現在の顧客")}: {entryUser.customer.name}
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              {entryUser?.customer ? (
+                <span className="metric-pill">
+                  {pickText(lang, "当前顾客", "現在の顧客")}: {entryUser.customer.name}
+                </span>
+              ) : null}
+              <span className="metric-pill metric-pill-soft">
+                {showcaseItems.length} {pickText(lang, "个可预约款式", "items")}
               </span>
-            ) : null}
+            </div>
           </div>
-        </section>
 
-        <section className="section-panel py-5">
-          <div className="flex flex-wrap gap-2">
-            <Link className={`site-lang-switch ${!categoryId ? "border-brand-700 bg-brand-700 text-white" : ""}`} href={buildHref(lang, entryToken)}>
+          <div className="compact-filter-row mt-4">
+            <Link className={`site-filter-chip ${!categoryId ? "site-filter-chip-active" : ""}`} href={buildHref(lang, entryToken)}>
               {pickText(lang, "全部", "すべて")}
             </Link>
             {categories.map((category) => (
               <Link
                 key={category.id.toString()}
-                className={`site-lang-switch ${categoryId === category.id.toString() ? "border-brand-700 bg-brand-700 text-white" : ""}`}
+                className={`site-filter-chip ${categoryId === category.id.toString() ? "site-filter-chip-active" : ""}`}
                 href={buildHref(lang, entryToken, category.id.toString())}
               >
                 {lang === "ja" ? category.nameJa : category.nameZh}
@@ -98,43 +107,67 @@ export default async function HomePage({ searchParams }: Props) {
 
         {showcaseItems.length === 0 ? (
           <section className="section-panel py-5">
-            <p className="ui-state-info mt-0">{pickText(lang, "当前分类下还没有可展示的图墙项。", "このカテゴリには表示できるギャラリー項目がありません。")}</p>
+            <p className="ui-state-info mt-0">
+              {pickText(lang, "当前分类下还没有可展示的图墙项。", "このカテゴリには表示できるギャラリー項目がありません。")}
+            </p>
           </section>
-        ) : null}
+        ) : (
+          <section className="gallery-grid">
+            {showcaseItems.map((item) => {
+              const bookingParams = new URLSearchParams({
+                showcaseItemId: item.id.toString(),
+                lang
+              });
+              if (entryToken) {
+                bookingParams.set("entry", entryToken);
+              }
 
-        <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {showcaseItems.map((item) => {
-            const bookingParams = new URLSearchParams({
-              showcaseItemId: item.id.toString(),
-              lang
-            });
-            if (entryToken) {
-              bookingParams.set("entry", entryToken);
-            }
+              const description = clampText(lang === "ja" ? item.descriptionJa : item.descriptionZh);
+              const packageName = lang === "ja" ? item.servicePackage.nameJa : item.servicePackage.nameZh;
 
-            return (
-              <article key={item.id.toString()} className="product-card mb-5 break-inside-avoid overflow-hidden">
-                <div className="product-card-media min-h-[18rem] rounded-[1.4rem] sm:min-h-[19rem]" style={{ backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.08), rgba(47,29,39,0.28)), url(${item.imageUrl})` }}>
-                  <span>{lang === "ja" ? item.category.nameJa : item.category.nameZh}</span>
-                </div>
-                <div className="mt-4 flex flex-col gap-3">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-brand-900">{lang === "ja" ? item.titleJa : item.titleZh}</h2>
-                    <p className="mt-2 text-sm leading-7 text-brand-700">{lang === "ja" ? item.descriptionJa || "-" : item.descriptionZh || "-"}</p>
+              return (
+                <article key={item.id.toString()} className="product-card product-card-compact overflow-hidden">
+                  <div
+                    className="product-card-media min-h-[17rem] rounded-[1.35rem] sm:min-h-[18rem]"
+                    style={{ backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.06), rgba(47,29,39,0.28)), url(${item.imageUrl})` }}
+                  >
+                    <span>{lang === "ja" ? item.category.nameJa : item.category.nameZh}</span>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="metric-pill">{item.servicePackage.priceJpy} JPY {pickText(lang, "起", "〜")}</span>
-                    <span className="metric-pill metric-pill-soft">{item.servicePackage.durationMin} min</span>
+                  <div className="mt-4 flex flex-col gap-3">
+                    <div className="space-y-2">
+                      <h2 className="text-xl font-semibold text-brand-900 sm:text-2xl">
+                        {lang === "ja" ? item.titleJa : item.titleZh}
+                      </h2>
+                      {description ? (
+                        <p
+                          className="text-sm leading-7 text-brand-700"
+                          style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                        >
+                          {description}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <span className="metric-pill">{item.servicePackage.priceJpy} JPY {pickText(lang, "起", "〜")}</span>
+                      <span className="metric-pill metric-pill-soft">{item.servicePackage.durationMin} min</span>
+                    </div>
+
+                    <div className="product-card-footer">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">Package</p>
+                        <p className="mt-1 truncate text-sm text-brand-800">{packageName}</p>
+                      </div>
+                      <Link className="ui-btn-primary ui-btn-primary-compact" href={`/booking?${bookingParams.toString()}`}>
+                        {pickText(lang, "预约同款", "このデザインで予約")}
+                      </Link>
+                    </div>
                   </div>
-                  <p className="text-sm text-brand-700">{pickText(lang, "对应套餐", "連携メニュー")}: {lang === "ja" ? item.servicePackage.nameJa : item.servicePackage.nameZh}</p>
-                  <Link className="ui-btn-primary w-full" href={`/booking?${bookingParams.toString()}`}>
-                    {pickText(lang, "预约同款", "このデザインで予約")}
-                  </Link>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+                </article>
+              );
+            })}
+          </section>
+        )}
       </main>
     </PublicSiteFrame>
   );
