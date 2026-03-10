@@ -119,6 +119,13 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
   const packageName = displayName(lang, showcaseItem.packageNameZh, showcaseItem.packageNameJa);
   const categoryName = displayName(lang, showcaseItem.categoryNameZh, showcaseItem.categoryNameJa);
   const selectedSlotLabel = selectedStartAt ? formatSlotLabel(lang, selectedStartAt) : t.unselectedSlot;
+  const slotCountLabel = date ? `${t.slots}: ${slots.length}` : t.selectSlot;
+  const progressSteps = [
+    { id: "design", index: "01", label: t.selectedDesign, active: true },
+    { id: "date", index: "02", label: t.date, active: Boolean(date) },
+    { id: "time", index: "03", label: t.slots, active: Boolean(selectedStartAt) },
+    { id: "submit", index: "04", label: t.submit, active: Boolean(selectedStartAt) }
+  ];
 
   const todayYmd = useMemo(() => {
     const today = new Date();
@@ -205,6 +212,14 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
       <section className="booking-design-strip">
         <div className="booking-design-media" style={{ backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.05), rgba(47,29,39,0.18)), url(${showcaseItem.imageUrl})` }} />
         <div className="booking-design-meta">
+          <div className="booking-progress-bar">
+            {progressSteps.map((step) => (
+              <span key={step.id} className={`booking-progress-step ${step.active ? "booking-progress-step-active" : ""}`}>
+                <strong>{step.index}</strong>
+                <span>{step.label}</span>
+              </span>
+            ))}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="metric-pill">JPY {showcaseItem.priceJpy}</span>
             <span className="metric-pill metric-pill-soft">{packageName}</span>
@@ -239,9 +254,15 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
       </section>
 
       <section className="section-panel section-panel-compact booking-step-panel">
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-start">
+        <div className="booking-step-header">
+          <div>
+            <h2 className="text-lg font-semibold text-brand-900">1. {t.date}</h2>
+            <p className="booking-helper-copy">{entryToken ? t.lineHint : t.lineMissing}</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-start">
           <label className="grid gap-2" htmlFor="booking-date">
-            <span className="text-sm font-medium text-brand-800">1. {t.date}</span>
+            <span className="text-sm font-medium text-brand-800">{t.date}</span>
             <input
               id="booking-date"
               className="ui-input"
@@ -256,14 +277,19 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
             />
           </label>
           <div className="compact-info-card text-sm text-brand-800">
-            <p className="font-medium text-brand-900">{entryToken ? t.lineHint : t.lineMissing}</p>
+            <p className="font-medium text-brand-900">{t.customer}</p>
+            <p className="mt-2 text-sm text-brand-700">{customerName || "-"}</p>
+            <p className="mt-3 booking-helper-copy">{entryToken ? t.submitHint : t.lineMissing}</p>
           </div>
         </div>
       </section>
 
       <section className="section-panel section-panel-compact booking-step-panel">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-brand-900">2. {t.slots}</h2>
+        <div className="booking-step-header">
+          <div>
+            <h2 className="text-lg font-semibold text-brand-900">2. {t.slots}</h2>
+            <p className="booking-helper-copy">{slotCountLabel}</p>
+          </div>
           <span className="metric-pill metric-pill-soft">
             {selectedStartAt ? `${t.selectedSlot}: ${selectedSlotLabel}` : t.unselectedSlot}
           </span>
@@ -327,7 +353,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
           </div>
         </dl>
         <p className="field-hint mt-4">{t.submitHint}</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="booking-summary-actions">
           <button disabled={submitting || !entryToken} className="ui-btn-primary w-full" type="submit">
             {submitting ? "..." : t.submit}
           </button>

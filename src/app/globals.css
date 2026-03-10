@@ -457,6 +457,34 @@ a:focus-visible {
     @apply mt-1 block font-medium text-brand-900;
   }
 
+  .booking-progress-bar {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .booking-progress-step {
+    @apply inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3 py-2 text-xs font-semibold text-brand-700 shadow-sm;
+  }
+
+  .booking-progress-step strong {
+    @apply inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[11px] text-brand-900;
+  }
+
+  .booking-progress-step-active {
+    @apply border-brand-700 bg-brand-700 text-white shadow-[0_14px_32px_rgba(120,25,55,0.18)];
+  }
+
+  .booking-progress-step-active strong {
+    @apply bg-white/20 text-white;
+  }
+
+  .booking-step-header {
+    @apply flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between;
+  }
+
+  .booking-helper-copy {
+    @apply text-xs leading-6 text-brand-600;
+  }
+
   .booking-note-card {
     @apply rounded-[1.2rem] border border-brand-100 bg-brand-50/45 px-4 py-3 text-sm text-brand-800;
   }
@@ -578,6 +606,10 @@ a:focus-visible {
 
   .booking-summary-card-compact {
     @apply p-4 sm:p-5;
+  }
+
+  .booking-summary-actions {
+    @apply mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-1;
   }
 
   .booking-submit-bar {
@@ -780,8 +812,32 @@ a:focus-visible {
     @apply inline-flex min-h-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition-colors duration-200 hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
+  .admin-toolbar {
+    @apply flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between;
+  }
+
+  .admin-toolbar-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .admin-stat-grid {
+    @apply grid gap-3 sm:grid-cols-2 xl:grid-cols-3;
+  }
+
+  .admin-stat-card {
+    @apply rounded-2xl border border-brand-100 bg-white px-4 py-3 text-sm text-brand-800 shadow-sm;
+  }
+
+  .admin-filter-pills {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .admin-action-row {
+    @apply flex flex-wrap gap-2;
+  }
+
   .admin-inline-actions {
-    @apply grid w-full gap-2 sm:w-auto md:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,1fr))];
+    @apply flex w-full flex-wrap gap-2 sm:w-auto;
   }
 }
 

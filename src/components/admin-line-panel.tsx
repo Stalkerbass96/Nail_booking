@@ -432,12 +432,12 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
 
   return (
     <section className="admin-panel-shell">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <div className="admin-toolbar">
         <div>
           <h2 className="admin-section-title">{t.title}</h2>
           <p className="admin-note mt-2">{t.desc}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="admin-toolbar-actions">
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${configEnabled ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
             {configEnabled ? t.configOn : t.configOff}
           </span>
@@ -458,18 +458,18 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
             {t.search}
           </button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-800">
+        <div className="admin-stat-grid">
+          <div className="admin-stat-card bg-brand-50/60">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.inboxSummary}</p>
             <p className="mt-2 text-2xl font-semibold text-brand-900">{unreadTotal}</p>
             <p className="text-xs text-brand-600">{t.unreadMessages}</p>
           </div>
-          <div className="rounded-2xl border border-brand-100 bg-white px-4 py-3 text-sm text-brand-800">
+          <div className="admin-stat-card">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.filterUnread}</p>
             <p className="mt-2 text-2xl font-semibold text-brand-900">{orderedUsers.filter((item) => item.unreadCount > 0).length}</p>
             <p className="text-xs text-brand-600">{t.resultsLabel}</p>
           </div>
-          <div className="rounded-2xl border border-brand-100 bg-white px-4 py-3 text-sm text-brand-800">
+          <div className="admin-stat-card">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.filterLinked}</p>
             <p className="mt-2 text-2xl font-semibold text-brand-900">{linkedTotal}</p>
             <p className="text-xs text-brand-600">{t.resultsLabel}</p>
@@ -487,7 +487,7 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
               <h3 className="font-semibold text-brand-900">{t.recentUsers}</h3>
               <p className="mt-1 text-xs text-brand-700">{t.filterLabel}</p>
             </div>
-            <div className="admin-inline-actions">
+            <div className="admin-filter-pills">
               {([
                 ["all", t.filterAll],
                 ["unread", t.filterUnread],
@@ -497,7 +497,7 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
                   key={value}
                   type="button"
                   onClick={() => setInboxFilter(value)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${inboxFilter === value ? "bg-brand-700 text-white" : "bg-brand-50 text-brand-700 hover:bg-brand-100"}`}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${inboxFilter === value ? "bg-brand-700 text-white shadow-[0_10px_24px_rgba(120,25,55,0.18)]" : "bg-brand-50 text-brand-700 hover:bg-brand-100"}`}
                 >
                   {label}
                 </button>
@@ -570,7 +570,7 @@ export default function AdminLinePanel({ lang, initialUserId = "" }: Props) {
                     {activeUser.customer ? <button type="button" className="admin-btn-ghost" onClick={() => void bindCustomer(null)}>{t.unbind}</button> : null}
                   </div>
                 </div>
-                <div className="mt-3 grid gap-2">
+                <div className="mt-3 grid gap-3">
                   <p className="field-hint mt-0">{t.galleryHelp}</p>
                   <p className="field-hint mt-0">{t.linkHelp}</p>
                   {galleryLinkUrl ? (

@@ -353,7 +353,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
 
   return (
     <section className="admin-panel-shell">
-      <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+      <div className="admin-toolbar mb-5">
         <div>
           <h2 className="admin-section-title">{t.title}</h2>
           <p className="admin-note mt-2 max-w-3xl">{t.subtitle}</p>
@@ -431,7 +431,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
               <span>{t.keyword}</span>
               <input className="admin-input" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={t.keywordPlaceholder} />
             </label>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="admin-action-row pt-1">
               <button type="button" className="admin-btn-secondary" onClick={resetFilters}>{t.reset}</button>
               <button type="button" className="admin-btn-primary" onClick={() => void fetchItems()}>{t.refresh}</button>
             </div>
@@ -492,7 +492,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 xl:max-w-[15rem] xl:justify-end">
+              <div className="admin-inline-actions xl:max-w-[18rem] xl:justify-end">
                 {item.status === "pending" ? (
                   <button type="button" className="admin-btn-primary min-h-10 px-3 py-2" onClick={() => void doPatch("/api/admin/appointments/" + item.id + "/confirm")}>
                     {t.confirm}
