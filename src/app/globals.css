@@ -355,9 +355,17 @@ a:focus-visible {
     column-count: 2;
   }
 
+  .gallery-grid-stable {
+    @apply grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
   .gallery-tile {
     break-inside: avoid;
     @apply mb-4 overflow-hidden rounded-[1.4rem] border border-white/80 bg-white/90 p-2 shadow-[0_18px_42px_rgba(120,25,55,0.08)] backdrop-blur-xl;
+  }
+
+  .gallery-tile-stable {
+    @apply mb-0 flex h-full flex-col;
   }
 
   .gallery-tile-media-wrap {
@@ -369,12 +377,8 @@ a:focus-visible {
     @apply rounded-[1.1rem] bg-cover bg-center transition-transform duration-300;
   }
 
-  .gallery-tile:nth-child(3n) .gallery-tile-media {
-    aspect-ratio: 0.74;
-  }
-
-  .gallery-tile:nth-child(4n) .gallery-tile-media {
-    aspect-ratio: 0.92;
+  .gallery-tile-media-stable {
+    aspect-ratio: 0.82;
   }
 
   .gallery-tile:hover .gallery-tile-media {
@@ -716,6 +720,8 @@ a:focus-visible {
     @apply grid w-full gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,1fr))];
   }
 }
+
+
 
 
 

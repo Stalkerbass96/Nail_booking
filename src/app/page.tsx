@@ -80,7 +80,7 @@ export default async function HomePage({ searchParams }: Props) {
             </p>
           </section>
         ) : (
-          <section className="gallery-waterfall">
+          <section className="gallery-grid-stable">
             {showcaseItems.map((item) => {
               const bookingParams = new URLSearchParams({
                 showcaseItemId: item.id.toString(),
@@ -93,10 +93,10 @@ export default async function HomePage({ searchParams }: Props) {
               const packageName = lang === "ja" ? item.servicePackage.nameJa : item.servicePackage.nameZh;
 
               return (
-                <article key={item.id.toString()} className="gallery-tile">
+                <article key={item.id.toString()} className="gallery-tile gallery-tile-stable">
                   <div className="gallery-tile-media-wrap">
                     <div
-                      className="gallery-tile-media"
+                      className="gallery-tile-media gallery-tile-media-stable"
                       style={{ backgroundImage: `linear-gradient(180deg, rgba(38, 24, 31, 0.05), rgba(38, 24, 31, 0.18)), url(${item.imageUrl})` }}
                     />
                   </div>
