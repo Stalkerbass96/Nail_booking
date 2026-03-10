@@ -44,6 +44,7 @@ const TEXT = {
     moveUp: "上移",
     moveDown: "下移",
     edit: "编辑",
+    remove: "删除",
     save: "保存",
     cancel: "取消",
     loadFailed: "加载分类失败",
@@ -51,6 +52,9 @@ const TEXT = {
     updateFailed: "更新失败",
     batchFailed: "批量更新失败",
     reorderFailed: "排序失败",
+    deleteFailed: "删除分类失败",
+    deleteConfirm: "确定要删除这个分类吗？如果已经被套餐或图墙使用，系统会拒绝删除。",
+    deleteBlocked: "这个分类已被套餐或图墙使用，不能删除。",
     empty: "暂无分类"
   },
   ja: {
@@ -72,6 +76,7 @@ const TEXT = {
     moveUp: "上へ",
     moveDown: "下へ",
     edit: "編集",
+    remove: "削除",
     save: "保存",
     cancel: "キャンセル",
     loadFailed: "カテゴリの読み込みに失敗しました",
@@ -79,9 +84,12 @@ const TEXT = {
     updateFailed: "更新に失敗しました",
     batchFailed: "一括更新に失敗しました",
     reorderFailed: "並び替えに失敗しました",
+    deleteFailed: "カテゴリの削除に失敗しました",
+    deleteConfirm: "このカテゴリを削除しますか？メニューやギャラリーで使われている場合は削除できません。",
+    deleteBlocked: "このカテゴリはメニューまたはギャラリーで使われているため削除できません。",
     empty: "カテゴリはありません"
   }
-};
+} as const;
 
 function createEmptyForm(): CategoryFormState {
   return {
@@ -101,6 +109,13 @@ function fromItem(item: CategoryItem): CategoryFormState {
   };
 }
 
+function mapDeleteError(lang: Lang, fallback: string, message?: string) {
+  const t = TEXT[lang];
+  if (!message) return fallback;
+  if (message.includes("packages or showcase items")) return t.deleteBlocked;
+  return message;
+}
+
 export default function AdminCategoriesPanel({ lang }: Props) {
   const t = TEXT[lang];
 
@@ -109,14 +124,12 @@ export default function AdminCategoriesPanel({ lang }: Props) {
   const [error, setError] = useState("");
 
   const [createForm, setCreateForm] = useState<CategoryFormState>(createEmptyForm());
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<CategoryFormState>(createEmptyForm());
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const orderedItems = useMemo(
-    () => [...items].sort((a, b) => (a.sortOrder - b.sortOrder) || a.id.localeCompare(b.id)),
+    () => [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)),
     [items]
   );
 
@@ -273,15 +286,29 @@ export default function AdminCategoriesPanel({ lang }: Props) {
     }
   }
 
+  async function deleteCategory(item: CategoryItem) {
+    if (!window.confirm(t.deleteConfirm)) return;
+
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/categories/${item.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(mapDeleteError(lang, t.deleteFailed, data?.error));
+      if (editingId === item.id) cancelEdit();
+      setSelectedIds((prev) => prev.filter((id) => id !== item.id));
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.deleteFailed);
+    }
+  }
+
   const allChecked = orderedItems.length > 0 && selectedIds.length === orderedItems.length;
 
   return (
     <section className="admin-panel-shell">
       <div className="flex items-center justify-between">
         <h2 className="admin-section-title">{t.title}</h2>
-        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">
-          {t.refresh}
-        </button>
+        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">{t.refresh}</button>
       </div>
 
       {error ? <p className="admin-danger">{error}</p> : null}
@@ -291,47 +318,20 @@ export default function AdminCategoriesPanel({ lang }: Props) {
         <p className="font-medium text-brand-900">{t.createTitle}</p>
 
         <div className="grid gap-3 md:grid-cols-4">
-          <input
-            className="admin-input-sm"
-            placeholder={t.nameZh}
-            value={createForm.nameZh}
-            onChange={(e) => patchCreateForm({ nameZh: e.target.value })}
-          />
-          <input
-            className="admin-input-sm"
-            placeholder={t.nameJa}
-            value={createForm.nameJa}
-            onChange={(e) => patchCreateForm({ nameJa: e.target.value })}
-          />
-          <input
-            className="admin-input-sm"
-            placeholder={t.sortOrder}
-            value={createForm.sortOrder}
-            onChange={(e) => patchCreateForm({ sortOrder: e.target.value })}
-          />
-          <button className="admin-btn-primary" type="submit">
-            {t.create}
-          </button>
+          <input className="admin-input-sm" placeholder={t.nameZh} value={createForm.nameZh} onChange={(e) => patchCreateForm({ nameZh: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.nameJa} value={createForm.nameJa} onChange={(e) => patchCreateForm({ nameJa: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.sortOrder} value={createForm.sortOrder} onChange={(e) => patchCreateForm({ sortOrder: e.target.value })} />
+          <button className="admin-btn-primary" type="submit">{t.create}</button>
         </div>
       </form>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <label className="admin-btn-ghost">
-          <input
-            className="admin-check"
-            type="checkbox"
-            checked={allChecked}
-            onChange={(e) => setAllSelected(e.target.checked)}
-          />
+          <input className="admin-check" type="checkbox" checked={allChecked} onChange={(e) => setAllSelected(e.target.checked)} />
           {t.selectAll}
         </label>
-
-        <button className="admin-btn-ghost" onClick={() => void batchSetActive(true)} type="button">
-          {t.batchEnable}
-        </button>
-        <button className="admin-btn-ghost" onClick={() => void batchSetActive(false)} type="button">
-          {t.batchDisable}
-        </button>
+        <button className="admin-btn-ghost" onClick={() => void batchSetActive(true)} type="button">{t.batchEnable}</button>
+        <button className="admin-btn-ghost" onClick={() => void batchSetActive(false)} type="button">{t.batchDisable}</button>
       </div>
 
       <div className="mt-4 grid gap-3">
@@ -341,72 +341,37 @@ export default function AdminCategoriesPanel({ lang }: Props) {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="grid gap-1 text-sm text-brand-800">
                 <label>
-                  <input
-                    className="admin-check"
-                    type="checkbox"
-                    checked={selectedIds.includes(item.id)}
-                    onChange={() => toggleSelect(item.id)}
-                  />
+                  <input className="admin-check" type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => toggleSelect(item.id)} />
                   {item.nameZh} / {item.nameJa}
                 </label>
-                <p>
-                  {t.sortOrder}: {item.sortOrder} · {t.active}: {item.isActive ? t.yes : t.no}
-                </p>
-                <p>
-                  {t.packageUsage}: {item.activePackageCount}/{item.packageCount}
-                </p>
+                <p>{t.sortOrder}: {item.sortOrder} · {t.active}: {item.isActive ? t.yes : t.no}</p>
+                <p>{t.packageUsage}: {item.activePackageCount}/{item.packageCount}</p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button className="admin-btn-ghost" onClick={() => void swapSortOrder(index, -1)} type="button">
-                  {t.moveUp}
-                </button>
-                <button className="admin-btn-ghost" onClick={() => void swapSortOrder(index, 1)} type="button">
-                  {t.moveDown}
-                </button>
-                <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">
-                  {t.edit}
-                </button>
+                <button className="admin-btn-ghost" onClick={() => void swapSortOrder(index, -1)} type="button">{t.moveUp}</button>
+                <button className="admin-btn-ghost" onClick={() => void swapSortOrder(index, 1)} type="button">{t.moveDown}</button>
+                <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">{t.edit}</button>
+                <button className="admin-btn-danger" onClick={() => void deleteCategory(item)} type="button">{t.remove}</button>
               </div>
             </div>
 
             {editingId === item.id ? (
               <form className="mt-3 grid gap-3 rounded-xl border border-brand-100 p-3" onSubmit={saveEdit}>
                 <div className="grid gap-3 md:grid-cols-3">
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.nameZh}
-                    onChange={(e) => patchEditForm({ nameZh: e.target.value })}
-                  />
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.nameJa}
-                    onChange={(e) => patchEditForm({ nameJa: e.target.value })}
-                  />
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.sortOrder}
-                    onChange={(e) => patchEditForm({ sortOrder: e.target.value })}
-                  />
+                  <input className="admin-input-sm" value={editForm.nameZh} onChange={(e) => patchEditForm({ nameZh: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.nameJa} onChange={(e) => patchEditForm({ nameJa: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.sortOrder} onChange={(e) => patchEditForm({ sortOrder: e.target.value })} />
                 </div>
 
                 <label className="text-sm text-brand-800">
-                  <input
-                    className="admin-check"
-                    type="checkbox"
-                    checked={editForm.isActive}
-                    onChange={(e) => patchEditForm({ isActive: e.target.checked })}
-                  />
+                  <input className="admin-check" type="checkbox" checked={editForm.isActive} onChange={(e) => patchEditForm({ isActive: e.target.checked })} />
                   {t.active}
                 </label>
 
                 <div className="flex gap-2">
-                  <button className="admin-btn-primary px-3 py-1.5" type="submit">
-                    {t.save}
-                  </button>
-                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>
-                    {t.cancel}
-                  </button>
+                  <button className="admin-btn-primary px-3 py-1.5" type="submit">{t.save}</button>
+                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>{t.cancel}</button>
                 </div>
               </form>
             ) : null}
@@ -416,4 +381,3 @@ export default function AdminCategoriesPanel({ lang }: Props) {
     </section>
   );
 }
-

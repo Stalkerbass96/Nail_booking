@@ -48,12 +48,16 @@ const TEXT = {
     disabled: "停用",
     active: "启用",
     edit: "编辑",
+    remove: "删除",
     save: "保存",
     cancel: "取消",
     loadAddonFailed: "加载加项失败",
     loadFailed: "加载失败",
     createFailed: "创建失败",
     updateFailed: "更新失败",
+    deleteFailed: "删除加项失败",
+    deleteConfirm: "确定要删除这个加项吗？如果已经被套餐或预约历史使用，系统会拒绝删除。",
+    deleteBlocked: "这个加项已被套餐或预约历史使用，不能删除。",
     empty: "暂无加项"
   },
   ja: {
@@ -74,15 +78,19 @@ const TEXT = {
     disabled: "無効",
     active: "有効",
     edit: "編集",
+    remove: "削除",
     save: "保存",
     cancel: "キャンセル",
     loadAddonFailed: "追加オプションの読み込みに失敗しました",
     loadFailed: "読み込みに失敗しました",
     createFailed: "作成に失敗しました",
     updateFailed: "更新に失敗しました",
+    deleteFailed: "追加オプションの削除に失敗しました",
+    deleteConfirm: "この追加オプションを削除しますか？メニューや予約履歴で使われている場合は削除できません。",
+    deleteBlocked: "この追加オプションはメニューまたは予約履歴で使われているため削除できません。",
     empty: "追加オプションはありません"
   }
-};
+} as const;
 
 function createEmptyFormState(): AddonFormState {
   return {
@@ -108,6 +116,13 @@ function fromAddon(item: AddonItem): AddonFormState {
   };
 }
 
+function mapDeleteError(lang: Lang, fallback: string, message?: string) {
+  const t = TEXT[lang];
+  if (!message) return fallback;
+  if (message.includes("packages or appointment history")) return t.deleteBlocked;
+  return message;
+}
+
 export default function AdminAddonsPanel({ lang }: Props) {
   const t = TEXT[lang];
 
@@ -116,7 +131,6 @@ export default function AdminAddonsPanel({ lang }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [createForm, setCreateForm] = useState<AddonFormState>(createEmptyFormState());
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<AddonFormState>(createEmptyFormState());
 
@@ -222,6 +236,21 @@ export default function AdminAddonsPanel({ lang }: Props) {
     }
   }
 
+  async function deleteAddon(item: AddonItem) {
+    if (!window.confirm(t.deleteConfirm)) return;
+
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/addons/${item.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(mapDeleteError(lang, t.deleteFailed, data?.error));
+      if (editingId === item.id) cancelEdit();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.deleteFailed);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
       <div className="flex items-center justify-between">
@@ -238,124 +267,56 @@ export default function AdminAddonsPanel({ lang }: Props) {
         <p className="font-medium text-brand-900">{t.createTitle}</p>
 
         <div className="grid gap-3 md:grid-cols-4">
-          <input
-            className="admin-input-sm"
-            placeholder={t.nameZh}
-            value={createForm.nameZh}
-            onChange={(e) => patchCreateForm({ nameZh: e.target.value })}
-          />
-          <input
-            className="admin-input-sm"
-            placeholder={t.nameJa}
-            value={createForm.nameJa}
-            onChange={(e) => patchCreateForm({ nameJa: e.target.value })}
-          />
-          <input
-            className="admin-input-sm"
-            placeholder={t.price}
-            value={createForm.priceJpy}
-            onChange={(e) => patchCreateForm({ priceJpy: e.target.value })}
-          />
-          <input
-            className="admin-input-sm"
-            placeholder={t.duration}
-            value={createForm.durationIncreaseMin}
-            onChange={(e) => patchCreateForm({ durationIncreaseMin: e.target.value })}
-          />
+          <input className="admin-input-sm" placeholder={t.nameZh} value={createForm.nameZh} onChange={(e) => patchCreateForm({ nameZh: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.nameJa} value={createForm.nameJa} onChange={(e) => patchCreateForm({ nameJa: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.price} value={createForm.priceJpy} onChange={(e) => patchCreateForm({ priceJpy: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.duration} value={createForm.durationIncreaseMin} onChange={(e) => patchCreateForm({ durationIncreaseMin: e.target.value })} />
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <textarea
-            className="admin-input min-h-20"
-            placeholder={t.descZh}
-            value={createForm.descZh}
-            onChange={(e) => patchCreateForm({ descZh: e.target.value })}
-          />
-          <textarea
-            className="admin-input min-h-20"
-            placeholder={t.descJa}
-            value={createForm.descJa}
-            onChange={(e) => patchCreateForm({ descJa: e.target.value })}
-          />
+          <textarea className="admin-input min-h-20" placeholder={t.descZh} value={createForm.descZh} onChange={(e) => patchCreateForm({ descZh: e.target.value })} />
+          <textarea className="admin-input min-h-20" placeholder={t.descJa} value={createForm.descJa} onChange={(e) => patchCreateForm({ descJa: e.target.value })} />
         </div>
 
-        <button className="admin-btn-primary w-fit" type="submit">
-          {t.create}
-        </button>
+        <button className="admin-btn-primary w-fit" type="submit">{t.create}</button>
       </form>
 
       <div className="mt-4 grid gap-3">
         {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
         {items.map((item) => (
           <article key={item.id} className="admin-item">
-            <p className="font-medium text-brand-900">
-              {item.nameZh} / {item.nameJa}
-            </p>
+            <p className="font-medium text-brand-900">{item.nameZh} / {item.nameJa}</p>
             <p className="text-sm text-brand-700">
               {item.priceJpy} JPY · +{item.durationIncreaseMin} min · {t.usedBy} {item.packageIds.length} {t.packageSuffix} · {item.isActive ? t.enabled : t.disabled}
             </p>
 
             <div className="mt-2 flex gap-2">
-              <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">
-                {t.edit}
-              </button>
+              <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">{t.edit}</button>
+              <button className="admin-btn-danger" onClick={() => void deleteAddon(item)} type="button">{t.remove}</button>
             </div>
 
             {editingId === item.id ? (
               <form className="mt-3 grid gap-3 rounded-xl border border-brand-100 p-3" onSubmit={saveEdit}>
                 <div className="grid gap-3 md:grid-cols-4">
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.nameZh}
-                    onChange={(e) => patchEditForm({ nameZh: e.target.value })}
-                  />
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.nameJa}
-                    onChange={(e) => patchEditForm({ nameJa: e.target.value })}
-                  />
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.priceJpy}
-                    onChange={(e) => patchEditForm({ priceJpy: e.target.value })}
-                  />
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.durationIncreaseMin}
-                    onChange={(e) => patchEditForm({ durationIncreaseMin: e.target.value })}
-                  />
+                  <input className="admin-input-sm" value={editForm.nameZh} onChange={(e) => patchEditForm({ nameZh: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.nameJa} onChange={(e) => patchEditForm({ nameJa: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.priceJpy} onChange={(e) => patchEditForm({ priceJpy: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.durationIncreaseMin} onChange={(e) => patchEditForm({ durationIncreaseMin: e.target.value })} />
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <textarea
-                    className="admin-input min-h-20"
-                    value={editForm.descZh}
-                    onChange={(e) => patchEditForm({ descZh: e.target.value })}
-                  />
-                  <textarea
-                    className="admin-input min-h-20"
-                    value={editForm.descJa}
-                    onChange={(e) => patchEditForm({ descJa: e.target.value })}
-                  />
+                  <textarea className="admin-input min-h-20" value={editForm.descZh} onChange={(e) => patchEditForm({ descZh: e.target.value })} />
+                  <textarea className="admin-input min-h-20" value={editForm.descJa} onChange={(e) => patchEditForm({ descJa: e.target.value })} />
                 </div>
 
                 <label className="text-sm text-brand-800">
-                  <input
-                    className="admin-check"
-                    type="checkbox"
-                    checked={editForm.isActive}
-                    onChange={(e) => patchEditForm({ isActive: e.target.checked })}
-                  />
+                  <input className="admin-check" type="checkbox" checked={editForm.isActive} onChange={(e) => patchEditForm({ isActive: e.target.checked })} />
                   {t.active}
                 </label>
 
                 <div className="flex gap-2">
-                  <button className="admin-btn-primary px-3 py-1.5" type="submit">
-                    {t.save}
-                  </button>
-                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>
-                    {t.cancel}
-                  </button>
+                  <button className="admin-btn-primary px-3 py-1.5" type="submit">{t.save}</button>
+                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>{t.cancel}</button>
                 </div>
               </form>
             ) : null}
@@ -365,4 +326,3 @@ export default function AdminAddonsPanel({ lang }: Props) {
     </section>
   );
 }
-
