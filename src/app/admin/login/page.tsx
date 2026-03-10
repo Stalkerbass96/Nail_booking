@@ -9,12 +9,12 @@ type Props = {
 
 const TEXT = {
   zh: {
-    title: "管理员登录",
-    desc: "开发环境默认账号由 seed 写入，可通过环境变量修改密码。"
+    title: "后台登录",
+    desc: "使用管理员邮箱和密码登录。初始账号由 seed 创建，部署后请及时替换默认密码。"
   },
   ja: {
-    title: "管理者ログイン",
-    desc: "開発用アカウントは seed で作成され、パスワードは環境変数で変更できます。"
+    title: "管理画面ログイン",
+    desc: "管理者メールアドレスとパスワードでログインします。初期アカウントは seed で作成されるため、デプロイ後は早めに初期パスワードを変更してください。"
   }
 };
 
@@ -47,7 +47,7 @@ export default async function AdminLoginPage({ searchParams }: Props) {
       <section className="admin-panel-shell">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-500">Admin Console</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-brand-900 sm:text-3xl">{t.title}</h1>
-        <p className="mt-2 max-w-lg text-sm text-brand-700">{t.desc}</p>
+        <p className="mt-2 max-w-lg text-sm leading-7 text-brand-700">{t.desc}</p>
 
         <div className="mt-7">
           <AdminLoginForm nextPath={nextPath} lang={lang} />

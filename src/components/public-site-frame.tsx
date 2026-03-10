@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Lang } from "@/lib/lang";
 import { pickText } from "@/lib/lang";
@@ -26,14 +26,24 @@ export default function PublicSiteFrame({ lang, children, entryToken }: Props) {
       <div className="site-orb site-orb-right" aria-hidden="true" />
       <header className="site-header">
         <div className="site-header-inner site-header-inner-stream">
-          <nav className="site-nav site-nav-stream" aria-label="Primary">
-            <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/", lang, entryToken)}>
-              {pickText(lang, "图墙", "ギャラリー")}
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
+              <span className="brand-mark">NA</span>
+              <span className="site-brand-copy">
+                <strong className="brand-wordmark">Nail Atelier</strong>
+                <small className="brand-wordmark-sub">{pickText(lang, "作品预约", "Gallery Booking")}</small>
+              </span>
             </Link>
-            <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/services", lang, entryToken)}>
-              {pickText(lang, "套餐", "メニュー")}
-            </Link>
-          </nav>
+
+            <nav className="site-nav site-nav-stream" aria-label="Primary">
+              <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/", lang, entryToken)}>
+                {pickText(lang, "图墙", "ギャラリー")}
+              </Link>
+              <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/services", lang, entryToken)}>
+                {pickText(lang, "套餐", "メニュー")}
+              </Link>
+            </nav>
+          </div>
 
           <div className="site-header-tools">
             <Link className="site-lang-switch site-lang-switch-stream" href={withLangAndEntry("/", altLang, entryToken)}>
