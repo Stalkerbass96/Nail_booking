@@ -118,6 +118,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
   const t = TEXT[lang];
   const packageName = displayName(lang, showcaseItem.packageNameZh, showcaseItem.packageNameJa);
   const categoryName = displayName(lang, showcaseItem.categoryNameZh, showcaseItem.categoryNameJa);
+  const selectedSlotLabel = selectedStartAt ? formatSlotLabel(lang, selectedStartAt) : t.unselectedSlot;
 
   const todayYmd = useMemo(() => {
     const today = new Date();
@@ -216,6 +217,27 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
         </div>
       </section>
 
+      <section className="booking-mobile-summary-card lg:hidden">
+        <div className="booking-mobile-summary-head">
+          <p className="section-eyebrow">{t.summary}</p>
+          <span className="metric-pill">JPY {showcaseItem.priceJpy}</span>
+        </div>
+        <dl className="mt-3 grid gap-3 text-sm text-brand-800">
+          <div className="summary-row">
+            <dt>{t.packageLabel}</dt>
+            <dd>{packageName}</dd>
+          </div>
+          <div className="summary-row">
+            <dt>{t.totalDuration}</dt>
+            <dd>{showcaseItem.durationMin} min</dd>
+          </div>
+          <div className="summary-row">
+            <dt>{t.selectedSlot}</dt>
+            <dd>{selectedSlotLabel}</dd>
+          </div>
+        </dl>
+      </section>
+
       <section className="section-panel section-panel-compact booking-step-panel">
         <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_280px] md:items-start">
           <label className="grid gap-2" htmlFor="booking-date">
@@ -243,7 +265,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold text-brand-900">2. {t.slots}</h2>
           <span className="metric-pill metric-pill-soft">
-            {selectedStartAt ? `${t.selectedSlot}: ${formatSlotLabel(lang, selectedStartAt)}` : t.unselectedSlot}
+            {selectedStartAt ? `${t.selectedSlot}: ${selectedSlotLabel}` : t.unselectedSlot}
           </span>
         </div>
 
@@ -284,7 +306,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
         {message ? <p className="ui-state-success" aria-live="polite">{message}</p> : null}
       </section>
 
-      <aside className="booking-summary-card booking-summary-card-compact booking-summary-lite">
+      <aside className="booking-summary-card booking-summary-card-compact booking-summary-lite hidden lg:block">
         <p className="section-eyebrow">{t.summary}</p>
         <dl className="mt-3 grid gap-3 text-sm text-brand-800">
           <div className="summary-row">
@@ -301,7 +323,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
           </div>
           <div className="summary-row">
             <dt>{t.selectedSlot}</dt>
-            <dd>{selectedStartAt ? formatSlotLabel(lang, selectedStartAt) : t.unselectedSlot}</dd>
+            <dd>{selectedSlotLabel}</dd>
           </div>
         </dl>
         <p className="field-hint mt-4">{t.submitHint}</p>
@@ -314,6 +336,16 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
           </button>
         </div>
       </aside>
+
+      <div className="booking-submit-bar lg:hidden">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-brand-900">{packageName}</p>
+          <p className="text-xs text-brand-700">{selectedSlotLabel}</p>
+        </div>
+        <button disabled={submitting || !entryToken} className="ui-btn-primary shrink-0" type="submit">
+          {submitting ? "..." : t.submit}
+        </button>
+      </div>
     </form>
   );
 }
