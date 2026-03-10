@@ -7,6 +7,7 @@ type Props = {
   lang: Lang;
   children: ReactNode;
   entryToken?: string;
+  minimalHeader?: boolean;
 };
 
 function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
@@ -17,7 +18,7 @@ function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
   return `${pathname}?${params.toString()}`;
 }
 
-export default function PublicSiteFrame({ lang, children, entryToken }: Props) {
+export default function PublicSiteFrame({ lang, children, entryToken, minimalHeader = false }: Props) {
   const altLang = lang === "ja" ? "zh" : "ja";
 
   return (
@@ -25,15 +26,17 @@ export default function PublicSiteFrame({ lang, children, entryToken }: Props) {
       <div className="site-orb site-orb-left" aria-hidden="true" />
       <div className="site-orb site-orb-right" aria-hidden="true" />
       <header className="site-header">
-        <div className="site-header-inner site-header-inner-stream">
+        <div className={`site-header-inner ${minimalHeader ? "site-header-inner-compact" : "site-header-inner-stream"}`}>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
-              <span className="brand-mark">NA</span>
-              <span className="site-brand-copy">
-                <strong className="brand-wordmark">Nail Atelier</strong>
-                <small className="brand-wordmark-sub">{pickText(lang, "作品预约", "Gallery Booking")}</small>
-              </span>
-            </Link>
+            {!minimalHeader ? (
+              <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
+                <span className="brand-mark">NA</span>
+                <span className="site-brand-copy">
+                  <strong className="brand-wordmark">Nail Atelier</strong>
+                  <small className="brand-wordmark-sub">{pickText(lang, "作品预约", "Gallery Booking")}</small>
+                </span>
+              </Link>
+            ) : null}
 
             <nav className="site-nav site-nav-stream" aria-label="Primary">
               <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/", lang, entryToken)}>
@@ -49,7 +52,7 @@ export default function PublicSiteFrame({ lang, children, entryToken }: Props) {
             <Link className="site-lang-switch site-lang-switch-stream" href={withLangAndEntry("/", altLang, entryToken)}>
               {altLang === "ja" ? "日本語" : "中文"}
             </Link>
-            {entryToken ? <span className="site-entry-pill">{pickText(lang, "LINE 预约中", "LINE 予約中")}</span> : null}
+            {entryToken && !minimalHeader ? <span className="site-entry-pill">{pickText(lang, "LINE 预约中", "LINE 予約中")}</span> : null}
           </div>
         </div>
       </header>
