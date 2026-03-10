@@ -90,7 +90,11 @@ const TEXT = {
     keywordPlaceholder: "\u641c\u7d22\u56fe\u5899\u6807\u9898\u3001\u5206\u7c7b\u6216\u5957\u9910",
     allCategories: "\u5168\u90e8\u5206\u7c7b",
     allStatuses: "\u5168\u90e8\u72b6\u6001",
-    sortHint: "\u4f18\u5148\u7528\u4e0a\u79fb / \u4e0b\u79fb\u8c03\u6574\u9996\u9875\u56fe\u5899\u987a\u5e8f\u3002"
+    sortHint: "\u4f18\u5148\u7528\u4e0a\u79fb / \u4e0b\u79fb\u8c03\u6574\u9996\u9875\u56fe\u5899\u987a\u5e8f\u3002",
+    remove: "\u5220\u9664",
+    deleteFailed: "\u5220\u9664\u56fe\u5899\u5931\u8d25",
+    deleteSuccess: "\u56fe\u5899\u9879\u5df2\u5220\u9664",
+    deleteConfirm: "\u786e\u5b9a\u8981\u5220\u9664\u8fd9\u4e2a\u56fe\u5899\u9879\u5417\uff1f\u5982\u679c\u5df2\u7ecf\u4ea7\u751f\u9884\u7ea6\uff0c\u7cfb\u7edf\u4f1a\u62d2\u7edd\u5220\u9664\u3002"
   },
   ja: {
     title: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7ba1\u7406",
@@ -131,7 +135,11 @@ const TEXT = {
     keywordPlaceholder: "\u30bf\u30a4\u30c8\u30eb\u3001\u30ab\u30c6\u30b4\u30ea\u3001\u30e1\u30cb\u30e5\u30fc\u3067\u691c\u7d22",
     allCategories: "\u3059\u3079\u3066\u306e\u30ab\u30c6\u30b4\u30ea",
     allStatuses: "\u3059\u3079\u3066\u306e\u72b6\u614b",
-    sortHint: "\u30db\u30fc\u30e0\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u9806\u756a\u306f\u4e0a\u3078 / \u4e0b\u3078\u3067\u7c21\u5358\u306b\u8abf\u6574\u3067\u304d\u307e\u3059\u3002"
+    sortHint: "\u30db\u30fc\u30e0\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u9806\u756a\u306f\u4e0a\u3078 / \u4e0b\u3078\u3067\u7c21\u5358\u306b\u8abf\u6574\u3067\u304d\u307e\u3059\u3002",
+    remove: "\u524a\u9664",
+    deleteFailed: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u306e\u524a\u9664\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+    deleteSuccess: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u3092\u524a\u9664\u3057\u307e\u3057\u305f",
+    deleteConfirm: "\u3053\u306e\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u4e88\u7d04\u5c65\u6b74\u304c\u3042\u308b\u5834\u5408\u306f\u524a\u9664\u3067\u304d\u307e\u305b\u3093\u3002"
   }
 } as const;
 
@@ -395,6 +403,28 @@ export default function AdminShowcasePanel({ lang }: Props) {
     }
   }
 
+
+  async function deleteItem(item: ShowcaseItem) {
+    if (!window.confirm(t.deleteConfirm)) return;
+    setError("");
+    setNotice("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/showcase/" + item.id, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.deleteFailed);
+      if (editingId === item.id) {
+        setEditingId(null);
+        setEditForm(createEmptyForm(categories[0]?.id || "", packages[0]?.id || ""));
+      }
+      setNotice(t.deleteSuccess);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.deleteFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
   function renderPreview(imageUrl: string) {
     if (!imageUrl) return null;
     return (
@@ -502,6 +532,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={reorderLocked || index === filteredItems.length - 1 || saving}>{t.moveDown}</button>
                     <button className="admin-btn-ghost" onClick={() => void togglePublish(item)} type="button" disabled={saving}>{item.isPublished ? t.unpublishNow : t.publishNow}</button>
                     <button className="admin-btn-ghost" onClick={() => { setEditingId(item.id); setEditForm(fromItem(item)); }} type="button">{t.edit}</button>
+                    <button className="admin-btn-ghost" onClick={() => void deleteItem(item)} type="button" disabled={saving}>{t.remove}</button>
                   </div>
                 </div>
                 <p className="text-sm leading-7 text-brand-700">{displayName(lang, item.descriptionZh || "", item.descriptionJa || "") || "-"}</p>

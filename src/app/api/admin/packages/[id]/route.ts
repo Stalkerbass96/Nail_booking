@@ -96,3 +96,46 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const packageId = parseSingleBigInt(id, "packageId");
+
+    const summary = await prisma.servicePackage.findUnique({
+      where: { id: packageId },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            appointments: true,
+            showcaseItems: true
+          }
+        }
+      }
+    });
+
+    if (!summary) {
+      return NextResponse.json({ error: "Package not found" }, { status: 404 });
+    }
+
+    if (summary._count.appointments > 0 || summary._count.showcaseItems > 0) {
+      return NextResponse.json({ error: "Cannot delete package that is used by appointments or showcase items" }, { status: 409 });
+    }
+
+    await prisma.servicePackage.delete({ where: { id: packageId } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Invalid ")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: "Failed to delete package", details: error instanceof Error ? error.message : "Unknown" },
+      { status: 500 }
+    );
+  }
+}

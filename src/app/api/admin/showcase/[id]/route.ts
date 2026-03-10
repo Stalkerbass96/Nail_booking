@@ -62,3 +62,42 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     );
   }
 }
+
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+    const showcaseId = toBigInt(id, "showcaseId");
+
+    const target = await prisma.showcaseItem.findUnique({
+      where: { id: showcaseId },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            appointments: true
+          }
+        }
+      }
+    });
+
+    if (!target) {
+      return NextResponse.json({ error: "Showcase item not found" }, { status: 404 });
+    }
+
+    if (target._count.appointments > 0) {
+      return NextResponse.json({ error: "Cannot delete showcase item with appointment history" }, { status: 409 });
+    }
+
+    await prisma.showcaseItem.delete({ where: { id: showcaseId } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Invalid ")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: "Failed to delete showcase item", details: error instanceof Error ? error.message : "Unknown" },
+      { status: 500 }
+    );
+  }
+}

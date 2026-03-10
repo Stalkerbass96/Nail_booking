@@ -141,7 +141,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    if (email && !/^[^s@]+@[^s@]+.[^s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
@@ -180,6 +180,56 @@ export async function PATCH(
 
     return NextResponse.json(
       { error: "Failed to update customer", details: error instanceof Error ? error.message : "Unknown" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const customerId = parseSingleBigInt(id, "customerId");
+
+    const summary = await prisma.customer.findUnique({
+      where: { id: customerId },
+      select: {
+        id: true,
+        lineUser: { select: { id: true } },
+        _count: {
+          select: {
+            appointments: true,
+            pointLedgers: true
+          }
+        }
+      }
+    });
+
+    if (!summary) {
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    }
+
+    if (summary._count.appointments > 0 || summary._count.pointLedgers > 0) {
+      return NextResponse.json({ error: "Cannot delete customer with appointment or points history" }, { status: 409 });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (summary.lineUser?.id) {
+        await tx.lineUser.delete({ where: { id: summary.lineUser.id } });
+      }
+      await tx.customer.delete({ where: { id: customerId } });
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Invalid ")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: "Failed to delete customer", details: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }
     );
   }

@@ -132,7 +132,11 @@ const TEXT = {
     notes: "\u5907\u6ce8",
     notesPlaceholder: "\u8bb0\u5f55\u5ba2\u6237\u504f\u597d\u3001\u6c9f\u901a\u91cd\u70b9\u6216\u5230\u5e97\u60c5\u51b5",
     save: "\u4fdd\u5b58\u5ba2\u6237\u4fe1\u606f",
-    openLineConversation: "\u6253\u5f00 LINE \u4f1a\u8bdd"
+    openLineConversation: "\u6253\u5f00 LINE \u4f1a\u8bdd",
+    remove: "\u5220\u9664\u5ba2\u6237",
+    deleteFailed: "\u5220\u9664\u5ba2\u6237\u5931\u8d25",
+    deleteSuccess: "\u5ba2\u6237\u5df2\u5220\u9664",
+    deleteConfirm: "\u786e\u5b9a\u8981\u5220\u9664\u8fd9\u4e2a\u5ba2\u6237\u6863\u6848\u5417\uff1f\u5982\u679c\u5df2\u6709\u9884\u7ea6\u6216\u79ef\u5206\u8bb0\u5f55\uff0c\u7cfb\u7edf\u4f1a\u62d2\u7edd\u5220\u9664\u3002"
   },
   ja: {
     title: "\u9867\u5ba2\u3068 LINE \u30d7\u30ed\u30d5\u30a3\u30fc\u30eb",
@@ -186,7 +190,11 @@ const TEXT = {
     notes: "\u30e1\u30e2",
     notesPlaceholder: "\u597d\u307f\u3001\u30d2\u30a2\u30ea\u30f3\u30b0\u5185\u5bb9\u3001\u6765\u5e97\u6642\u306e\u88dc\u8db3\u3092\u8a18\u9332",
     save: "\u9867\u5ba2\u60c5\u5831\u3092\u4fdd\u5b58",
-    openLineConversation: "LINE \u4f1a\u8a71\u3092\u958b\u304f"
+    openLineConversation: "LINE \u4f1a\u8a71\u3092\u958b\u304f",
+    remove: "\u9867\u5ba2\u3092\u524a\u9664",
+    deleteFailed: "\u9867\u5ba2\u306e\u524a\u9664\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+    deleteSuccess: "\u9867\u5ba2\u3092\u524a\u9664\u3057\u307e\u3057\u305f",
+    deleteConfirm: "\u3053\u306e\u9867\u5ba2\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u4e88\u7d04\u5c65\u6b74\u307e\u305f\u306f\u30dd\u30a4\u30f3\u30c8\u5c65\u6b74\u304c\u3042\u308b\u5834\u5408\u306f\u524a\u9664\u3067\u304d\u307e\u305b\u3093\u3002"
   }
 } as const;
 
@@ -320,6 +328,31 @@ export default function AdminCustomersPanel({ lang }: Props) {
     }
   }
 
+
+  async function deleteCustomer() {
+    if (!detail) return;
+    if (!window.confirm(t.deleteConfirm)) return;
+
+    setError("");
+    setNotice("");
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${detail.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.deleteFailed);
+
+      setItems((prev) => prev.filter((item) => item.id !== detail.id));
+      setDetail(null);
+      setPoints([]);
+      setActiveCustomerId("");
+      setDraft(createDraft(null));
+      setNotice(t.deleteSuccess);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.deleteFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
   return (
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>

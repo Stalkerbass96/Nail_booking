@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
@@ -70,12 +70,15 @@ const TEXT = {
     edit: "编辑",
     save: "保存",
     cancel: "取消",
+    remove: "删除",
     loadCategoryFailed: "加载分类失败",
     loadAddonFailed: "加载加项失败",
     loadPackageFailed: "加载套餐失败",
     loadFailed: "加载失败",
     createFailed: "创建失败",
     updateFailed: "更新失败",
+    deleteFailed: "删除套餐失败",
+    deleteConfirm: "确定要删除这个套餐吗？如果已经被图墙或预约引用，系统会拒绝删除。",
     empty: "暂无套餐"
   },
   ja: {
@@ -101,15 +104,18 @@ const TEXT = {
     edit: "編集",
     save: "保存",
     cancel: "キャンセル",
+    remove: "削除",
     loadCategoryFailed: "カテゴリの読み込みに失敗しました",
     loadAddonFailed: "追加オプションの読み込みに失敗しました",
     loadPackageFailed: "メニューの読み込みに失敗しました",
     loadFailed: "読み込みに失敗しました",
     createFailed: "作成に失敗しました",
     updateFailed: "更新に失敗しました",
+    deleteFailed: "メニューの削除に失敗しました",
+    deleteConfirm: "このメニューを削除しますか？ギャラリーや予約で使われている場合は削除できません。",
     empty: "メニューはありません"
   }
-};
+} as const;
 
 function createEmptyFormState(categoryId = ""): PackageFormState {
   return {
@@ -155,7 +161,6 @@ export default function AdminPackagesPanel({ lang }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [createForm, setCreateForm] = useState<PackageFormState>(createEmptyFormState());
-
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PackageFormState>(createEmptyFormState());
 
@@ -313,6 +318,20 @@ export default function AdminPackagesPanel({ lang }: Props) {
     }
   }
 
+  async function deletePackage(item: PackageItem) {
+    if (!window.confirm(t.deleteConfirm)) return;
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/packages/${item.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.deleteFailed);
+      if (editingId === item.id) cancelEdit();
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.deleteFailed);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
       <div className="flex items-center justify-between">
@@ -329,95 +348,41 @@ export default function AdminPackagesPanel({ lang }: Props) {
         <p className="font-medium text-brand-900">{t.createTitle}</p>
 
         <div className="grid gap-3 md:grid-cols-5">
-          <select
-            className="admin-input-sm"
-            value={createForm.categoryId}
-            onChange={(e) => patchCreateForm({ categoryId: e.target.value })}
-          >
+          <select className="admin-input-sm" value={createForm.categoryId} onChange={(e) => patchCreateForm({ categoryId: e.target.value })}>
             {categories.map((item) => (
-              <option key={item.id} value={item.id}>
-                {displayName(lang, item.nameZh, item.nameJa)}
-              </option>
+              <option key={item.id} value={item.id}>{displayName(lang, item.nameZh, item.nameJa)}</option>
             ))}
           </select>
-
-          <input
-            className="admin-input-sm"
-            placeholder={t.nameZh}
-            value={createForm.nameZh}
-            onChange={(e) => patchCreateForm({ nameZh: e.target.value })}
-          />
-
-          <input
-            className="admin-input-sm"
-            placeholder={t.nameJa}
-            value={createForm.nameJa}
-            onChange={(e) => patchCreateForm({ nameJa: e.target.value })}
-          />
-
-          <input
-            className="admin-input-sm"
-            placeholder={t.price}
-            value={createForm.priceJpy}
-            onChange={(e) => patchCreateForm({ priceJpy: e.target.value })}
-          />
-
-          <input
-            className="admin-input-sm"
-            placeholder={t.duration}
-            value={createForm.durationMin}
-            onChange={(e) => patchCreateForm({ durationMin: e.target.value })}
-          />
+          <input className="admin-input-sm" placeholder={t.nameZh} value={createForm.nameZh} onChange={(e) => patchCreateForm({ nameZh: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.nameJa} value={createForm.nameJa} onChange={(e) => patchCreateForm({ nameJa: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.price} value={createForm.priceJpy} onChange={(e) => patchCreateForm({ priceJpy: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.duration} value={createForm.durationMin} onChange={(e) => patchCreateForm({ durationMin: e.target.value })} />
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <textarea
-            className="admin-input min-h-20"
-            placeholder={t.descZh}
-            value={createForm.descZh}
-            onChange={(e) => patchCreateForm({ descZh: e.target.value })}
-          />
-          <textarea
-            className="admin-input min-h-20"
-            placeholder={t.descJa}
-            value={createForm.descJa}
-            onChange={(e) => patchCreateForm({ descJa: e.target.value })}
-          />
+          <textarea className="admin-input min-h-20" placeholder={t.descZh} value={createForm.descZh} onChange={(e) => patchCreateForm({ descZh: e.target.value })} />
+          <textarea className="admin-input min-h-20" placeholder={t.descJa} value={createForm.descJa} onChange={(e) => patchCreateForm({ descJa: e.target.value })} />
         </div>
 
-        <input
-          className="admin-input-sm"
-          placeholder={t.imageUrl}
-          value={createForm.imageUrl}
-          onChange={(e) => patchCreateForm({ imageUrl: e.target.value })}
-        />
+        <input className="admin-input-sm" placeholder={t.imageUrl} value={createForm.imageUrl} onChange={(e) => patchCreateForm({ imageUrl: e.target.value })} />
 
         <div className="grid gap-2 md:grid-cols-4">
           {addons.map((addon) => (
             <label key={addon.id} className="rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm text-brand-800">
-              <input
-                className="admin-check"
-                type="checkbox"
-                checked={createForm.addonIds.includes(addon.id)}
-                onChange={() => toggleCreateAddon(addon.id)}
-              />
+              <input className="admin-check" type="checkbox" checked={createForm.addonIds.includes(addon.id)} onChange={() => toggleCreateAddon(addon.id)} />
               {displayName(lang, addon.nameZh, addon.nameJa)}
             </label>
           ))}
         </div>
 
-        <button className="admin-btn-primary w-fit" type="submit">
-          {t.create}
-        </button>
+        <button className="admin-btn-primary w-fit" type="submit">{t.create}</button>
       </form>
 
       <div className="mt-4 grid gap-3">
         {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
         {items.map((item) => (
           <article key={item.id} className="admin-item">
-            <p className="font-medium text-brand-900">
-              {item.nameZh} / {item.nameJa}
-            </p>
+            <p className="font-medium text-brand-900">{item.nameZh} / {item.nameJa}</p>
             <p className="text-sm text-brand-700">
               {t.category}: {displayName(lang, item.category.nameZh, item.category.nameJa)} · {item.priceJpy} JPY · {item.durationMin} min · {item.isActive ? t.enabled : t.disabled}
             </p>
@@ -426,102 +391,48 @@ export default function AdminPackagesPanel({ lang }: Props) {
             </p>
 
             <div className="mt-2 flex gap-2">
-              <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">
-                {t.edit}
-              </button>
+              <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">{t.edit}</button>
+              <button className="admin-btn-ghost" onClick={() => void deletePackage(item)} type="button">{t.remove}</button>
             </div>
 
             {editingId === item.id ? (
               <form className="mt-3 grid gap-3 rounded-xl border border-brand-100 p-3" onSubmit={saveEdit}>
                 <div className="grid gap-3 md:grid-cols-5">
-                  <select
-                    className="admin-input-sm"
-                    value={editForm.categoryId}
-                    onChange={(e) => patchEditForm({ categoryId: e.target.value })}
-                  >
+                  <select className="admin-input-sm" value={editForm.categoryId} onChange={(e) => patchEditForm({ categoryId: e.target.value })}>
                     {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {displayName(lang, cat.nameZh, cat.nameJa)}
-                      </option>
+                      <option key={cat.id} value={cat.id}>{displayName(lang, cat.nameZh, cat.nameJa)}</option>
                     ))}
                   </select>
-
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.nameZh}
-                    onChange={(e) => patchEditForm({ nameZh: e.target.value })}
-                  />
-
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.nameJa}
-                    onChange={(e) => patchEditForm({ nameJa: e.target.value })}
-                  />
-
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.priceJpy}
-                    onChange={(e) => patchEditForm({ priceJpy: e.target.value })}
-                  />
-
-                  <input
-                    className="admin-input-sm"
-                    value={editForm.durationMin}
-                    onChange={(e) => patchEditForm({ durationMin: e.target.value })}
-                  />
+                  <input className="admin-input-sm" value={editForm.nameZh} onChange={(e) => patchEditForm({ nameZh: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.nameJa} onChange={(e) => patchEditForm({ nameJa: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.priceJpy} onChange={(e) => patchEditForm({ priceJpy: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.durationMin} onChange={(e) => patchEditForm({ durationMin: e.target.value })} />
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <textarea
-                    className="admin-input min-h-20"
-                    value={editForm.descZh}
-                    onChange={(e) => patchEditForm({ descZh: e.target.value })}
-                  />
-                  <textarea
-                    className="admin-input min-h-20"
-                    value={editForm.descJa}
-                    onChange={(e) => patchEditForm({ descJa: e.target.value })}
-                  />
+                  <textarea className="admin-input min-h-20" value={editForm.descZh} onChange={(e) => patchEditForm({ descZh: e.target.value })} />
+                  <textarea className="admin-input min-h-20" value={editForm.descJa} onChange={(e) => patchEditForm({ descJa: e.target.value })} />
                 </div>
 
-                <input
-                  className="admin-input-sm"
-                  placeholder={t.imageUrlShort}
-                  value={editForm.imageUrl}
-                  onChange={(e) => patchEditForm({ imageUrl: e.target.value })}
-                />
+                <input className="admin-input-sm" placeholder={t.imageUrlShort} value={editForm.imageUrl} onChange={(e) => patchEditForm({ imageUrl: e.target.value })} />
 
                 <label className="text-sm text-brand-800">
-                  <input
-                    className="admin-check"
-                    type="checkbox"
-                    checked={editForm.isActive}
-                    onChange={(e) => patchEditForm({ isActive: e.target.checked })}
-                  />
+                  <input className="admin-check" type="checkbox" checked={editForm.isActive} onChange={(e) => patchEditForm({ isActive: e.target.checked })} />
                   {t.active}
                 </label>
 
                 <div className="grid gap-2 md:grid-cols-4">
                   {addons.map((addon) => (
                     <label key={addon.id} className="rounded-xl border border-brand-200 bg-white px-3 py-2 text-sm text-brand-800">
-                      <input
-                        className="admin-check"
-                        type="checkbox"
-                        checked={editForm.addonIds.includes(addon.id)}
-                        onChange={() => toggleEditAddon(addon.id)}
-                      />
+                      <input className="admin-check" type="checkbox" checked={editForm.addonIds.includes(addon.id)} onChange={() => toggleEditAddon(addon.id)} />
                       {displayName(lang, addon.nameZh, addon.nameJa)}
                     </label>
                   ))}
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="admin-btn-primary px-3 py-1.5" type="submit">
-                    {t.save}
-                  </button>
-                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>
-                    {t.cancel}
-                  </button>
+                  <button className="admin-btn-primary px-3 py-1.5" type="submit">{t.save}</button>
+                  <button className="admin-btn-ghost" type="button" onClick={cancelEdit}>{t.cancel}</button>
                 </div>
               </form>
             ) : null}
@@ -531,4 +442,3 @@ export default function AdminPackagesPanel({ lang }: Props) {
     </section>
   );
 }
-
