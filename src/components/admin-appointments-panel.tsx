@@ -216,11 +216,10 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   const queryString = useMemo(() => {
     const qs = new URLSearchParams({ lang, limit: "200" });
     if (date) qs.set("date", date);
-    if (status !== "all") qs.set("status", status);
     if (sourceChannel !== "all") qs.set("sourceChannel", sourceChannel);
     if (showcaseItemId !== "all") qs.set("showcaseItemId", showcaseItemId);
     return qs.toString();
-  }, [date, lang, showcaseItemId, sourceChannel, status]);
+  }, [date, lang, showcaseItemId, sourceChannel]);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -243,7 +242,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     void fetchItems();
   }, [fetchItems]);
 
-  const filteredItems = useMemo(() => {
+  const keywordFilteredItems = useMemo(() => {
     const q = keyword.trim().toLowerCase();
     if (!q) return items;
     return items.filter((item) => {
@@ -263,15 +262,20 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     });
   }, [items, keyword]);
 
+  const filteredItems = useMemo(() => {
+    if (status === "all") return keywordFilteredItems;
+    return keywordFilteredItems.filter((item) => item.status === status);
+  }, [keywordFilteredItems, status]);
+
   const statusCounts = useMemo(() => {
-    return items.reduce(
+    return keywordFilteredItems.reduce(
       (acc, item) => {
         acc[item.status] += 1;
         return acc;
       },
       { pending: 0, confirmed: 0, completed: 0, canceled: 0 }
     );
-  }, [items]);
+  }, [keywordFilteredItems]);
 
   const showcaseOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -286,7 +290,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   }, [items, locale]);
 
   const overviewCards = [
-    { key: "all", label: t.all, value: items.length, hint: t.allHint, tone: "from-brand-100 via-white to-white" },
+    { key: "all", label: t.all, value: keywordFilteredItems.length, hint: t.allHint, tone: "from-brand-100 via-white to-white" },
     { key: "pending", label: t.pending, value: statusCounts.pending, hint: t.pendingHint, tone: "from-amber-100 via-white to-white" },
     { key: "confirmed", label: t.confirmed, value: statusCounts.confirmed, hint: t.confirmedHint, tone: "from-sky-100 via-white to-white" },
     { key: "completed", label: t.completed, value: statusCounts.completed, hint: t.completedHint, tone: "from-emerald-100 via-white to-white" },
