@@ -11,6 +11,22 @@ type SettingsDto = {
   pointRedeemRatioJpy: number;
 };
 
+type ResetSummary = {
+  customers: number;
+  appointments: number;
+  lineUsers: number;
+  lineMessages: number;
+  showcaseItems: number;
+  servicePackages: number;
+  serviceAddons: number;
+  serviceCategories: number;
+  preserved: {
+    admins: number;
+    systemSettings: number;
+    businessHours: number;
+  };
+};
+
 type Props = {
   lang: Lang;
 };
@@ -35,7 +51,29 @@ const TEXT = {
     invalidCutoff: "客户取消截止必须在 0 到 168 小时之间",
     invalidEarnRatio: "积分累计比例必须在 1 到 100000 之间",
     invalidRedeemRatio: "积分抵扣比例必须在 1 到 100000 之间",
-    slotHint: "当前系统仅支持 30 分钟的倍数，建议保持 30 分钟。"
+    slotHint: "当前系统仅支持 30 分钟的倍数，建议保持 30 分钟。",
+    dangerTitle: "测试清库",
+    dangerDesc: "清空客户、预约、LINE 会话、图墙、分类、套餐和加项等业务数据，并恢复示例目录。管理员账号、系统设置和营业时间会保留。",
+    confirmationLabel: "输入确认词 RESET 后才能执行",
+    confirmationPlaceholder: "请输入 RESET",
+    resetAction: "清空测试数据",
+    resetting: "正在清空...",
+    resetFailed: "清空测试数据失败",
+    resetSuccess: "测试数据已清空，并恢复了示例目录",
+    invalidConfirmation: "确认词不正确",
+    resetSummary: "本次清理结果",
+    resetCustomers: "客户",
+    resetAppointments: "预约",
+    resetLineUsers: "LINE 用户",
+    resetLineMessages: "LINE 消息",
+    resetShowcase: "图墙项",
+    resetPackages: "套餐",
+    resetAddons: "加项",
+    resetCategories: "分类",
+    preserved: "保留",
+    admins: "管理员",
+    systemSettings: "系统设置",
+    businessHours: "营业时间"
   },
   ja: {
     title: "システム設定",
@@ -56,7 +94,29 @@ const TEXT = {
     invalidCutoff: "キャンセル締切は 0 から 168 時間の範囲で入力してください",
     invalidEarnRatio: "ポイント付与比率は 1 から 100000 の範囲で入力してください",
     invalidRedeemRatio: "ポイント利用比率は 1 から 100000 の範囲で入力してください",
-    slotHint: "現在の予約モデルでは 30 分単位のみサポートしています。通常は 30 分を推奨します。"
+    slotHint: "現在の予約モデルでは 30 分単位のみサポートしています。通常は 30 分を推奨します。",
+    dangerTitle: "テストデータ初期化",
+    dangerDesc: "顧客、予約、LINE 会話、ギャラリー、カテゴリ、メニュー、追加オプションなどの業務データを削除し、サンプルカタログを復元します。管理者アカウント、システム設定、営業時間は保持されます。",
+    confirmationLabel: "実行するには確認文字 RESET を入力してください",
+    confirmationPlaceholder: "RESET を入力",
+    resetAction: "テストデータを初期化",
+    resetting: "初期化中...",
+    resetFailed: "テストデータの初期化に失敗しました",
+    resetSuccess: "テストデータを初期化し、サンプルカタログを復元しました",
+    invalidConfirmation: "確認文字が正しくありません",
+    resetSummary: "今回の初期化結果",
+    resetCustomers: "顧客",
+    resetAppointments: "予約",
+    resetLineUsers: "LINE ユーザー",
+    resetLineMessages: "LINE メッセージ",
+    resetShowcase: "ギャラリー項目",
+    resetPackages: "メニュー",
+    resetAddons: "追加オプション",
+    resetCategories: "カテゴリ",
+    preserved: "保持",
+    admins: "管理者",
+    systemSettings: "システム設定",
+    businessHours: "営業時間"
   }
 } as const;
 
@@ -129,8 +189,11 @@ export default function AdminSettingsPanel({ lang }: Props) {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
+  const [resetInput, setResetInput] = useState("");
+  const [resetSummary, setResetSummary] = useState<ResetSummary | null>(null);
 
   const [slotMinutes, setSlotMinutes] = useState("30");
   const [pendingAutoCancelHours, setPendingAutoCancelHours] = useState("24");
@@ -210,6 +273,34 @@ export default function AdminSettingsPanel({ lang }: Props) {
     }
   }
 
+  async function onResetTestData() {
+    setError("");
+    setOk("");
+
+    if (resetInput.trim() !== "RESET") {
+      setError(t.invalidConfirmation);
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const res = await fetch("/api/admin/test-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: resetInput.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.resetFailed);
+      setResetSummary(data.summary ?? null);
+      setResetInput("");
+      setOk(t.resetSuccess);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.resetFailed);
+    } finally {
+      setResetting(false);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>
@@ -250,6 +341,50 @@ export default function AdminSettingsPanel({ lang }: Props) {
           </button>
         </div>
       </form>
+
+      <section className="admin-subsection mt-6 border border-red-100 bg-red-50/50">
+        <p className="font-medium text-red-800">{t.dangerTitle}</p>
+        <p className="mt-2 text-sm leading-7 text-red-700">{t.dangerDesc}</p>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px] md:items-end">
+          <label className="grid gap-1 text-sm text-red-800" htmlFor="test-reset-confirmation">
+            <span>{t.confirmationLabel}</span>
+            <input
+              id="test-reset-confirmation"
+              className="admin-input border-red-200 bg-white"
+              value={resetInput}
+              onChange={(e) => setResetInput(e.target.value)}
+              placeholder={t.confirmationPlaceholder}
+            />
+          </label>
+
+          <button className="admin-btn-danger w-full" disabled={resetting} onClick={() => void onResetTestData()} type="button">
+            {resetting ? t.resetting : t.resetAction}
+          </button>
+        </div>
+
+        {resetSummary ? (
+          <div className="mt-4 rounded-2xl border border-red-100 bg-white p-4 text-sm text-brand-800">
+            <p className="font-medium text-brand-900">{t.resetSummary}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <p>{t.resetCustomers}: {resetSummary.customers}</p>
+              <p>{t.resetAppointments}: {resetSummary.appointments}</p>
+              <p>{t.resetLineUsers}: {resetSummary.lineUsers}</p>
+              <p>{t.resetLineMessages}: {resetSummary.lineMessages}</p>
+              <p>{t.resetShowcase}: {resetSummary.showcaseItems}</p>
+              <p>{t.resetPackages}: {resetSummary.servicePackages}</p>
+              <p>{t.resetAddons}: {resetSummary.serviceAddons}</p>
+              <p>{t.resetCategories}: {resetSummary.serviceCategories}</p>
+            </div>
+            <p className="mt-3 font-medium text-brand-900">{t.preserved}</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              <p>{t.admins}: {resetSummary.preserved.admins}</p>
+              <p>{t.systemSettings}: {resetSummary.preserved.systemSettings}</p>
+              <p>{t.businessHours}: {resetSummary.preserved.businessHours}</p>
+            </div>
+          </div>
+        ) : null}
+      </section>
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
       {ok ? <p className="ui-state-success" aria-live="polite">{ok}</p> : null}
