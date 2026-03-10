@@ -365,7 +365,16 @@ a:focus-visible {
   }
 
   .gallery-tile-media {
-    @apply min-h-[17rem] rounded-[1.1rem] bg-cover bg-center transition-transform duration-300;
+    aspect-ratio: 0.84;
+    @apply rounded-[1.1rem] bg-cover bg-center transition-transform duration-300;
+  }
+
+  .gallery-tile:nth-child(3n) .gallery-tile-media {
+    aspect-ratio: 0.74;
+  }
+
+  .gallery-tile:nth-child(4n) .gallery-tile-media {
+    aspect-ratio: 0.92;
   }
 
   .gallery-tile:hover .gallery-tile-media {
@@ -589,6 +598,35 @@ a:focus-visible {
     @apply mt-5;
   }
 
+  .success-panel-lite {
+    @apply p-5 sm:p-6;
+  }
+
+  .success-ticket-lite {
+    @apply rounded-[1.25rem] bg-white p-4 shadow-none;
+  }
+
+  .success-card-stack {
+    @apply grid gap-3 sm:grid-cols-2;
+  }
+
+  .booking-detail-layout {
+    @apply grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start;
+  }
+
+  .booking-detail-card {
+    @apply overflow-hidden rounded-[1.5rem] border border-white/80 bg-white/90 shadow-[0_18px_42px_rgba(120,25,55,0.08)] backdrop-blur-xl;
+  }
+
+  .booking-detail-media {
+    aspect-ratio: 1.18;
+    @apply bg-cover bg-center;
+  }
+
+  .booking-detail-copy {
+    @apply p-4 sm:p-5;
+  }
+
   .ui-card {
     @apply rounded-3xl border border-brand-100/80 bg-white/90 p-4 shadow-[0_18px_45px_rgba(120,25,55,0.08)] sm:p-5 md:p-6;
   }
@@ -669,6 +707,7 @@ a:focus-visible {
     @apply grid w-full gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,1fr))];
   }
 }
+
 
 
 

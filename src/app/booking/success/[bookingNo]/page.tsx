@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import PublicSiteFrame from "@/components/public-site-frame";
 import { pickText, resolveLang } from "@/lib/lang";
 
@@ -16,56 +16,54 @@ export default async function BookingSuccessPage({ params, searchParams }: Props
 
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
-      <main className="mx-auto flex min-h-[72vh] w-full max-w-4xl items-center px-4 py-8 sm:px-6 sm:py-12">
-        <section className="success-panel w-full">
-          <div className="success-badge">
-            {pickText(lang, "待确认", "未確認")}
-          </div>
-          <h1 className="section-title">
-            {pickText(lang, "预约请求已经提交", "予約リクエストを受け付けました")}
+      <main className="mx-auto flex min-h-[72vh] w-full max-w-3xl items-center px-4 py-6 sm:px-6 sm:py-8">
+        <section className="success-panel success-panel-lite w-full">
+          <div className="success-badge">{pickText(lang, "等待确认", "確認待ち")}</div>
+          <h1 className="text-2xl font-semibold tracking-tight text-brand-900 sm:text-3xl">
+            {pickText(lang, "预约已经发送给店长", "予約を送信しました")}
           </h1>
-          <p className="section-copy mt-3 max-w-2xl">
+          <p className="mt-3 max-w-xl text-sm leading-7 text-brand-700 sm:text-base">
             {pickText(
               lang,
-              "时间已经为你暂时保留。店长确认后，系统会继续通过 LINE 把结果和详情链接发给你。",
-              "時間枠は一時的に確保されています。店側で確認が完了すると、結果と詳細リンクが LINE に届きます。"
+              "店长确认后会继续通过 LINE 联系你。先保留预约号，后续查看详情或沟通时都会用到。",
+              "確認後のご案内はそのまま LINE に届きます。予約番号は詳細確認ややり取りで使うので控えておいてください。"
             )}
           </p>
 
-          <div className="success-ticket">
+          <div className="success-ticket success-ticket-lite">
             <span>{pickText(lang, "预约号", "予約番号")}</span>
             <strong>{bookingNo}</strong>
           </div>
 
-          <div className="success-grid mt-5">
-            <div className="showcase-card">
-              <strong>{pickText(lang, "现在会发生什么", "この後の流れ")}</strong>
-              <p>
+          <div className="success-card-stack mt-5">
+            <div className="compact-info-card">
+              <p className="text-sm font-medium text-brand-900">{pickText(lang, "接下来会发生什么", "このあとについて")}</p>
+              <p className="mt-2 text-sm leading-7 text-brand-700">
                 {pickText(
                   lang,
-                  "店长会在后台确认预约。确认前，这个时段会继续占用，不会被其他预约覆盖。",
-                  "管理画面で予約確認が行われます。確認前でも、この時間枠は他の予約に開放されません。"
+                  "预约会先进入待确认状态。店长确认时间后，LINE 会自动通知你。",
+                  "予約はまず確認待ちになります。時間が確定したら LINE で自動通知します。"
                 )}
               </p>
             </div>
-            <div className="showcase-card">
-              <strong>{pickText(lang, "查看方式", "確認方法")}</strong>
-              <p>
+            <div className="compact-info-card">
+              <p className="text-sm font-medium text-brand-900">{pickText(lang, "后续查看", "あとで確認する")}</p>
+              <p className="mt-2 text-sm leading-7 text-brand-700">
                 {pickText(
                   lang,
-                  "你可以等 LINE 通知，也可以直接打开预约详情页查看当前状态。",
-                  "LINE 通知を待つことも、予約詳細ページを開いて状態を確認することもできます。"
+                  "如果你之后想看这笔预约的状态，可以直接打开详情页。",
+                  "あとで状態を見たいときは、このまま詳細ページを開いて確認できます。"
                 )}
               </p>
             </div>
           </div>
 
-          <div className="admin-inline-actions mt-6 max-w-[34rem]">
-            <Link className="ui-btn-primary" href={detailHref}>
+          <div className="mt-6 grid gap-2 sm:grid-cols-2">
+            <Link className="ui-btn-primary w-full" href={detailHref}>
               {pickText(lang, "查看预约详情", "予約詳細を見る")}
             </Link>
-            <Link className="ui-btn-secondary" href={galleryHref}>
-              {pickText(lang, "继续查看图墙", "ギャラリーに戻る")}
+            <Link className="ui-btn-secondary w-full" href={galleryHref}>
+              {pickText(lang, "继续看图墙", "ギャラリーに戻る")}
             </Link>
           </div>
         </section>
