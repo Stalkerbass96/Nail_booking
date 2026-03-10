@@ -392,6 +392,34 @@ a:focus-visible {
     @apply w-full rounded-full;
   }
 
+  .booking-flow-shell {
+    @apply grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start;
+  }
+
+  .booking-design-strip {
+    @apply flex flex-col gap-3 rounded-[1.5rem] border border-white/80 bg-white/90 p-3 shadow-[0_18px_42px_rgba(120,25,55,0.08)] backdrop-blur-xl sm:flex-row;
+  }
+
+  .booking-design-media {
+    @apply min-h-[15rem] rounded-[1.2rem] bg-cover bg-center sm:w-[42%] sm:min-h-[13rem];
+  }
+
+  .booking-design-meta {
+    @apply flex min-w-0 flex-1 flex-col justify-between gap-3 p-1 sm:p-2;
+  }
+
+  .booking-step-panel {
+    @apply lg:col-span-1;
+  }
+
+  .booking-summary-lite {
+    @apply lg:sticky lg:top-20;
+  }
+
+  .menu-row-card {
+    @apply flex items-center justify-between gap-3 rounded-[1.1rem] border border-brand-100 bg-white px-4 py-3;
+  }
+
   .product-card-media,
   .detail-hero-media {
     @apply flex min-h-[12rem] items-end rounded-[1.5rem] bg-[linear-gradient(135deg,#f9d8d8,#ffe7d8_55%,#fff6ef)] bg-cover bg-center p-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-900;
@@ -641,5 +669,6 @@ a:focus-visible {
     @apply grid w-full gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,1fr))];
   }
 }
+
 
 
