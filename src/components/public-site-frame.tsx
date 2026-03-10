@@ -33,40 +33,42 @@ export default function PublicSiteFrame({ lang, children, entryToken, minimalHea
                 <span className="brand-mark">NA</span>
                 <span className="site-brand-copy">
                   <strong className="brand-wordmark">Nail Atelier</strong>
-                  <small className="brand-wordmark-sub">{pickText(lang, "作品预约", "Gallery Booking")}</small>
+                  <small className="brand-wordmark-sub">{pickText(lang, "\u4f5c\u54c1\u9884\u7ea6", "Gallery Booking")}</small>
                 </span>
               </Link>
             ) : null}
 
-            <nav className="site-nav site-nav-stream" aria-label="Primary">
-              <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/", lang, entryToken)}>
-                {pickText(lang, "图墙", "ギャラリー")}
+            <nav className={`site-nav ${minimalHeader ? "site-nav-compact" : "site-nav-stream"}`} aria-label="Primary">
+              <Link className={`site-nav-link ${minimalHeader ? "site-nav-link-compact" : "site-nav-link-stream"}`} href={withLangAndEntry("/", lang, entryToken)}>
+                {pickText(lang, "\u56fe\u5899", "\u30ae\u30e3\u30e9\u30ea\u30fc")}
               </Link>
-              <Link className="site-nav-link site-nav-link-stream" href={withLangAndEntry("/services", lang, entryToken)}>
-                {pickText(lang, "套餐", "メニュー")}
+              <Link className={`site-nav-link ${minimalHeader ? "site-nav-link-compact" : "site-nav-link-stream"}`} href={withLangAndEntry("/services", lang, entryToken)}>
+                {pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}
               </Link>
             </nav>
           </div>
 
           <div className="site-header-tools">
-            <Link className="site-lang-switch site-lang-switch-stream" href={withLangAndEntry("/", altLang, entryToken)}>
-              {altLang === "ja" ? "日本語" : "中文"}
+            <Link className={`site-lang-switch ${minimalHeader ? "site-lang-switch-compact" : "site-lang-switch-stream"}`} href={withLangAndEntry("/", altLang, entryToken)}>
+              {altLang === "ja" ? "\u65e5\u672c\u8a9e" : "\u4e2d\u6587"}
             </Link>
-            {entryToken && !minimalHeader ? <span className="site-entry-pill">{pickText(lang, "LINE 预约中", "LINE 予約中")}</span> : null}
+            {entryToken && !minimalHeader ? <span className="site-entry-pill">{pickText(lang, "LINE \u9884\u7ea6\u4e2d", "LINE \u4e88\u7d04\u4e2d")}</span> : null}
           </div>
         </div>
       </header>
 
       <div className="site-main">{children}</div>
 
-      <footer className="site-footer">
-        <div className="site-footer-inner site-footer-inner-stream">
-          <div className="site-footer-links site-footer-links-inline">
-            <Link href={withLangAndEntry("/", lang, entryToken)}>{pickText(lang, "图墙", "ギャラリー")}</Link>
-            <Link href={withLangAndEntry("/services", lang, entryToken)}>{pickText(lang, "套餐", "メニュー")}</Link>
+      {!minimalHeader ? (
+        <footer className="site-footer">
+          <div className="site-footer-inner site-footer-inner-stream">
+            <div className="site-footer-links site-footer-links-inline">
+              <Link href={withLangAndEntry("/", lang, entryToken)}>{pickText(lang, "\u56fe\u5899", "\u30ae\u30e3\u30e9\u30ea\u30fc")}</Link>
+              <Link href={withLangAndEntry("/services", lang, entryToken)}>{pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}</Link>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      ) : null}
     </div>
   );
 }
