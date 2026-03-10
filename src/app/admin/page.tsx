@@ -4,7 +4,12 @@ import AdminNav from "@/components/admin-nav";
 import { prisma } from "@/lib/db";
 import { getLineConfig } from "@/lib/line";
 import { resolveLang } from "@/lib/lang";
-import { buildDateTimeWithOffset, formatYmdInOffset, toHHMM } from "@/lib/booking-rules";
+import {
+  buildDateTimeWithOffset,
+  formatDateTimeInOffset,
+  formatTimeInOffset,
+  formatYmdInOffset
+} from "@/lib/booking-rules";
 import { getBusinessWindowByDate } from "@/lib/business-hours";
 
 type Props = {
@@ -108,15 +113,12 @@ const TEXT = {
 
 function formatDateTime(value: Date | null, locale: string) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(value);
+  return formatDateTimeInOffset(value, locale);
 }
 
 function formatTimeRange(openAt?: Date, closeAt?: Date) {
   if (!openAt || !closeAt) return "-";
-  return `${toHHMM(openAt)} - ${toHHMM(closeAt)}`;
+  return `${formatTimeInOffset(openAt)} - ${formatTimeInOffset(closeAt)}`;
 }
 
 export default async function AdminHomePage({ searchParams }: Props) {

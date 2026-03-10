@@ -30,6 +30,16 @@ function parsePositiveInt(raw: string | undefined, fallback: number): number {
   return parsed;
 }
 
+function getOffsetMinutes(utcOffset: string): number {
+  const sign = utcOffset.startsWith("-") ? -1 : 1;
+  const [hourPart, minutePart] = utcOffset.slice(1).split(":");
+  return sign * (Number(hourPart) * 60 + Number(minutePart));
+}
+
+function shiftDateToOffset(base: Date, utcOffset: string): Date {
+  return new Date(base.getTime() + getOffsetMinutes(utcOffset) * 60_000);
+}
+
 export function calculateTotalDurationMinutes(
   servicePackage: Pick<ServicePackage, "durationMin">,
   addons: Array<Pick<ServiceAddon, "durationIncreaseMin">>
@@ -82,6 +92,26 @@ export function toHHMM(timeLike: Date): string {
   return `${hh}:${mm}`;
 }
 
+export function formatTimeInOffset(base: Date, utcOffset = DEFAULT_STORE_UTC_OFFSET): string {
+  const shifted = shiftDateToOffset(base, utcOffset);
+  const hh = String(shifted.getUTCHours()).padStart(2, "0");
+  const mm = String(shifted.getUTCMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+export function formatDateTimeInOffset(
+  base: Date,
+  locale: string,
+  utcOffset = DEFAULT_STORE_UTC_OFFSET
+): string {
+  const shifted = shiftDateToOffset(base, utcOffset);
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC"
+  }).format(shifted);
+}
+
 export function generateStartSlots(
   dayStart: Date,
   dayEnd: Date,
@@ -108,11 +138,7 @@ export function addMinutes(base: Date, minutes: number): Date {
 }
 
 export function formatYmdInOffset(base: Date, utcOffset = DEFAULT_STORE_UTC_OFFSET): string {
-  const sign = utcOffset.startsWith("-") ? -1 : 1;
-  const [hourPart, minutePart] = utcOffset.slice(1).split(":");
-  const totalMinutes = sign * (Number(hourPart) * 60 + Number(minutePart));
-  const shifted = new Date(base.getTime() + totalMinutes * 60_000);
-
+  const shifted = shiftDateToOffset(base, utcOffset);
   const y = shifted.getUTCFullYear();
   const m = String(shifted.getUTCMonth() + 1).padStart(2, "0");
   const d = String(shifted.getUTCDate()).padStart(2, "0");
