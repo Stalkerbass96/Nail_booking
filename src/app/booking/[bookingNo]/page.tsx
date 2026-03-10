@@ -11,16 +11,16 @@ type Props = {
 
 const STATUS_TEXT = {
   zh: {
-    pending: "\u5f85\u786e\u8ba4",
-    confirmed: "\u5df2\u786e\u8ba4",
-    completed: "\u5df2\u5b8c\u6210",
-    canceled: "\u5df2\u53d6\u6d88"
+    pending: "待确认",
+    confirmed: "已确认",
+    completed: "已完成",
+    canceled: "已取消"
   },
   ja: {
-    pending: "\u672a\u78ba\u8a8d",
-    confirmed: "\u78ba\u8a8d\u6e08\u307f",
-    completed: "\u5b8c\u4e86",
-    canceled: "\u30ad\u30e3\u30f3\u30bb\u30eb"
+    pending: "未確認",
+    confirmed: "確認済み",
+    completed: "完了",
+    canceled: "キャンセル"
   }
 } as const;
 
@@ -44,54 +44,132 @@ export default async function PublicBookingDetailPage({ params, searchParams }: 
     }
   });
 
+  const galleryHref = `/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`;
+  const menuHref = `/services?lang=${lang}`;
+
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         {!appointment ? (
-          <section className="section-panel">
-            <p className="ui-state-error mt-0">{pickText(lang, "\u6ca1\u6709\u627e\u5230\u5bf9\u5e94\u9884\u7ea6\u3002", "\u8a72\u5f53\u3059\u308b\u4e88\u7d04\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3002")}</p>
+          <section className="section-panel section-panel-compact">
+            <p className="ui-state-error mt-0">
+              {pickText(lang, "没有找到对应预约。", "該当する予約が見つかりません。")}
+            </p>
+            <div className="admin-inline-actions mt-5">
+              <Link className="ui-btn-primary" href={galleryHref}>
+                {pickText(lang, "返回图墙", "ギャラリーに戻る")}
+              </Link>
+            </div>
           </section>
         ) : (
           <>
             <section className="success-panel">
-              <div className="success-badge">
-                {appointment.status === AppointmentStatus.pending ? "PENDING" : "BOOKING DETAIL"}
-              </div>
-              <h1 className="section-title">{pickText(lang, "\u9884\u7ea6\u8be6\u60c5", "\u4e88\u7d04\u8a73\u7d30")}</h1>
-              <p className="section-copy mt-3">
-                {pickText(lang, "\u8fd9\u4e2a\u516c\u5f00\u8be6\u60c5\u94fe\u63a5\u53ef\u4ece LINE \u6d88\u606f\u4e2d\u6253\u5f00\u67e5\u770b\u3002", "\u3053\u306e\u516c\u958b\u8a73\u7d30\u30ea\u30f3\u30af\u306f LINE \u30e1\u30c3\u30bb\u30fc\u30b8\u304b\u3089\u958b\u3044\u3066\u78ba\u8a8d\u3067\u304d\u307e\u3059\u3002")}
+              <div className="success-badge">{STATUS_TEXT[lang][appointment.status]}</div>
+              <h1 className="section-title">{pickText(lang, "预约详情", "予約詳細")}</h1>
+              <p className="section-copy mt-3 max-w-2xl">
+                {pickText(
+                  lang,
+                  "这是一条可公开打开的预约详情链接。状态变化后，店长也会继续通过 LINE 通知你。",
+                  "この予約詳細リンクはそのまま確認用に使えます。状態が変わると、LINE にも通知が届きます。"
+                )}
               </p>
               <div className="success-ticket">
-                <span>{pickText(lang, "\u9884\u7ea6\u53f7", "\u4e88\u7d04\u756a\u53f7")}</span>
+                <span>{pickText(lang, "预约号", "予約番号")}</span>
                 <strong>{appointment.bookingNo}</strong>
               </div>
             </section>
 
-            <section className="detail-hero-panel">
-              <div className="detail-hero-media min-h-[18rem]" style={appointment.showcaseItem?.imageUrl ? { backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.06), rgba(47,29,39,0.24)), url(${appointment.showcaseItem.imageUrl})` } : undefined}>
-                <span>{appointment.showcaseItem ? (lang === "ja" ? appointment.showcaseItem.titleJa : appointment.showcaseItem.titleZh) : pickText(lang, "\u9884\u7ea6\u8bb0\u5f55", "\u4e88\u7d04\u8a18\u9332")}</span>
+            <section className="detail-hero-panel detail-hero-panel-compact">
+              <div
+                className="detail-hero-media min-h-[17rem]"
+                style={
+                  appointment.showcaseItem?.imageUrl
+                    ? {
+                        backgroundImage: `linear-gradient(180deg, rgba(47,29,39,0.08), rgba(47,29,39,0.26)), url(${appointment.showcaseItem.imageUrl})`
+                      }
+                    : undefined
+                }
+              >
+                <span>
+                  {appointment.showcaseItem
+                    ? lang === "ja"
+                      ? appointment.showcaseItem.titleJa
+                      : appointment.showcaseItem.titleZh
+                    : pickText(lang, "预约记录", "予約記録")}
+                </span>
               </div>
+
               <div className="grid gap-4">
                 <div>
-                  <p className="section-eyebrow">Status</p>
+                  <p className="section-eyebrow">{pickText(lang, "当前状态", "現在の状態")}</p>
                   <h2 className="text-3xl font-semibold text-brand-900">{STATUS_TEXT[lang][appointment.status]}</h2>
                 </div>
-                <div className="grid gap-3 text-sm text-brand-800">
-                  <div className="summary-row"><dt>{pickText(lang, "\u987e\u5ba2", "\u9867\u5ba2")}</dt><dd>{appointment.customer.name}</dd></div>
-                  <div className="summary-row"><dt>{pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}</dt><dd>{lang === "ja" ? appointment.servicePackage.nameJa : appointment.servicePackage.nameZh}</dd></div>
-                  <div className="summary-row"><dt>{pickText(lang, "\u65f6\u95f4", "\u6642\u9593")}</dt><dd>{new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "zh-CN", { dateStyle: "medium", timeStyle: "short" }).format(appointment.startAt)}</dd></div>
-                  <div className="summary-row"><dt>{pickText(lang, "\u4ef7\u683c\u53c2\u8003", "\u4fa1\u683c\u76ee\u5b89")}</dt><dd>{appointment.servicePackage.priceJpy} JPY</dd></div>
-                  <div className="summary-row"><dt>{pickText(lang, "\u5907\u6ce8", "\u5099\u8003")}</dt><dd>{appointment.customerNote || "-"}</dd></div>
+
+                <div className="compact-info-card">
+                  <div className="summary-row">
+                    <dt>{pickText(lang, "顾客", "お客様")}</dt>
+                    <dd>{appointment.customer.name}</dd>
+                  </div>
+                  <div className="summary-row">
+                    <dt>{pickText(lang, "套餐", "メニュー")}</dt>
+                    <dd>{lang === "ja" ? appointment.servicePackage.nameJa : appointment.servicePackage.nameZh}</dd>
+                  </div>
+                  <div className="summary-row">
+                    <dt>{pickText(lang, "到店时间", "来店時間")}</dt>
+                    <dd>
+                      {new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "zh-CN", {
+                        dateStyle: "medium",
+                        timeStyle: "short"
+                      }).format(appointment.startAt)}
+                    </dd>
+                  </div>
+                  <div className="summary-row">
+                    <dt>{pickText(lang, "预计时长", "所要時間")}</dt>
+                    <dd>{appointment.servicePackage.durationMin} min</dd>
+                  </div>
+                  <div className="summary-row">
+                    <dt>{pickText(lang, "价格参考", "価格目安")}</dt>
+                    <dd>{appointment.servicePackage.priceJpy} JPY</dd>
+                  </div>
+                  <div className="summary-row">
+                    <dt>{pickText(lang, "备注", "メモ")}</dt>
+                    <dd>{appointment.customerNote || "-"}</dd>
+                  </div>
                 </div>
               </div>
             </section>
 
-            <div className="flex flex-wrap gap-3">
-              <Link className="ui-btn-primary" href={`/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`}>
-                {pickText(lang, "\u8fd4\u56de\u56fe\u5899", "\u30ae\u30e3\u30e9\u30ea\u30fc\u3078\u623b\u308b")}
+            <section className="section-panel section-panel-compact">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="showcase-card">
+                  <strong>{pickText(lang, "确认前", "確認前")}</strong>
+                  <p>
+                    {pickText(
+                      lang,
+                      "如果当前状态仍是待确认，表示店长还在处理这笔预约，时间会继续为你保留。",
+                      "未確認の表示中は、店舗側で内容を確認しています。時間枠はそのまま確保されています。"
+                    )}
+                  </p>
+                </div>
+                <div className="showcase-card">
+                  <strong>{pickText(lang, "后续通知", "今後の通知")}</strong>
+                  <p>
+                    {pickText(
+                      lang,
+                      "确认、取消或后续沟通都会优先通过 LINE 发送给你。",
+                      "確定・キャンセル・追加確認は、主に LINE でお知らせします。"
+                    )}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <div className="admin-inline-actions">
+              <Link className="ui-btn-primary" href={galleryHref}>
+                {pickText(lang, "继续查看图墙", "ギャラリーを続けて見る")}
               </Link>
-              <Link className="ui-btn-secondary" href={`/services?lang=${lang}`}>
-                {pickText(lang, "\u67e5\u770b\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc\u4e00\u89a7")}
+              <Link className="ui-btn-secondary" href={menuHref}>
+                {pickText(lang, "查看套餐", "メニューを見る")}
               </Link>
             </div>
           </>
