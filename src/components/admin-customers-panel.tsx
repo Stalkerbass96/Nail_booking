@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
 
 type CustomerItem = {
@@ -11,10 +11,13 @@ type CustomerItem = {
   totalSpentJpy: number;
   currentPoints: number;
   appointmentCount: number;
+  pointLedgerCount: number;
+  deletable: boolean;
   customerType: "lead" | "active";
   createdFrom: "line" | "admin" | "legacy_web";
   firstBookedAt: string | null;
   lineUser: {
+    id: string;
     lineUserId: string;
     displayName: string | null;
     isFollowing: boolean;
@@ -81,120 +84,132 @@ type Props = {
 
 const TEXT = {
   zh: {
-    title: "\u5ba2\u6237\u4e0e LINE \u6863\u6848",
-    placeholder: "\u59d3\u540d\u3001LINE \u6635\u79f0\u3001LINE ID \u6216\u90ae\u7bb1",
-    search: "\u67e5\u8be2",
-    searchFailed: "\u67e5\u8be2\u5931\u8d25",
-    detailFailed: "\u52a0\u8f7d\u5ba2\u6237\u8be6\u60c5\u5931\u8d25",
-    pointsFailed: "\u52a0\u8f7d\u79ef\u5206\u5931\u8d25",
-    loadFailed: "\u52a0\u8f7d\u5931\u8d25",
-    saveFailed: "\u4fdd\u5b58\u5ba2\u6237\u4fe1\u606f\u5931\u8d25",
-    saveSuccess: "\u5ba2\u6237\u4fe1\u606f\u5df2\u66f4\u65b0",
-    invalidName: "\u5ba2\u6237\u59d3\u540d\u4e0d\u80fd\u4e3a\u7a7a",
-    summary: "\u9884\u7ea6",
-    spent: "\u6d88\u8d39",
-    points: "\u79ef\u5206",
-    selectHint: "\u9009\u62e9\u5de6\u4fa7\u5ba2\u6237\u67e5\u770b LINE \u6863\u6848\u4e0e\u9884\u7ea6\u5386\u53f2",
-    currentPoints: "\u5f53\u524d\u79ef\u5206",
-    recentAppointments: "\u6700\u8fd1\u9884\u7ea6",
-    pointLedger: "\u79ef\u5206\u6d41\u6c34",
-    loading: "\u52a0\u8f7d\u4e2d...",
-    saving: "\u4fdd\u5b58\u4e2d...",
-    empty: "\u6682\u65e0\u5ba2\u6237\u8bb0\u5f55",
-    noAppointments: "\u6682\u65e0\u9884\u7ea6\u8bb0\u5f55",
-    noPoints: "\u6682\u65e0\u79ef\u5206\u6d41\u6c34",
-    lead: "\u6f5c\u5728\u5ba2\u6237",
-    active: "\u6b63\u5f0f\u5ba2\u6237",
-    source: "\u521b\u5efa\u6765\u6e90",
-    sourceLine: "LINE \u52a0\u597d\u53cb",
-    sourceAdmin: "\u540e\u53f0\u521b\u5efa",
-    sourceLegacy: "\u65e7\u7f51\u9875\u6d41\u7a0b",
-    lineProfile: "LINE \u6863\u6848",
+    title: "客户与 LINE 档案",
+    placeholder: "姓名、LINE 昵称、LINE ID 或邮箱",
+    search: "查询",
+    cleanupLeads: "清理可删除潜在客户",
+    cleanupHint: "只会删除没有预约和积分记录的潜在客户。",
+    searchFailed: "查询失败",
+    detailFailed: "加载客户详情失败",
+    pointsFailed: "加载积分失败",
+    loadFailed: "加载失败",
+    saveFailed: "保存客户信息失败",
+    saveSuccess: "客户信息已更新",
+    cleanupFailed: "清理潜在客户失败",
+    cleanupSuccess: "已清理可删除潜在客户",
+    invalidName: "客户姓名不能为空",
+    summary: "预约",
+    spent: "消费",
+    points: "积分",
+    selectHint: "选择左侧客户查看 LINE 档案与预约历史",
+    currentPoints: "当前积分",
+    recentAppointments: "最近预约",
+    pointLedger: "积分流水",
+    loading: "加载中...",
+    saving: "保存中...",
+    empty: "暂无客户记录",
+    noAppointments: "暂无预约记录",
+    noPoints: "暂无积分流水",
+    lead: "潜在客户",
+    active: "正式客户",
+    source: "创建来源",
+    sourceLine: "LINE 加好友",
+    sourceAdmin: "后台创建",
+    sourceLegacy: "旧网页流程",
+    lineProfile: "LINE 档案",
     lineId: "LINE ID",
-    lineName: "LINE \u6635\u79f0",
-    lineFollowing: "\u5df2\u5173\u6ce8",
-    lineInactive: "\u5df2\u53d6\u6d88\u5173\u6ce8",
-    lastSeen: "\u6700\u540e\u4ea4\u4e92",
-    firstBookedAt: "\u9996\u6b21\u9884\u7ea6\u65f6\u95f4",
-    email: "\u90ae\u7bb1",
-    noEmail: "\u672a\u586b\u5199",
-    packageLabel: "\u5957\u9910",
-    showcaseLabel: "\u6765\u81ea\u56fe\u5899",
-    directBooking: "\u975e\u56fe\u5899\u6d41\u7a0b",
-    channelLine: "LINE \u56fe\u5899",
-    channelAdmin: "\u540e\u53f0\u624b\u52a8",
-    channelLegacy: "\u65e7\u7f51\u9875",
-    connected: "\u5df2\u7ed1\u5b9a",
-    disconnected: "\u672a\u7ed1\u5b9a",
-    createdAt: "\u5efa\u6863\u65f6\u95f4",
-    editTitle: "\u5ba2\u6237\u7ef4\u62a4",
-    name: "\u59d3\u540d",
-    notes: "\u5907\u6ce8",
-    notesPlaceholder: "\u8bb0\u5f55\u5ba2\u6237\u504f\u597d\u3001\u6c9f\u901a\u91cd\u70b9\u6216\u5230\u5e97\u60c5\u51b5",
-    save: "\u4fdd\u5b58\u5ba2\u6237\u4fe1\u606f",
-    openLineConversation: "\u6253\u5f00 LINE \u4f1a\u8bdd",
-    remove: "\u5220\u9664\u5ba2\u6237",
-    deleteFailed: "\u5220\u9664\u5ba2\u6237\u5931\u8d25",
-    deleteSuccess: "\u5ba2\u6237\u5df2\u5220\u9664",
-    deleteConfirm: "\u786e\u5b9a\u8981\u5220\u9664\u8fd9\u4e2a\u5ba2\u6237\u6863\u6848\u5417\uff1f\u5982\u679c\u5df2\u6709\u9884\u7ea6\u6216\u79ef\u5206\u8bb0\u5f55\uff0c\u7cfb\u7edf\u4f1a\u62d2\u7edd\u5220\u9664\u3002"
+    lineName: "LINE 昵称",
+    lineFollowing: "已关注",
+    lineInactive: "已取消关注",
+    lastSeen: "最后互动",
+    firstBookedAt: "首次预约时间",
+    email: "邮箱",
+    noEmail: "未填写",
+    packageLabel: "套餐",
+    showcaseLabel: "来自图墙",
+    directBooking: "非图墙流程",
+    channelLine: "LINE 图墙",
+    channelAdmin: "后台手动",
+    channelLegacy: "旧网页",
+    connected: "已绑定",
+    disconnected: "未绑定",
+    createdAt: "建档时间",
+    editTitle: "客户维护",
+    name: "姓名",
+    notes: "备注",
+    notesPlaceholder: "记录客户偏好、沟通重点或到店情况",
+    save: "保存客户信息",
+    openLineConversation: "打开 LINE 会话",
+    remove: "删除客户",
+    deleteFailed: "删除客户失败",
+    deleteSuccess: "客户已删除",
+    deleteConfirm: "确定要删除这个客户档案吗？如果已有预约或积分记录，系统会拒绝删除。",
+    cannotDeleteHistory: "该客户已有预约或积分历史，不能删除。",
+    batchCount: "本次清理数量"
   },
   ja: {
-    title: "\u9867\u5ba2\u3068 LINE \u30d7\u30ed\u30d5\u30a3\u30fc\u30eb",
-    placeholder: "\u540d\u524d\u3001LINE \u8868\u793a\u540d\u3001LINE ID \u307e\u305f\u306f\u30e1\u30fc\u30eb",
-    search: "\u691c\u7d22",
-    searchFailed: "\u691c\u7d22\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    detailFailed: "\u9867\u5ba2\u8a73\u7d30\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    pointsFailed: "\u30dd\u30a4\u30f3\u30c8\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    loadFailed: "\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    saveFailed: "\u9867\u5ba2\u60c5\u5831\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    saveSuccess: "\u9867\u5ba2\u60c5\u5831\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f",
-    invalidName: "\u9867\u5ba2\u540d\u306f\u5fc5\u9808\u3067\u3059",
-    summary: "\u4e88\u7d04",
-    spent: "\u5229\u7528\u984d",
-    points: "\u30dd\u30a4\u30f3\u30c8",
-    selectHint: "\u5de6\u5074\u3067\u9867\u5ba2\u3092\u9078\u3076\u3068 LINE \u60c5\u5831\u3068\u4e88\u7d04\u5c65\u6b74\u3092\u78ba\u8a8d\u3067\u304d\u307e\u3059",
-    currentPoints: "\u73fe\u5728\u30dd\u30a4\u30f3\u30c8",
-    recentAppointments: "\u6700\u8fd1\u306e\u4e88\u7d04",
-    pointLedger: "\u30dd\u30a4\u30f3\u30c8\u5c65\u6b74",
-    loading: "\u8aad\u307f\u8fbc\u307f\u4e2d...",
-    saving: "\u4fdd\u5b58\u4e2d...",
-    empty: "\u9867\u5ba2\u30c7\u30fc\u30bf\u304c\u3042\u308a\u307e\u305b\u3093",
-    noAppointments: "\u4e88\u7d04\u5c65\u6b74\u306f\u3042\u308a\u307e\u305b\u3093",
-    noPoints: "\u30dd\u30a4\u30f3\u30c8\u5c65\u6b74\u306f\u3042\u308a\u307e\u305b\u3093",
-    lead: "\u898b\u8fbc\u307f\u9867\u5ba2",
-    active: "\u6765\u5e97\u4e88\u5b9a\u30fb\u65e2\u5b58\u9867\u5ba2",
-    source: "\u4f5c\u6210\u5143",
-    sourceLine: "LINE \u53cb\u3060\u3061\u8ffd\u52a0",
-    sourceAdmin: "\u7ba1\u7406\u753b\u9762\u4f5c\u6210",
-    sourceLegacy: "\u65e7 Web \u4e88\u7d04",
-    lineProfile: "LINE \u30d7\u30ed\u30d5\u30a3\u30fc\u30eb",
+    title: "顧客と LINE プロフィール",
+    placeholder: "名前、LINE 表示名、LINE ID またはメール",
+    search: "検索",
+    cleanupLeads: "削除可能な見込み顧客を整理",
+    cleanupHint: "予約履歴もポイント履歴もない見込み顧客だけを削除します。",
+    searchFailed: "検索に失敗しました",
+    detailFailed: "顧客詳細の読み込みに失敗しました",
+    pointsFailed: "ポイントの読み込みに失敗しました",
+    loadFailed: "読み込みに失敗しました",
+    saveFailed: "顧客情報の保存に失敗しました",
+    saveSuccess: "顧客情報を更新しました",
+    cleanupFailed: "見込み顧客の整理に失敗しました",
+    cleanupSuccess: "削除可能な見込み顧客を整理しました",
+    invalidName: "顧客名は必須です",
+    summary: "予約",
+    spent: "利用額",
+    points: "ポイント",
+    selectHint: "左側で顧客を選ぶと LINE 情報と予約履歴を確認できます",
+    currentPoints: "現在ポイント",
+    recentAppointments: "最近の予約",
+    pointLedger: "ポイント履歴",
+    loading: "読み込み中...",
+    saving: "保存中...",
+    empty: "顧客データがありません",
+    noAppointments: "予約履歴はありません",
+    noPoints: "ポイント履歴はありません",
+    lead: "見込み顧客",
+    active: "既存顧客",
+    source: "作成元",
+    sourceLine: "LINE 友だち追加",
+    sourceAdmin: "管理画面作成",
+    sourceLegacy: "旧 Web 予約",
+    lineProfile: "LINE プロフィール",
     lineId: "LINE ID",
-    lineName: "LINE \u8868\u793a\u540d",
-    lineFollowing: "\u53cb\u3060\u3061\u8ffd\u52a0\u4e2d",
-    lineInactive: "\u53cb\u3060\u3061\u89e3\u9664\u6e08\u307f",
-    lastSeen: "\u6700\u5f8c\u30a2\u30af\u30c6\u30a3\u30d6",
-    firstBookedAt: "\u521d\u56de\u4e88\u7d04\u65e5\u6642",
-    email: "\u30e1\u30fc\u30eb",
-    noEmail: "\u672a\u767b\u9332",
-    packageLabel: "\u30d1\u30c3\u30b1\u30fc\u30b8",
-    showcaseLabel: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7531\u6765",
-    directBooking: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7d4c\u7531\u3067\u306f\u306a\u3044",
-    channelLine: "LINE \u30ae\u30e3\u30e9\u30ea\u30fc",
-    channelAdmin: "\u7ba1\u7406\u753b\u9762\u624b\u52d5",
-    channelLegacy: "\u65e7 Web \u7d4c\u7531",
-    connected: "\u9023\u643a\u6e08\u307f",
-    disconnected: "\u672a\u9023\u643a",
-    createdAt: "\u4f5c\u6210\u65e5\u6642",
-    editTitle: "\u9867\u5ba2\u30e1\u30f3\u30c6\u30ca\u30f3\u30b9",
-    name: "\u540d\u524d",
-    notes: "\u30e1\u30e2",
-    notesPlaceholder: "\u597d\u307f\u3001\u30d2\u30a2\u30ea\u30f3\u30b0\u5185\u5bb9\u3001\u6765\u5e97\u6642\u306e\u88dc\u8db3\u3092\u8a18\u9332",
-    save: "\u9867\u5ba2\u60c5\u5831\u3092\u4fdd\u5b58",
-    openLineConversation: "LINE \u4f1a\u8a71\u3092\u958b\u304f",
-    remove: "\u9867\u5ba2\u3092\u524a\u9664",
-    deleteFailed: "\u9867\u5ba2\u306e\u524a\u9664\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    deleteSuccess: "\u9867\u5ba2\u3092\u524a\u9664\u3057\u307e\u3057\u305f",
-    deleteConfirm: "\u3053\u306e\u9867\u5ba2\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u4e88\u7d04\u5c65\u6b74\u307e\u305f\u306f\u30dd\u30a4\u30f3\u30c8\u5c65\u6b74\u304c\u3042\u308b\u5834\u5408\u306f\u524a\u9664\u3067\u304d\u307e\u305b\u3093\u3002"
+    lineName: "LINE 表示名",
+    lineFollowing: "友だち追加中",
+    lineInactive: "友だち解除済み",
+    lastSeen: "最終アクティブ",
+    firstBookedAt: "初回予約日時",
+    email: "メール",
+    noEmail: "未登録",
+    packageLabel: "パッケージ",
+    showcaseLabel: "ギャラリー由来",
+    directBooking: "ギャラリー経由ではない",
+    channelLine: "LINE ギャラリー",
+    channelAdmin: "管理画面手動",
+    channelLegacy: "旧 Web 経由",
+    connected: "連携済み",
+    disconnected: "未連携",
+    createdAt: "作成日時",
+    editTitle: "顧客メンテナンス",
+    name: "名前",
+    notes: "メモ",
+    notesPlaceholder: "好み、ヒアリング内容、来店時の補足を記録",
+    save: "顧客情報を保存",
+    openLineConversation: "LINE 会話を開く",
+    remove: "顧客を削除",
+    deleteFailed: "顧客の削除に失敗しました",
+    deleteSuccess: "顧客を削除しました",
+    deleteConfirm: "この顧客プロフィールを削除しますか？予約履歴またはポイント履歴がある場合は削除できません。",
+    cannotDeleteHistory: "この顧客には予約またはポイント履歴があるため削除できません。",
+    batchCount: "今回の整理件数"
   }
 } as const;
 
@@ -225,6 +240,13 @@ function createDraft(detail: CustomerDetail | null): EditDraft {
   };
 }
 
+function mapDeleteError(lang: Lang, fallback: string, message?: string) {
+  const t = TEXT[lang];
+  if (!message) return fallback;
+  if (message.includes("appointment or points history")) return t.cannotDeleteHistory;
+  return message;
+}
+
 export default function AdminCustomersPanel({ lang }: Props) {
   const t = TEXT[lang];
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
@@ -243,6 +265,11 @@ export default function AdminCustomersPanel({ lang }: Props) {
   useEffect(() => {
     setDraft(createDraft(detail));
   }, [detail]);
+
+  const cleanupCandidates = useMemo(
+    () => items.filter((item) => item.customerType === "lead" && item.deletable).length,
+    [items]
+  );
 
   async function search() {
     setError("");
@@ -310,16 +337,18 @@ export default function AdminCustomersPanel({ lang }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || t.saveFailed);
 
-      setDetail((prev) => prev
-        ? {
-            ...prev,
-            name: data.name,
-            email: data.email,
-            notes: data.notes,
-            updatedAt: data.updatedAt
-          }
-        : prev);
-      setItems((prev) => prev.map((item) => item.id === detail.id ? { ...item, name: data.name, email: data.email } : item));
+      setDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: data.name,
+              email: data.email,
+              notes: data.notes,
+              updatedAt: data.updatedAt
+            }
+          : prev
+      );
+      setItems((prev) => prev.map((item) => (item.id === detail.id ? { ...item, name: data.name, email: data.email } : item)));
       setNotice(t.saveSuccess);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.saveFailed);
@@ -327,7 +356,6 @@ export default function AdminCustomersPanel({ lang }: Props) {
       setSaving(false);
     }
   }
-
 
   async function deleteCustomer() {
     if (!detail) return;
@@ -339,7 +367,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
     try {
       const res = await fetch(`/api/admin/customers/${detail.id}`, { method: "DELETE" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || t.deleteFailed);
+      if (!res.ok) throw new Error(mapDeleteError(lang, t.deleteFailed, data?.error));
 
       setItems((prev) => prev.filter((item) => item.id !== detail.id));
       setDetail(null);
@@ -353,16 +381,53 @@ export default function AdminCustomersPanel({ lang }: Props) {
       setSaving(false);
     }
   }
+
+  async function cleanupLeadCustomers() {
+    setError("");
+    setNotice("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/customers?mode=cleanup-leads", { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.cleanupFailed);
+
+      setItems((prev) => prev.filter((item) => !(item.customerType === "lead" && item.deletable)));
+      if (detail && detail.customerType === "lead") {
+        setDetail(null);
+        setPoints([]);
+        setActiveCustomerId("");
+        setDraft(createDraft(null));
+      }
+      setNotice(`${t.cleanupSuccess} · ${t.batchCount}: ${data?.deletedCount ?? 0}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.cleanupFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <label htmlFor="customer-search-input" className="sr-only">{t.placeholder}</label>
-        <input id="customer-search-input" className="admin-input w-full" placeholder={t.placeholder} value={q} onChange={(e) => setQ(e.target.value)} />
-        <button className="admin-btn-primary w-full sm:w-auto" onClick={() => void search()} type="button">
-          {t.search}
-        </button>
+      <div className="mt-4 flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
+        <div className="flex w-full flex-col gap-2 sm:flex-row xl:max-w-2xl">
+          <label htmlFor="customer-search-input" className="sr-only">{t.placeholder}</label>
+          <input id="customer-search-input" className="admin-input w-full" placeholder={t.placeholder} value={q} onChange={(e) => setQ(e.target.value)} />
+          <button className="admin-btn-primary w-full sm:w-auto" onClick={() => void search()} type="button">
+            {t.search}
+          </button>
+        </div>
+        <div className="rounded-2xl border border-brand-100 bg-brand-50/50 px-4 py-3 text-sm text-brand-800 xl:max-w-sm">
+          <p className="font-medium text-brand-900">{t.cleanupLeads}</p>
+          <p className="mt-1 text-xs leading-6 text-brand-700">{t.cleanupHint}</p>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <span className="text-xs text-brand-600">{cleanupCandidates}</span>
+            <button className="admin-btn-danger" type="button" onClick={() => void cleanupLeadCustomers()} disabled={cleanupCandidates === 0 || saving}>
+              {t.cleanupLeads}
+            </button>
+          </div>
+        </div>
       </div>
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
@@ -388,10 +453,11 @@ export default function AdminCustomersPanel({ lang }: Props) {
                 <span className={"rounded-full px-2 py-0.5 text-xs font-semibold " + (item.lineUser ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-600")}>
                   {item.lineUser ? t.connected : t.disconnected}
                 </span>
+                {item.deletable ? <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700">{t.remove}</span> : null}
               </div>
               <p className="mt-1 text-sm text-brand-700">{item.lineUser?.displayName || item.lineUser?.lineUserId || item.email || t.noEmail}</p>
               <p className="text-xs text-brand-700">
-                {t.summary} {item.appointmentCount} ? {t.spent} {item.totalSpentJpy} JPY ? {t.points} {item.currentPoints}
+                {t.summary} {item.appointmentCount} · {t.spent} {item.totalSpentJpy} JPY · {t.points} {item.currentPoints}
               </p>
               <p className="mt-1 text-xs text-brand-500">{t.source}: {createdFromLabel(lang, item.createdFrom)}</p>
             </button>
@@ -399,7 +465,9 @@ export default function AdminCustomersPanel({ lang }: Props) {
         </div>
 
         <div className="rounded-2xl border border-brand-100/90 bg-white p-4">
-          {!detail ? <p className="ui-state-info mt-0">{t.selectHint}</p> : (
+          {!detail ? (
+            <p className="ui-state-info mt-0">{t.selectHint}</p>
+          ) : (
             <div className="grid gap-4">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -410,7 +478,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
                 </div>
                 <p className="mt-1 text-sm text-brand-700">{t.email}: {detail.email || t.noEmail}</p>
                 <p className="text-sm text-brand-700">{t.source}: {createdFromLabel(lang, detail.createdFrom)}</p>
-                <p className="text-sm text-brand-700">{t.spent} {detail.totalSpentJpy} JPY ? {t.currentPoints} {detail.currentPoints}</p>
+                <p className="text-sm text-brand-700">{t.spent} {detail.totalSpentJpy} JPY · {t.currentPoints} {detail.currentPoints}</p>
                 <p className="text-sm text-brand-700">{t.firstBookedAt}: {detail.firstBookedAt ? new Date(detail.firstBookedAt).toLocaleString(locale) : "-"}</p>
               </div>
 
@@ -429,11 +497,18 @@ export default function AdminCustomersPanel({ lang }: Props) {
                       </Link>
                     </div>
                   </div>
-                ) : <p className="mt-2 text-sm text-brand-700">{t.disconnected}</p>}
+                ) : (
+                  <p className="mt-2 text-sm text-brand-700">{t.disconnected}</p>
+                )}
               </div>
 
               <div className="rounded-2xl border border-brand-100 bg-white p-3">
-                <p className="font-medium text-brand-900">{t.editTitle}</p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-medium text-brand-900">{t.editTitle}</p>
+                  <button type="button" className="admin-btn-danger" onClick={() => void deleteCustomer()}>
+                    {t.remove}
+                  </button>
+                </div>
                 <div className="mt-3 grid gap-3">
                   <label className="grid gap-1 text-sm text-brand-800">
                     <span>{t.name}</span>
@@ -473,7 +548,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
                 <p className="font-medium text-brand-900">{t.pointLedger}</p>
                 <div className="mt-1 grid max-h-48 gap-1 overflow-auto text-sm text-brand-700">
                   {points.slice(0, 20).map((point) => (
-                    <p key={point.id}>{point.type} ? {point.points}pt ? {point.jpyValue}JPY ? {new Date(point.createdAt).toLocaleString(locale)}</p>
+                    <p key={point.id}>{point.type} · {point.points}pt · {point.jpyValue}JPY · {new Date(point.createdAt).toLocaleString(locale)}</p>
                   ))}
                   {points.length === 0 ? <p>{t.noPoints}</p> : null}
                 </div>

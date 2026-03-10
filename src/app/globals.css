@@ -537,6 +537,10 @@ a:focus-visible {
     @apply inline-flex min-h-10 items-center justify-center rounded-xl border border-transparent px-4 py-2 text-sm font-medium text-brand-700 transition-colors duration-200 hover:bg-brand-50 hover:text-brand-900;
   }
 
+  .admin-btn-danger {
+    @apply inline-flex min-h-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition-colors duration-200 hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
   .admin-inline-actions {
     @apply grid w-full gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,1fr))];
   }

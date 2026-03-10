@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
@@ -79,6 +79,7 @@ const TEXT = {
     updateFailed: "更新失败",
     deleteFailed: "删除套餐失败",
     deleteConfirm: "确定要删除这个套餐吗？如果已经被图墙或预约引用，系统会拒绝删除。",
+    deleteBlocked: "这个套餐已被图墙或预约引用，不能删除。",
     empty: "暂无套餐"
   },
   ja: {
@@ -113,6 +114,7 @@ const TEXT = {
     updateFailed: "更新に失敗しました",
     deleteFailed: "メニューの削除に失敗しました",
     deleteConfirm: "このメニューを削除しますか？ギャラリーや予約で使われている場合は削除できません。",
+    deleteBlocked: "このメニューはギャラリーまたは予約で使われているため削除できません。",
     empty: "メニューはありません"
   }
 } as const;
@@ -159,7 +161,6 @@ export default function AdminPackagesPanel({ lang }: Props) {
   const [addons, setAddons] = useState<AddonItem[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [createForm, setCreateForm] = useState<PackageFormState>(createEmptyFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PackageFormState>(createEmptyFormState());
@@ -219,11 +220,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
         fetch("/api/admin/packages")
       ]);
 
-      const [catData, addonData, pkgData] = await Promise.all([
-        catRes.json(),
-        addonRes.json(),
-        pkgRes.json()
-      ]);
+      const [catData, addonData, pkgData] = await Promise.all([catRes.json(), addonRes.json(), pkgRes.json()]);
 
       if (!catRes.ok) throw new Error(catData?.error || t.loadCategoryFailed);
       if (!addonRes.ok) throw new Error(addonData?.error || t.loadAddonFailed);
@@ -324,7 +321,10 @@ export default function AdminPackagesPanel({ lang }: Props) {
     try {
       const res = await fetch(`/api/admin/packages/${item.id}`, { method: "DELETE" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || t.deleteFailed);
+      if (!res.ok) {
+        const message = typeof data?.error === "string" && data.error.includes("appointments or showcase items") ? t.deleteBlocked : data?.error || t.deleteFailed;
+        throw new Error(message);
+      }
       if (editingId === item.id) cancelEdit();
       await refresh();
     } catch (err) {
@@ -336,9 +336,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
     <section className="admin-panel-shell">
       <div className="flex items-center justify-between">
         <h2 className="admin-section-title">{t.title}</h2>
-        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">
-          {t.refresh}
-        </button>
+        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">{t.refresh}</button>
       </div>
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
@@ -392,7 +390,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
             <div className="mt-2 flex gap-2">
               <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">{t.edit}</button>
-              <button className="admin-btn-ghost" onClick={() => void deletePackage(item)} type="button">{t.remove}</button>
+              <button className="admin-btn-danger" onClick={() => void deletePackage(item)} type="button">{t.remove}</button>
             </div>
 
             {editingId === item.id ? (

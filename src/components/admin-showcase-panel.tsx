@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
@@ -52,94 +52,96 @@ type Props = {
 
 const TEXT = {
   zh: {
-    title: "\u56fe\u5899\u7ba1\u7406",
-    refresh: "\u5237\u65b0",
-    loading: "\u52a0\u8f7d\u4e2d...",
-    saving: "\u4fdd\u5b58\u4e2d...",
-    createTitle: "\u65b0\u5efa\u56fe\u5899\u9879",
-    titleZh: "\u4e2d\u6587\u6807\u9898",
-    titleJa: "\u65e5\u6587\u6807\u9898",
-    descriptionZh: "\u4e2d\u6587\u8bf4\u660e",
-    descriptionJa: "\u65e5\u6587\u8bf4\u660e",
-    imageUrl: "\u56fe\u7247 URL",
-    sortOrder: "\u6392\u5e8f",
-    create: "\u65b0\u5efa\u56fe\u5899\u9879",
-    edit: "\u7f16\u8f91",
-    save: "\u4fdd\u5b58",
-    cancel: "\u53d6\u6d88",
-    published: "\u4e0a\u67b6",
-    unpublished: "\u4e0b\u67b6",
-    appointments: "\u6765\u6e90\u9884\u7ea6",
-    loadFailed: "\u52a0\u8f7d\u56fe\u5899\u5931\u8d25",
-    createFailed: "\u521b\u5efa\u5931\u8d25",
-    updateFailed: "\u66f4\u65b0\u5931\u8d25",
-    reorderFailed: "\u6392\u5e8f\u8c03\u6574\u5931\u8d25",
-    saveSuccess: "\u56fe\u5899\u9879\u5df2\u4fdd\u5b58",
-    reorderSuccess: "\u56fe\u5899\u6392\u5e8f\u5df2\u66f4\u65b0",
-    empty: "\u6682\u65e0\u56fe\u5899\u9879",
-    activePackageMissing: "\u5173\u8054\u5957\u9910\u5df2\u505c\u7528",
-    moveUp: "\u4e0a\u79fb",
-    moveDown: "\u4e0b\u79fb",
-    publishNow: "\u7acb\u5373\u4e0a\u67b6",
-    unpublishNow: "\u7acb\u5373\u4e0b\u67b6",
-    preview: "\u56fe\u7247\u9884\u89c8",
-    filtersTitle: "\u5feb\u901f\u7b5b\u9009",
-    category: "\u5206\u7c7b",
-    status: "\u72b6\u6001",
-    keyword: "\u5173\u952e\u8bcd",
-    keywordPlaceholder: "\u641c\u7d22\u56fe\u5899\u6807\u9898\u3001\u5206\u7c7b\u6216\u5957\u9910",
-    allCategories: "\u5168\u90e8\u5206\u7c7b",
-    allStatuses: "\u5168\u90e8\u72b6\u6001",
-    sortHint: "\u4f18\u5148\u7528\u4e0a\u79fb / \u4e0b\u79fb\u8c03\u6574\u9996\u9875\u56fe\u5899\u987a\u5e8f\u3002",
-    remove: "\u5220\u9664",
-    deleteFailed: "\u5220\u9664\u56fe\u5899\u5931\u8d25",
-    deleteSuccess: "\u56fe\u5899\u9879\u5df2\u5220\u9664",
-    deleteConfirm: "\u786e\u5b9a\u8981\u5220\u9664\u8fd9\u4e2a\u56fe\u5899\u9879\u5417\uff1f\u5982\u679c\u5df2\u7ecf\u4ea7\u751f\u9884\u7ea6\uff0c\u7cfb\u7edf\u4f1a\u62d2\u7edd\u5220\u9664\u3002"
+    title: "图墙管理",
+    refresh: "刷新",
+    loading: "加载中...",
+    saving: "保存中...",
+    createTitle: "新建图墙项",
+    titleZh: "中文标题",
+    titleJa: "日文标题",
+    descriptionZh: "中文说明",
+    descriptionJa: "日文说明",
+    imageUrl: "图片 URL",
+    sortOrder: "排序",
+    create: "新建图墙项",
+    edit: "编辑",
+    save: "保存",
+    cancel: "取消",
+    published: "上架",
+    unpublished: "下架",
+    appointments: "来源预约",
+    loadFailed: "加载图墙失败",
+    createFailed: "创建失败",
+    updateFailed: "更新失败",
+    reorderFailed: "排序调整失败",
+    saveSuccess: "图墙项已保存",
+    reorderSuccess: "图墙排序已更新",
+    empty: "暂无图墙项",
+    activePackageMissing: "关联套餐已停用",
+    moveUp: "上移",
+    moveDown: "下移",
+    publishNow: "立即上架",
+    unpublishNow: "立即下架",
+    preview: "图片预览",
+    filtersTitle: "快速筛选",
+    category: "分类",
+    status: "状态",
+    keyword: "关键词",
+    keywordPlaceholder: "搜索图墙标题、分类或套餐",
+    allCategories: "全部分类",
+    allStatuses: "全部状态",
+    sortHint: "优先用上移 / 下移调整首页图墙顺序。",
+    remove: "删除",
+    deleteFailed: "删除图墙失败",
+    deleteSuccess: "图墙项已删除",
+    deleteConfirm: "确定要删除这个图墙项吗？如果已经产生预约，系统会拒绝删除。",
+    deleteBlocked: "这个图墙项已有预约历史，不能删除。"
   },
   ja: {
-    title: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7ba1\u7406",
-    refresh: "\u66f4\u65b0",
-    loading: "\u8aad\u307f\u8fbc\u307f\u4e2d...",
-    saving: "\u4fdd\u5b58\u4e2d...",
-    createTitle: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u4f5c\u6210",
-    titleZh: "\u4e2d\u56fd\u8a9e\u30bf\u30a4\u30c8\u30eb",
-    titleJa: "\u65e5\u672c\u8a9e\u30bf\u30a4\u30c8\u30eb",
-    descriptionZh: "\u4e2d\u56fd\u8a9e\u8aac\u660e",
-    descriptionJa: "\u65e5\u672c\u8a9e\u8aac\u660e",
-    imageUrl: "\u753b\u50cf URL",
-    sortOrder: "\u4e26\u3073\u9806",
-    create: "\u4f5c\u6210",
-    edit: "\u7de8\u96c6",
-    save: "\u4fdd\u5b58",
-    cancel: "\u30ad\u30e3\u30f3\u30bb\u30eb",
-    published: "\u516c\u958b",
-    unpublished: "\u975e\u516c\u958b",
-    appointments: "\u4e88\u7d04\u6d41\u5165",
-    loadFailed: "\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    createFailed: "\u4f5c\u6210\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    updateFailed: "\u66f4\u65b0\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    reorderFailed: "\u4e26\u3073\u66ff\u3048\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    saveSuccess: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f",
-    reorderSuccess: "\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u4e26\u3073\u9806\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f",
-    empty: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u306f\u3042\u308a\u307e\u305b\u3093",
-    activePackageMissing: "\u9023\u643a\u30e1\u30cb\u30e5\u30fc\u306f\u7121\u52b9\u3067\u3059",
-    moveUp: "\u4e0a\u3078",
-    moveDown: "\u4e0b\u3078",
-    publishNow: "\u3059\u3050\u516c\u958b",
-    unpublishNow: "\u975e\u516c\u958b\u306b\u3059\u308b",
-    preview: "\u753b\u50cf\u30d7\u30ec\u30d3\u30e5\u30fc",
-    filtersTitle: "\u30af\u30a4\u30c3\u30af\u7d5e\u308a\u8fbc\u307f",
-    category: "\u30ab\u30c6\u30b4\u30ea",
-    status: "\u72b6\u614b",
-    keyword: "\u30ad\u30fc\u30ef\u30fc\u30c9",
-    keywordPlaceholder: "\u30bf\u30a4\u30c8\u30eb\u3001\u30ab\u30c6\u30b4\u30ea\u3001\u30e1\u30cb\u30e5\u30fc\u3067\u691c\u7d22",
-    allCategories: "\u3059\u3079\u3066\u306e\u30ab\u30c6\u30b4\u30ea",
-    allStatuses: "\u3059\u3079\u3066\u306e\u72b6\u614b",
-    sortHint: "\u30db\u30fc\u30e0\u30ae\u30e3\u30e9\u30ea\u30fc\u306e\u9806\u756a\u306f\u4e0a\u3078 / \u4e0b\u3078\u3067\u7c21\u5358\u306b\u8abf\u6574\u3067\u304d\u307e\u3059\u3002",
-    remove: "\u524a\u9664",
-    deleteFailed: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u306e\u524a\u9664\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-    deleteSuccess: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u3092\u524a\u9664\u3057\u307e\u3057\u305f",
-    deleteConfirm: "\u3053\u306e\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u3092\u524a\u9664\u3057\u307e\u3059\u304b\uff1f\u4e88\u7d04\u5c65\u6b74\u304c\u3042\u308b\u5834\u5408\u306f\u524a\u9664\u3067\u304d\u307e\u305b\u3093\u3002"
+    title: "ギャラリー管理",
+    refresh: "更新",
+    loading: "読み込み中...",
+    saving: "保存中...",
+    createTitle: "ギャラリー項目作成",
+    titleZh: "中国語タイトル",
+    titleJa: "日本語タイトル",
+    descriptionZh: "中国語説明",
+    descriptionJa: "日本語説明",
+    imageUrl: "画像 URL",
+    sortOrder: "並び順",
+    create: "作成",
+    edit: "編集",
+    save: "保存",
+    cancel: "キャンセル",
+    published: "公開",
+    unpublished: "非公開",
+    appointments: "予約流入",
+    loadFailed: "ギャラリーの読み込みに失敗しました",
+    createFailed: "作成に失敗しました",
+    updateFailed: "更新に失敗しました",
+    reorderFailed: "並び替えに失敗しました",
+    saveSuccess: "ギャラリー項目を保存しました",
+    reorderSuccess: "ギャラリーの並び順を更新しました",
+    empty: "ギャラリー項目はありません",
+    activePackageMissing: "連携メニューは無効です",
+    moveUp: "上へ",
+    moveDown: "下へ",
+    publishNow: "すぐ公開",
+    unpublishNow: "非公開にする",
+    preview: "画像プレビュー",
+    filtersTitle: "クイック絞り込み",
+    category: "カテゴリ",
+    status: "状態",
+    keyword: "キーワード",
+    keywordPlaceholder: "タイトル、カテゴリ、メニューで検索",
+    allCategories: "すべてのカテゴリ",
+    allStatuses: "すべての状態",
+    sortHint: "ホームギャラリーの順番は上へ / 下へで簡単に調整できます。",
+    remove: "削除",
+    deleteFailed: "ギャラリー項目の削除に失敗しました",
+    deleteSuccess: "ギャラリー項目を削除しました",
+    deleteConfirm: "このギャラリー項目を削除しますか？予約履歴がある場合は削除できません。",
+    deleteBlocked: "このギャラリー項目には予約履歴があるため削除できません。"
   }
 } as const;
 
@@ -250,7 +252,6 @@ export default function AdminShowcasePanel({ lang }: Props) {
   }, [refresh]);
 
   const sortedItems = useMemo(() => [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)), [items]);
-
   const reorderLocked = categoryFilter !== "all" || publishFilter !== "all" || keyword.trim() !== "";
 
   const filteredItems = useMemo(() => {
@@ -387,10 +388,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
       const res = await fetch("/api/admin/showcase/" + item.id, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...serializeForm(fromItem(item)),
-          isPublished: !item.isPublished
-        })
+        body: JSON.stringify({ ...serializeForm(fromItem(item)), isPublished: !item.isPublished })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || t.updateFailed);
@@ -403,7 +401,6 @@ export default function AdminShowcasePanel({ lang }: Props) {
     }
   }
 
-
   async function deleteItem(item: ShowcaseItem) {
     if (!window.confirm(t.deleteConfirm)) return;
     setError("");
@@ -412,7 +409,10 @@ export default function AdminShowcasePanel({ lang }: Props) {
     try {
       const res = await fetch("/api/admin/showcase/" + item.id, { method: "DELETE" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || t.deleteFailed);
+      if (!res.ok) {
+        const message = typeof data?.error === "string" && data.error.includes("appointment history") ? t.deleteBlocked : data?.error || t.deleteFailed;
+        throw new Error(message);
+      }
       if (editingId === item.id) {
         setEditingId(null);
         setEditForm(createEmptyForm(categories[0]?.id || "", packages[0]?.id || ""));
@@ -425,6 +425,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
       setSaving(false);
     }
   }
+
   function renderPreview(imageUrl: string) {
     if (!imageUrl) return null;
     return (
@@ -442,9 +443,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
           <h2 className="admin-section-title">{t.title}</h2>
           <p className="admin-note mt-2">{t.sortHint}</p>
         </div>
-        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">
-          {t.refresh}
-        </button>
+        <button className="admin-btn-ghost" onClick={() => void refresh()} type="button">{t.refresh}</button>
       </div>
 
       {error ? <p className="admin-danger">{error}</p> : null}
@@ -532,7 +531,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={reorderLocked || index === filteredItems.length - 1 || saving}>{t.moveDown}</button>
                     <button className="admin-btn-ghost" onClick={() => void togglePublish(item)} type="button" disabled={saving}>{item.isPublished ? t.unpublishNow : t.publishNow}</button>
                     <button className="admin-btn-ghost" onClick={() => { setEditingId(item.id); setEditForm(fromItem(item)); }} type="button">{t.edit}</button>
-                    <button className="admin-btn-ghost" onClick={() => void deleteItem(item)} type="button" disabled={saving}>{t.remove}</button>
+                    <button className="admin-btn-danger" onClick={() => void deleteItem(item)} type="button" disabled={saving}>{t.remove}</button>
                   </div>
                 </div>
                 <p className="text-sm leading-7 text-brand-700">{displayName(lang, item.descriptionZh || "", item.descriptionJa || "") || "-"}</p>
