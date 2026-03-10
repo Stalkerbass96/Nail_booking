@@ -220,38 +220,17 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
               </span>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="metric-pill">JPY {showcaseItem.priceJpy}</span>
-            <span className="metric-pill metric-pill-soft">{packageName}</span>
+          <div className="booking-design-heading">
+            <div className="min-w-0">
+              <p className="booking-design-package">{packageName}</p>
+              <p className="booking-design-meta-copy">{t.categoryLabel}: {categoryName} - {showcaseItem.durationMin} min</p>
+            </div>
+            <span className="metric-pill shrink-0">JPY {showcaseItem.priceJpy}</span>
           </div>
-          <div className="grid gap-1 text-sm text-brand-700">
-            <p>{t.categoryLabel}: {categoryName}</p>
-            <p>{t.totalDuration}: {showcaseItem.durationMin} min</p>
-            <p>{t.customer}: {customerName || "-"}</p>
-          </div>
+          <p className="booking-design-customer">{t.customer}: {customerName || "-"}</p>
         </div>
       </section>
 
-      <section className="booking-mobile-summary-card lg:hidden">
-        <div className="booking-mobile-summary-head">
-          <p className="section-eyebrow">{t.summary}</p>
-          <span className="metric-pill">JPY {showcaseItem.priceJpy}</span>
-        </div>
-        <dl className="mt-3 grid gap-3 text-sm text-brand-800">
-          <div className="summary-row">
-            <dt>{t.packageLabel}</dt>
-            <dd>{packageName}</dd>
-          </div>
-          <div className="summary-row">
-            <dt>{t.totalDuration}</dt>
-            <dd>{showcaseItem.durationMin} min</dd>
-          </div>
-          <div className="summary-row">
-            <dt>{t.selectedSlot}</dt>
-            <dd>{selectedSlotLabel}</dd>
-          </div>
-        </dl>
-      </section>
 
       <section className="section-panel section-panel-compact booking-step-panel">
         <div className="booking-step-header">

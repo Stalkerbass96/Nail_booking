@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -124,12 +124,16 @@ a:focus-visible {
     @apply sticky top-0 z-20 border-b border-white/40 bg-white/70 backdrop-blur-xl;
   }
 
+  .site-header-minimal {
+    @apply border-b border-brand-100/70 bg-white/90;
+  }
+
   .site-header-inner {
     @apply relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between;
   }
 
   .site-header-inner-compact {
-    @apply gap-3 py-3;
+    @apply gap-2 py-2.5;
   }
 
   .site-header-inner-stream {
@@ -185,7 +189,7 @@ a:focus-visible {
   }
 
   .site-nav-compact {
-    @apply gap-2;
+    @apply shrink min-w-0 gap-1.5;
   }
 
   .site-nav-stream {
@@ -197,7 +201,7 @@ a:focus-visible {
   }
 
   .site-nav-link-compact {
-    @apply min-h-9 px-3 py-1.5 text-[13px];
+    @apply min-h-8 px-2.5 py-1 text-xs;
   }
 
   .site-nav-link-stream {
@@ -209,7 +213,7 @@ a:focus-visible {
   }
 
   .site-lang-switch-compact {
-    @apply min-h-9 px-3 py-1.5 text-[13px];
+    @apply min-h-8 px-2.5 py-1 text-xs;
   }
 
   .site-lang-switch-stream {
@@ -490,24 +494,32 @@ a:focus-visible {
   }
 
   .booking-design-strip {
-    @apply flex flex-col gap-3 rounded-[1.5rem] border border-white/80 bg-white/90 p-3 shadow-[0_18px_42px_rgba(120,25,55,0.08)] backdrop-blur-xl sm:flex-row;
+    @apply flex items-start gap-3 rounded-[1.35rem] border border-white/80 bg-white/90 p-3 shadow-[0_16px_36px_rgba(120,25,55,0.08)] backdrop-blur-xl;
   }
 
   .booking-design-media {
     aspect-ratio: 1 / 1;
-    @apply w-full rounded-[1.2rem] bg-cover bg-center sm:w-[42%];
-  }
-
-  .booking-mobile-summary-card {
-    @apply rounded-[1.35rem] border border-brand-100/90 bg-white/90 p-4 shadow-[0_14px_32px_rgba(120,25,55,0.07)];
-  }
-
-  .booking-mobile-summary-head {
-    @apply flex items-center justify-between gap-3;
+    @apply w-24 shrink-0 rounded-[1rem] bg-cover bg-center sm:w-32;
   }
 
   .booking-design-meta {
-    @apply flex min-w-0 flex-1 flex-col justify-between gap-3 p-1 sm:p-2;
+    @apply flex min-w-0 flex-1 flex-col gap-2;
+  }
+
+  .booking-design-heading {
+    @apply flex items-start justify-between gap-3;
+  }
+
+  .booking-design-package {
+    @apply truncate text-sm font-semibold text-brand-900 sm:text-base;
+  }
+
+  .booking-design-meta-copy {
+    @apply mt-1 text-xs leading-5 text-brand-600;
+  }
+
+  .booking-design-customer {
+    @apply text-xs leading-5 text-brand-700;
   }
 
   .booking-step-panel {

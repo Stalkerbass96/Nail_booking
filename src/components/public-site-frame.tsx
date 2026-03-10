@@ -25,9 +25,9 @@ export default function PublicSiteFrame({ lang, children, entryToken, minimalHea
     <div className="site-shell">
       <div className="site-orb site-orb-left" aria-hidden="true" />
       <div className="site-orb site-orb-right" aria-hidden="true" />
-      <header className="site-header">
+      <header className={`site-header ${minimalHeader ? "site-header-minimal" : ""}`}>
         <div className={`site-header-inner ${minimalHeader ? "site-header-inner-compact" : "site-header-inner-stream"}`}>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <div className={`flex w-full ${minimalHeader ? "items-center justify-between gap-2" : "flex-col gap-3 sm:w-auto sm:flex-row sm:items-center"}`}>
             {!minimalHeader ? (
               <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
                 <span className="brand-mark">NA</span>
@@ -46,14 +46,24 @@ export default function PublicSiteFrame({ lang, children, entryToken, minimalHea
                 {pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}
               </Link>
             </nav>
+
+            {minimalHeader ? (
+              <div className="site-header-tools shrink-0">
+                <Link className="site-lang-switch site-lang-switch-compact" href={withLangAndEntry("/", altLang, entryToken)}>
+                  {altLang === "ja" ? "\u65e5\u672c\u8a9e" : "\u4e2d\u6587"}
+                </Link>
+              </div>
+            ) : null}
           </div>
 
-          <div className="site-header-tools">
-            <Link className={`site-lang-switch ${minimalHeader ? "site-lang-switch-compact" : "site-lang-switch-stream"}`} href={withLangAndEntry("/", altLang, entryToken)}>
-              {altLang === "ja" ? "\u65e5\u672c\u8a9e" : "\u4e2d\u6587"}
-            </Link>
-            {entryToken && !minimalHeader ? <span className="site-entry-pill">{pickText(lang, "LINE \u9884\u7ea6\u4e2d", "LINE \u4e88\u7d04\u4e2d")}</span> : null}
-          </div>
+          {!minimalHeader ? (
+            <div className="site-header-tools">
+              <Link className="site-lang-switch site-lang-switch-stream" href={withLangAndEntry("/", altLang, entryToken)}>
+                {altLang === "ja" ? "\u65e5\u672c\u8a9e" : "\u4e2d\u6587"}
+              </Link>
+              {entryToken ? <span className="site-entry-pill">{pickText(lang, "LINE \u9884\u7ea6\u4e2d", "LINE \u4e88\u7d04\u4e2d")}</span> : null}
+            </div>
+          ) : null}
         </div>
       </header>
 
