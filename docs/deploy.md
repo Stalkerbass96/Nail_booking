@@ -130,19 +130,22 @@ Messaging API 标签页：
 - 打开 **Use webhook** 开关
 - 点 **Verify** 验证
 
-### 7.3 创建 LIFF App
+### 7.3 创建 LIFF App（可选，主流程不需要）
 
-LIFF 标签页 → Add：
+> LIFF 仅用于 `/line/link` 手动重新绑定页面。顾客通过 follow 自动获得带 token 的预约链接，正常预约流程无需 LIFF，可以先跳过。
 
-- Size：**Full**
-- Endpoint URL：`https://你的域名/line/link`
-- 记录生成的 **LIFF ID**（格式：`1234567890-xxxxxxxx`）
+如需配置：
+1. 同一个 Channel 下，点 **LIFF** 标签 → Add
+2. Size 选 **Full**
+3. Endpoint URL 填：`https://你的域名/line/link`
+4. 记录生成的 **LIFF ID**（格式：`1234567890-xxxxxxxx`）
 
 ### 7.4 写入环境变量并重启
 
 ```bash
 nano /var/www/Nail_booking/.env
-# 填入 LINE_CHANNEL_ACCESS_TOKEN / LINE_CHANNEL_SECRET / LINE_LIFF_ID
+# 必填：LINE_CHANNEL_ACCESS_TOKEN / LINE_CHANNEL_SECRET
+# 选填：LINE_LIFF_ID（不填则 /line/link 页不可用，不影响主预约流程）
 
 npm run build
 pm2 restart nail-booking
