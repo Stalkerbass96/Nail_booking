@@ -97,16 +97,16 @@ export default async function HomePage({ searchParams }: Props) {
                   <div className="gallery-tile-media-wrap">
                     <div
                       className="gallery-tile-media gallery-tile-media-stable"
-                      style={{ backgroundImage: `linear-gradient(180deg, rgba(38, 24, 31, 0.05), rgba(38, 24, 31, 0.18)), url(${item.imageUrl})` }}
+                      style={{ backgroundImage: `url(${item.imageUrl})` }}
                     />
                   </div>
                   <div className="gallery-tile-body">
                     <div className="gallery-tile-meta-row">
-                      <span className="gallery-price">JPY {item.servicePackage.priceJpy}</span>
                       <span className="gallery-package">{packageName}</span>
+                      <span className="gallery-price">¥{Number(item.servicePackage.priceJpy).toLocaleString()}</span>
                     </div>
                     <Link className="ui-btn-primary gallery-book-btn" href={`/booking?${bookingParams.toString()}`}>
-                      {pickText(lang, "预约同款", "このデザインで予約")}
+                      {pickText(lang, "预约", "予約する")}
                     </Link>
                   </div>
                 </article>

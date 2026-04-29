@@ -210,7 +210,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
               <p className="booking-design-package">{packageName}</p>
               <p className="booking-design-meta-copy">{categoryName} · {showcaseItem.durationMin} min</p>
             </div>
-            <span className="metric-pill shrink-0">JPY {showcaseItem.priceJpy}</span>
+            <span className="metric-pill shrink-0">¥{Number(showcaseItem.priceJpy).toLocaleString()}</span>
           </div>
           <p className="booking-design-customer">{customerName || t.customer}</p>
         </div>
@@ -220,13 +220,20 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
       <section className="section-panel section-panel-compact booking-step-panel">
         <div className="booking-step-header">
           <div>
-            <h2 className="text-lg font-semibold text-neutral-950">{t.date}</h2>
-            <p className="booking-helper-copy">{entryToken ? t.lineHint : t.lineMissing}</p>
+            <h2 className="text-lg font-semibold" style={{ color: "var(--text)" }}>{t.date}</h2>
+            {entryToken && (
+              <p className="booking-helper-copy">{t.lineHint}</p>
+            )}
           </div>
         </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_240px] md:items-start">
+
+        {!entryToken && (
+          <p className="ui-state-error mt-3">{t.lineMissing}</p>
+        )}
+
+        <div className="mt-4">
           <label className="grid gap-2" htmlFor="booking-date">
-            <span className="text-sm font-medium text-neutral-700">{t.date}</span>
+            <span className="text-sm font-medium" style={{ color: "var(--text-2)" }}>{t.date}</span>
             <input
               id="booking-date"
               className="ui-input"
@@ -240,17 +247,13 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
               }}
             />
           </label>
-          <div className="compact-info-card text-sm text-neutral-600">
-            <p className="font-medium text-neutral-950">{selectedSlotLabel}</p>
-            <p className="mt-2 booking-helper-copy">{entryToken ? t.submitHint : t.lineMissing}</p>
-          </div>
         </div>
       </section>
 
       <section className="section-panel section-panel-compact booking-step-panel">
         <div className="booking-step-header">
           <div>
-            <h2 className="text-lg font-semibold text-neutral-950">{t.slots}</h2>
+            <h2 className="text-lg font-semibold" style={{ color: "var(--text)" }}>{t.slots}</h2>
             <p className="booking-helper-copy">{slotCountLabel}</p>
           </div>
           <span className="metric-pill metric-pill-soft">

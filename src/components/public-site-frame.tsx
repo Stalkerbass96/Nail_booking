@@ -12,43 +12,69 @@ type Props = {
 
 function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
   const params = new URLSearchParams({ lang });
-  if (entryToken) {
-    params.set("entry", entryToken);
-  }
+  if (entryToken) params.set("entry", entryToken);
   return `${pathname}?${params.toString()}`;
 }
 
-export default function PublicSiteFrame({ lang, children, entryToken, minimalHeader = false }: Props) {
+export default function PublicSiteFrame({
+  lang,
+  children,
+  entryToken,
+  minimalHeader = false,
+}: Props) {
   const altLang = lang === "ja" ? "zh" : "ja";
 
   return (
     <div className="site-shell">
-      <header className={`site-header ${minimalHeader ? "site-header-minimal" : ""}`}>
-        <div className={`site-header-inner ${minimalHeader ? "site-header-inner-compact" : "site-header-inner-stream"}`}>
+      <header className={`site-header${minimalHeader ? " site-header-minimal" : ""}`}>
+        <div className="site-header-inner">
+          {/* Brand wordmark only — no badge */}
           <div className="flex min-w-0 items-center gap-3">
-            <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
-              <span className="brand-mark">TS</span>
-              {!minimalHeader ? (
-                <span className="site-brand-copy">
-                  <strong className="brand-wordmark">Tsuzuri</strong>
-                </span>
-              ) : null}
+            <Link
+              className="site-brand"
+              href={withLangAndEntry("/", lang, entryToken)}
+            >
+              <strong className="brand-wordmark">Tsuzuri</strong>
             </Link>
 
-            <nav className={`site-nav ${minimalHeader ? "site-nav-compact" : "site-nav-stream"}`} aria-label="Primary">
-              <Link className={`site-nav-link ${minimalHeader ? "site-nav-link-compact" : "site-nav-link-stream"}`} href={withLangAndEntry("/", lang, entryToken)}>
-                {pickText(lang, "\u56fe\u5899", "\u30ae\u30e3\u30e9\u30ea\u30fc")}
-              </Link>
-              <Link className={`site-nav-link ${minimalHeader ? "site-nav-link-compact" : "site-nav-link-stream"}`} href={withLangAndEntry("/services", lang, entryToken)}>
-                {pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}
-              </Link>
-            </nav>
+            {!minimalHeader && (
+              <>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 1,
+                    height: 16,
+                    background: "var(--border-mid)",
+                    flexShrink: 0,
+                  }}
+                />
+                <nav className="site-nav" aria-label="Primary">
+                  <Link
+                    className="site-nav-link"
+                    href={withLangAndEntry("/", lang, entryToken)}
+                  >
+                    {pickText(lang, "图墙", "ギャラリー")}
+                  </Link>
+                  <Link
+                    className="site-nav-link"
+                    href={withLangAndEntry("/services", lang, entryToken)}
+                  >
+                    {pickText(lang, "套餐", "メニュー")}
+                  </Link>
+                </nav>
+              </>
+            )}
           </div>
 
           <div className="site-header-tools shrink-0">
-            {entryToken && !minimalHeader ? <span className="site-entry-pill">LINE</span> : null}
-            <Link className={`site-lang-switch ${minimalHeader ? "site-lang-switch-compact" : "site-lang-switch-stream"}`} href={withLangAndEntry("/", altLang, entryToken)}>
-              {altLang === "ja" ? "JP" : "\u4e2d\u6587"}
+            {entryToken && !minimalHeader && (
+              <span className="site-entry-pill">LINE</span>
+            )}
+            <Link
+              className="site-lang-switch"
+              href={withLangAndEntry("/", altLang, entryToken)}
+            >
+              {altLang === "ja" ? "JP" : "中文"}
             </Link>
           </div>
         </div>
@@ -56,16 +82,22 @@ export default function PublicSiteFrame({ lang, children, entryToken, minimalHea
 
       <div className="site-main">{children}</div>
 
-      {!minimalHeader ? (
+      {!minimalHeader && (
         <footer className="site-footer">
           <div className="site-footer-inner site-footer-inner-stream">
             <div className="site-footer-links site-footer-links-inline">
-              <Link href={withLangAndEntry("/", lang, entryToken)}>{pickText(lang, "\u56fe\u5899", "\u30ae\u30e3\u30e9\u30ea\u30fc")}</Link>
-              <Link href={withLangAndEntry("/services", lang, entryToken)}>{pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}</Link>
+              <Link href={withLangAndEntry("/", lang, entryToken)}>
+                {pickText(lang, "图墙", "ギャラリー")}
+              </Link>
+              <Link href={withLangAndEntry("/services", lang, entryToken)}>
+                {pickText(lang, "套餐", "メニュー")}
+              </Link>
+              <span style={{ color: "var(--border-mid)" }}>·</span>
+              <span>© 2025 Tsuzuri</span>
             </div>
           </div>
         </footer>
-      ) : null}
+      )}
     </div>
   );
 }
