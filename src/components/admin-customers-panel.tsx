@@ -87,6 +87,8 @@ const TEXT = {
     title: "客户与 LINE 档案",
     placeholder: "姓名、LINE 昵称、LINE ID 或邮箱",
     search: "查询",
+    tabAll: "全部",
+    tabLineFollowers: "LINE 关注者",
     cleanupLeads: "清理可删除潜在客户",
     cleanupHint: "只会删除没有预约和积分记录的潜在客户。",
     searchFailed: "查询失败",
@@ -151,6 +153,8 @@ const TEXT = {
     title: "顧客と LINE プロフィール",
     placeholder: "名前、LINE 表示名、LINE ID またはメール",
     search: "検索",
+    tabAll: "すべて",
+    tabLineFollowers: "LINE フォロワー",
     cleanupLeads: "削除可能な見込み顧客を整理",
     cleanupHint: "予約履歴もポイント履歴もない見込み顧客だけを削除します。",
     searchFailed: "検索に失敗しました",
@@ -252,6 +256,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
   const locale = lang === "ja" ? "ja-JP" : "zh-CN";
 
   const [q, setQ] = useState("");
+  const [tab, setTab] = useState<"all" | "line_followers">("line_followers");
   const [items, setItems] = useState<CustomerItem[]>([]);
   const [detail, setDetail] = useState<CustomerDetail | null>(null);
   const [points, setPoints] = useState<PointItem[]>([]);
@@ -266,10 +271,34 @@ export default function AdminCustomersPanel({ lang }: Props) {
     setDraft(createDraft(detail));
   }, [detail]);
 
+  useEffect(() => {
+    if (tab === "line_followers") void loadLineFollowers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
   const cleanupCandidates = useMemo(
     () => items.filter((item) => item.customerType === "lead" && item.deletable).length,
     [items]
   );
+
+  async function loadLineFollowers() {
+    setError("");
+    setNotice("");
+    setLoading(true);
+    setDetail(null);
+    setPoints([]);
+    setActiveCustomerId("");
+    try {
+      const res = await fetch("/api/admin/customers?filter=line_followers&limit=200");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.searchFailed);
+      setItems(data.items ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.searchFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function search() {
     setError("");
@@ -410,11 +439,30 @@ export default function AdminCustomersPanel({ lang }: Props) {
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>
 
-      <div className="mt-4 flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
-        <div className="flex w-full flex-col gap-2 sm:flex-row xl:max-w-2xl">
+      <div className="mt-4 flex gap-1.5">
+        {(["line_followers", "all"] as const).map((t_key) => (
+          <button
+            key={t_key}
+            type="button"
+            onClick={() => {
+              setTab(t_key);
+              if (t_key === "all") { setItems([]); setDetail(null); setPoints([]); setActiveCustomerId(""); }
+            }}
+            className={"inline-flex min-h-8 items-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-150 " +
+              (tab === t_key
+                ? "bg-brand-800 text-white"
+                : "bg-brand-50 text-brand-600 hover:bg-brand-100")}
+          >
+            {t_key === "line_followers" ? t.tabLineFollowers : t.tabAll}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
+        <div className={"flex w-full flex-col gap-2 sm:flex-row xl:max-w-2xl " + (tab === "line_followers" ? "opacity-40 pointer-events-none" : "")}>
           <label htmlFor="customer-search-input" className="sr-only">{t.placeholder}</label>
           <input id="customer-search-input" className="admin-input w-full" placeholder={t.placeholder} value={q} onChange={(e) => setQ(e.target.value)} />
-          <button className="admin-btn-primary w-full sm:w-auto" onClick={() => void search()} type="button">
+          <button className="admin-btn-primary w-full sm:w-auto" onClick={() => { setTab("all"); void search(); }} type="button">
             {t.search}
           </button>
         </div>

@@ -4,11 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   try {
     const keyword = (request.nextUrl.searchParams.get("q") ?? "").trim();
+    const filter = (request.nextUrl.searchParams.get("filter") ?? "").trim();
     const limitRaw = request.nextUrl.searchParams.get("limit") ?? "100";
     const limit = Math.min(Math.max(Number.parseInt(limitRaw, 10) || 100, 1), 300);
 
+    const lineFollowersWhere = filter === "line_followers"
+      ? { lineUser: { is: { isFollowing: true } } }
+      : undefined;
+
     const items = await prisma.customer.findMany({
-      where: keyword
+      where: lineFollowersWhere ?? (keyword
         ? {
             OR: [
               { name: { contains: keyword, mode: "insensitive" } },
@@ -25,7 +30,7 @@ export async function GET(request: NextRequest) {
               }
             ]
           }
-        : undefined,
+        : undefined),
       include: {
         lineUser: {
           select: {
