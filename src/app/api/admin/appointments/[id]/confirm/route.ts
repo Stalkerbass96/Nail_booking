@@ -54,7 +54,7 @@ export async function PATCH(
         linePlatformUserId: appointment.customer.lineUser.lineUserId,
         bookingNo: appointment.bookingNo,
         entryToken: appointment.customer.lineUser.homeEntryToken,
-        lang: "zh"
+        lang: "ja"
       });
     }
 
