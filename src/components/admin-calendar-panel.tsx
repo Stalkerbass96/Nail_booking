@@ -167,7 +167,7 @@ export default function AdminCalendarPanel({ lang }: Props) {
   const [mondayYmd, setMondayYmd] = useState<string>(() => getWeekMondayYmd());
   const [data, setData] = useState<CalendarData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const todayYmd = utcToJstYmd(new Date());
   const nowTop = useRef<number>(0);
   const [, setTick] = useState(0);
@@ -177,20 +177,20 @@ export default function AdminCalendarPanel({ lang }: Props) {
 
   const fetchWeek = useCallback(async (monday: string) => {
     setLoading(true);
-    setFetchError(false);
+    setFetchError(null);
     try {
       const from = monday;
       const to = addDaysToYmd(monday, 6);
       const res = await fetch(`/api/admin/calendar?from=${from}&to=${to}`);
+      const json = await res.json() as CalendarData & { error?: string; details?: string };
       if (!res.ok) {
-        setFetchError(true);
+        setFetchError(`HTTP ${res.status}: ${json.error ?? "unknown"} — ${json.details ?? ""}`);
         setData(null);
         return;
       }
-      const json = await res.json() as CalendarData;
       setData(json);
-    } catch {
-      setFetchError(true);
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : String(err));
       setData(null);
     } finally {
       setLoading(false);
@@ -292,7 +292,7 @@ export default function AdminCalendarPanel({ lang }: Props) {
       </div>
 
       {fetchError && (
-        <p className="ui-state-error mb-3">{t.error}</p>
+        <p className="ui-state-error mb-3">{t.error}<br /><span style={{ fontSize: 11, opacity: 0.75 }}>{fetchError}</span></p>
       )}
 
       {/* ── Calendar grid ── */}
