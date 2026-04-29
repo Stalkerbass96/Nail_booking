@@ -294,7 +294,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
     try {
       const res = await fetch("/api/admin/line/sync-followers", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || t.syncFailed);
+      if (!res.ok) throw new Error(data?.details || data?.error || t.syncFailed);
       setNotice(`${t.syncSuccess} · +${data.synced}`);
       await loadLineFollowers();
     } catch (err) {
