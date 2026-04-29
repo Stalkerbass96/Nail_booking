@@ -67,10 +67,10 @@ export async function sendWelcomeHomeLink(tx: Tx, input: {
   linePlatformUserId: string;
   entryToken: string;
 }) {
-  const homeUrl = buildLineHomeUrl(input.entryToken, "zh");
+  const homeUrl = buildLineHomeUrl(input.entryToken, "ja");
   if (!homeUrl) return false;
 
-  const text = `${TEXT.welcome.zh[0]}\n${TEXT.welcome.zh[1]}\n${homeUrl}\n\n${TEXT.welcome.ja[0]}\n${TEXT.welcome.ja[1]}\n${homeUrl}`;
+  const text = `${TEXT.welcome.ja[0]}\n${TEXT.welcome.ja[1]}\n${homeUrl}`;
 
   try {
     await pushLineTextMessage(input.linePlatformUserId, text);

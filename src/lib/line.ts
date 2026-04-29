@@ -145,11 +145,11 @@ export function buildAppUrl(pathname: string, params?: Record<string, string | u
   return url.toString();
 }
 
-export function buildLineHomeUrl(entryToken: string, lang = "zh") {
+export function buildLineHomeUrl(entryToken: string, lang = "ja") {
   return buildAppUrl("/", { entry: entryToken, lang });
 }
 
-export function buildPublicBookingDetailUrl(bookingNo: string, entryToken?: string, lang = "zh") {
+export function buildPublicBookingDetailUrl(bookingNo: string, entryToken?: string, lang = "ja") {
   return buildAppUrl(`/booking/${encodeURIComponent(bookingNo)}`, {
     entry: entryToken,
     lang
