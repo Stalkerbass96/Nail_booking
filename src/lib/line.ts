@@ -145,6 +145,23 @@ export function buildAppUrl(pathname: string, params?: Record<string, string | u
   return url.toString();
 }
 
+export async function getAllLineFollowerIds(): Promise<string[]> {
+  const ids: string[] = [];
+  let next: string | undefined;
+
+  do {
+    const path = next
+      ? `/v2/bot/followers/ids?next=${encodeURIComponent(next)}`
+      : "/v2/bot/followers/ids";
+    const res = await lineApiFetch(path, { method: "GET", headers: {} });
+    if (!res) break;
+    if (Array.isArray(res.userIds)) ids.push(...res.userIds);
+    next = typeof res.next === "string" ? res.next : undefined;
+  } while (next);
+
+  return ids;
+}
+
 export function buildLineHomeUrl(entryToken: string, lang = "ja") {
   return buildAppUrl("/", { entry: entryToken, lang });
 }

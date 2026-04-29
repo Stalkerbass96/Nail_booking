@@ -89,6 +89,9 @@ const TEXT = {
     search: "查询",
     tabAll: "全部",
     tabLineFollowers: "LINE 关注者",
+    syncFollowers: "同步 LINE 关注者",
+    syncSuccess: "同步完成",
+    syncFailed: "同步失败",
     cleanupLeads: "清理可删除潜在客户",
     cleanupHint: "只会删除没有预约和积分记录的潜在客户。",
     searchFailed: "查询失败",
@@ -155,6 +158,9 @@ const TEXT = {
     search: "検索",
     tabAll: "すべて",
     tabLineFollowers: "LINE フォロワー",
+    syncFollowers: "LINE フォロワーを同期",
+    syncSuccess: "同期完了",
+    syncFailed: "同期に失敗しました",
     cleanupLeads: "削除可能な見込み顧客を整理",
     cleanupHint: "予約履歴もポイント履歴もない見込み顧客だけを削除します。",
     searchFailed: "検索に失敗しました",
@@ -280,6 +286,23 @@ export default function AdminCustomersPanel({ lang }: Props) {
     () => items.filter((item) => item.customerType === "lead" && item.deletable).length,
     [items]
   );
+
+  async function syncFollowers() {
+    setError("");
+    setNotice("");
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/line/sync-followers", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.syncFailed);
+      setNotice(`${t.syncSuccess} · +${data.synced}`);
+      await loadLineFollowers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.syncFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function loadLineFollowers() {
     setError("");
@@ -439,7 +462,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
     <section className="admin-panel-shell">
       <h2 className="admin-section-title">{t.title}</h2>
 
-      <div className="mt-4 flex gap-1.5">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {(["line_followers", "all"] as const).map((t_key) => (
           <button
             key={t_key}
@@ -456,6 +479,14 @@ export default function AdminCustomersPanel({ lang }: Props) {
             {t_key === "line_followers" ? t.tabLineFollowers : t.tabAll}
           </button>
         ))}
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void syncFollowers()}
+          className="inline-flex min-h-8 items-center rounded-lg border border-brand-200 px-3 py-1.5 text-sm font-medium text-brand-700 transition-colors duration-150 hover:bg-brand-50 disabled:opacity-40 ml-auto"
+        >
+          {t.syncFollowers}
+        </button>
       </div>
 
       <div className="mt-3 flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
