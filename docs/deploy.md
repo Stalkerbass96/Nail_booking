@@ -39,7 +39,7 @@ GRANT ALL PRIVILEGES ON DATABASE nail_booking TO nailuser;
 ```bash
 cd /var/www
 sudo git clone https://github.com/Stalkerbass96/Nail_booking.git
-sudo chown -R ubuntu:ubuntu Nail_booking
+sudo chown -R $USER:$USER Nail_booking
 cd Nail_booking
 
 npm install
