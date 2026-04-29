@@ -232,7 +232,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
         )}
 
         <div className="mt-4">
-          <label className="grid gap-2" htmlFor="booking-date">
+          <label className="grid min-w-0 gap-2" htmlFor="booking-date">
             <span className="text-sm font-medium" style={{ color: "var(--text-2)" }}>{t.date}</span>
             <input
               id="booking-date"
