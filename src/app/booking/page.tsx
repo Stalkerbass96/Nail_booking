@@ -46,7 +46,7 @@ export default async function BookingPage({ searchParams }: Props) {
 
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken} minimalHeader>
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 overflow-x-hidden px-4 py-4 sm:px-6 sm:py-5">
         {!showcaseItem || !showcaseItem.servicePackage.isActive ? (
           <section className="section-panel section-panel-compact">
             <p className="ui-state-error mt-0">Design unavailable. Please return to the gallery and choose another style.</p>

@@ -67,8 +67,11 @@ input, select, textarea, button {
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
+  display: block;
+  box-sizing: border-box;
   min-width: 0;
   width: 100%;
+  max-width: 100%;
 }
 
 button, select {
@@ -498,6 +501,7 @@ a:focus-visible {
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 20px;
+    overflow: hidden;
   }
 
   @media (min-width: 640px) {
