@@ -21,6 +21,7 @@ const lineShowcaseSchema = z.object({
   showcaseItemId: z.union([z.string(), z.number().int().positive()]),
   startAt: z.string().datetime({ offset: true }),
   customerNote: z.string().max(1000).optional().nullable(),
+  name: z.string().trim().min(1).max(80).optional().nullable(),
   lang: z.enum(["zh", "ja"]).optional()
 });
 
@@ -292,7 +293,7 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
       data: {
         customerType: CustomerType.active,
         firstBookedAt: lineUser.customer!.firstBookedAt ?? new Date(),
-        name: lineUser.customer!.name || lineUser.displayName || `LINE-${lineUser.lineUserId.slice(-8)}`
+        name: payload.name?.trim() || lineUser.customer!.name || lineUser.displayName || `LINE-${lineUser.lineUserId.slice(-8)}`
       }
     });
 

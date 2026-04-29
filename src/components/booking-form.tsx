@@ -38,6 +38,9 @@ const TEXT = {
   zh: {
     date: "选择日期",
     slots: "选择时间",
+    name: "预约姓名",
+    namePlaceholder: "请输入您的姓名",
+    nameRequired: "请填写预约姓名",
     note: "备注需求",
     submit: "提交预约",
     loadingSlots: "正在计算可预约时间...",
@@ -66,6 +69,9 @@ const TEXT = {
   ja: {
     date: "日付を選ぶ",
     slots: "時間を選ぶ",
+    name: "お名前",
+    namePlaceholder: "お名前を入力してください",
+    nameRequired: "お名前を入力してください",
     note: "要望メモ",
     submit: "予約を送信",
     loadingSlots: "空き時間を確認しています...",
@@ -110,6 +116,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slotLoading, setSlotLoading] = useState(false);
   const [selectedStartAt, setSelectedStartAt] = useState("");
+  const [bookingName, setBookingName] = useState(customerName ?? "");
   const [customerNote, setCustomerNote] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -167,6 +174,11 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
       return;
     }
 
+    if (!bookingName.trim()) {
+      setError(t.nameRequired);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     setMessage("");
@@ -179,6 +191,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
           entry: entryToken,
           showcaseItemId: showcaseItem.id,
           startAt: selectedStartAt,
+          name: bookingName.trim(),
           customerNote,
           lang
         })
@@ -284,16 +297,30 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
       </section>
 
       <section className="section-panel section-panel-compact booking-step-panel">
-        <label className="grid gap-2" htmlFor="booking-customer-note">
-          <span className="text-sm font-medium text-neutral-700">{t.note}</span>
-          <textarea
+        <div className="grid gap-4">
+          <label className="grid gap-2" htmlFor="booking-name">
+            <span className="text-sm font-medium" style={{ color: "var(--text-2)" }}>{t.name}</span>
+            <input
+              id="booking-name"
+              className="ui-input"
+              type="text"
+              maxLength={80}
+              value={bookingName}
+              onChange={(event) => setBookingName(event.target.value)}
+              placeholder={t.namePlaceholder}
+            />
+          </label>
+          <label className="grid gap-2" htmlFor="booking-customer-note">
+            <span className="text-sm font-medium" style={{ color: "var(--text-2)" }}>{t.note}</span>
+            <textarea
             id="booking-customer-note"
             className="ui-input min-h-24"
             value={customerNote}
             onChange={(event) => setCustomerNote(event.target.value)}
             placeholder={t.notePlaceholder}
           />
-        </label>
+          </label>
+        </div>
         {error ? <p className="ui-state-error" aria-live="assertive">{error}</p> : null}
         {message ? <p className="ui-state-success" aria-live="polite">{message}</p> : null}
       </section>
