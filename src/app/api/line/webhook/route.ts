@@ -156,6 +156,40 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
+      if (event.type === "postback") {
+        const data = typeof event.postback?.data === "string" ? event.postback.data : "";
+
+        await prisma.lineMessage.create({
+          data: {
+            lineUserId: user.id,
+            direction: LineMessageDirection.incoming,
+            status: LineMessageStatus.received,
+            messageType: "postback",
+            text: data,
+            rawJson: event
+          }
+        });
+
+        if (data === "action=booking_link" && typeof event.replyToken === "string" && config.enabled && config.appBaseUrl) {
+          const lineUser = await prisma.lineUser.findUnique({
+            where: { id: user.id },
+            select: { homeEntryToken: true }
+          });
+          const token = lineUser?.homeEntryToken;
+          if (token) {
+            const { buildLineHomeUrl } = await import("@/lib/line");
+            const url = buildLineHomeUrl(token, "ja");
+            try {
+              await replyLineTextMessage(event.replyToken, `ご予約はこちらからどうぞ👇\n${url}`);
+            } catch {
+              // Best effort only.
+            }
+          }
+        }
+
+        continue;
+      }
+
       if (event.type === "message") {
         const messageType = typeof event.message?.type === "string" ? event.message.type : "unknown";
         const text = messageType === "text" && typeof event.message?.text === "string" ? event.message.text : null;
