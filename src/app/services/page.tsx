@@ -43,17 +43,13 @@ export default async function ServicesPage({ searchParams }: Props) {
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-5">
-        <section className="flex flex-col gap-3 border-b border-neutral-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-neutral-950">
-                {pickText(lang, "套餐参考", "メニュー一覧")}
-              </h1>
-            </div>
-            <Link className="ui-btn-secondary" href={`/?${withQuery(lang, entryToken)}`}>
-              {pickText(lang, "回到图墙", "ギャラリーに戻る")}
-            </Link>
-          </div>
+        <section className="flex items-center justify-between gap-3 border-b pb-4" style={{ borderColor: "var(--border)" }}>
+          <h1 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+            {pickText(lang, "套餐参考", "メニュー一覧")}
+          </h1>
+          <Link className="ui-btn-secondary shrink-0" href={`/?${withQuery(lang, entryToken)}`}>
+            {pickText(lang, "回到图墙", "ギャラリーに戻る")}
+          </Link>
         </section>
 
         {categories.length === 0 ? (
@@ -68,7 +64,7 @@ export default async function ServicesPage({ searchParams }: Props) {
           {categories.map((category) => (
             <section key={category.id.toString()} className="section-panel section-panel-compact">
               <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold text-neutral-950">{lang === "ja" ? category.nameJa : category.nameZh}</h2>
+                <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>{lang === "ja" ? category.nameJa : category.nameZh}</h2>
                 <span className="metric-pill metric-pill-soft">{category.packages.length}</span>
               </div>
 
@@ -81,8 +77,8 @@ export default async function ServicesPage({ searchParams }: Props) {
                   return (
                     <article key={pkg.id.toString()} className="menu-row-card">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-neutral-950">{lang === "ja" ? pkg.nameJa : pkg.nameZh}</p>
-                        <p className="mt-1 text-sm text-neutral-500">JPY {pkg.priceJpy} · {pkg.durationMin} min</p>
+                        <p className="truncate text-sm font-semibold" style={{ color: "var(--text)" }}>{lang === "ja" ? pkg.nameJa : pkg.nameZh}</p>
+                        <p className="mt-1 text-sm" style={{ color: "var(--text-3)" }}>¥{Number(pkg.priceJpy).toLocaleString()} · {pkg.durationMin} min</p>
                       </div>
                       <Link className="ui-btn-primary ui-btn-primary-compact shrink-0" href={bookingHref}>
                         {pickText(lang, "预约同款", "予約へ")}

@@ -182,67 +182,66 @@ export default async function AdminHomePage({ searchParams }: Props) {
     <main className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-10">
       <AdminNav lang={lang} />
 
-      <section className="grid gap-5 border-b border-neutral-200 pb-5 lg:grid-cols-[1fr_auto]">
-        <div className="flex flex-col justify-between gap-5">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl">{t.title}</h1>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {statCards.map((item) => (
-              <article
-                key={item.label}
-                className="rounded-xl border border-neutral-200 bg-white p-4"
-              >
-                <p className="text-xs font-medium text-neutral-500">{item.label}</p>
-                <strong className="mt-2 block text-3xl font-semibold text-neutral-950">{item.value}</strong>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <aside className="grid content-end gap-2 lg:w-48">
+      <section className="grid gap-5 pb-5" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl" style={{ color: "var(--text)" }}>{t.title}</h1>
+          <div className="flex flex-wrap gap-2">
             {t.quickActions.map((item) => (
               <Link
                 key={item.href}
                 href={`${item.href}?lang=${lang}`}
                 className={item.tone === "primary" ? "ui-btn-primary" : "ui-btn-secondary"}
+                style={{ minHeight: 36, padding: "0 14px", fontSize: 13 }}
               >
                 {item.label}
               </Link>
             ))}
-        </aside>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {statCards.map((item) => (
+            <article
+              key={item.label}
+              className="rounded-xl p-4"
+              style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+            >
+              <p className="text-xs font-medium" style={{ color: "var(--text-3)" }}>{item.label}</p>
+              <strong className="mt-2 block text-3xl font-semibold" style={{ color: "var(--text)" }}>{item.value}</strong>
+            </article>
+          ))}
+        </div>
       </section>
 
-      <section className="mt-5 grid gap-5 xl:grid-cols-[1.02fr_0.98fr]">
-        <article className="admin-panel-shell grid gap-4">
+      <section className="mt-5 grid gap-4 xl:grid-cols-2">
+        <article className="section-panel section-panel-compact grid gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="admin-section-title">{t.sections.nextBooking}</h2>
-            <span className="metric-pill metric-pill-soft">{pendingCount} {t.stats.pending}</span>
+            <span className="metric-pill">{pendingCount} {t.stats.pending}</span>
           </div>
           {nextBooking ? (
-            <div className="grid gap-3 rounded-[1.4rem] border border-brand-100 bg-brand-50/55 p-4">
+            <div className="grid gap-3 rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.sections.customer}</p>
-                  <p className="mt-2 text-lg font-semibold text-brand-900">{nextBooking.customer.name}</p>
-                  <p className="text-sm text-brand-700">{nextBooking.customer.email}</p>
+                  <p className="section-eyebrow">{t.sections.customer}</p>
+                  <p className="mt-1.5 font-semibold" style={{ color: "var(--text)" }}>{nextBooking.customer.name}</p>
+                  <p className="text-sm" style={{ color: "var(--text-3)" }}>{nextBooking.customer.email}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.sections.package}</p>
-                  <p className="mt-2 text-lg font-semibold text-brand-900">
+                  <p className="section-eyebrow">{t.sections.package}</p>
+                  <p className="mt-1.5 font-semibold" style={{ color: "var(--text)" }}>
                     {lang === "ja" ? nextBooking.servicePackage.nameJa : nextBooking.servicePackage.nameZh}
                   </p>
-                  <p className="text-sm text-brand-700">
+                  <p className="text-sm" style={{ color: "var(--text-3)" }}>
                     {nextBooking.status === AppointmentStatus.pending ? t.sections.pendingCutoff : t.sections.confirmed}
                   </p>
                 </div>
               </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.sections.time}</p>
-                <p className="mt-2 text-base font-semibold text-brand-900">{formatDateTime(nextBooking.startAt, locale)}</p>
+              <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                <p className="section-eyebrow">{t.sections.time}</p>
+                <p className="mt-1 text-base font-semibold" style={{ color: "var(--text)" }}>{formatDateTime(nextBooking.startAt, locale)}</p>
               </div>
-              <Link href={`/admin/appointments?lang=${lang}`} className="ui-btn-secondary w-full sm:w-auto">
+              <Link href={`/admin/appointments?lang=${lang}`} className="ui-btn-secondary">
                 {t.quickActions[0].label}
               </Link>
             </div>
@@ -251,44 +250,44 @@ export default async function AdminHomePage({ searchParams }: Props) {
           )}
         </article>
 
-        <article className="admin-panel-shell grid gap-4">
+        <article className="section-panel section-panel-compact grid gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="admin-section-title">{t.sections.todayHours}</h2>
-            <span className={`metric-pill ${todayWindow.isOpen ? "metric-pill-soft" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
+            <span className="metric-pill" style={todayWindow.isOpen ? {} : { color: "var(--text-3)" }}>
               {todayWindow.isOpen ? t.sections.open : t.sections.closed}
             </span>
           </div>
-          <div className="grid gap-3 rounded-[1.4rem] border border-brand-100 bg-brand-50/55 p-4">
-            <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{todayYmd}</p>
-              <p className="mt-2 text-2xl font-semibold text-brand-900">{formatTimeRange(todayWindow.openAt, todayWindow.closeAt)}</p>
-              <p className="mt-2 text-sm text-brand-700">
+          <div className="grid gap-3 rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+            <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+              <p className="section-eyebrow">{todayYmd}</p>
+              <p className="mt-1 text-xl font-semibold" style={{ color: "var(--text)" }}>{formatTimeRange(todayWindow.openAt, todayWindow.closeAt)}</p>
+              <p className="mt-1 text-sm" style={{ color: "var(--text-3)" }}>
                 {todayWindow.source === "special" ? t.sections.sourceSpecial : t.sections.sourceWeekly}
               </p>
             </div>
-            <Link href={`/admin/schedule?lang=${lang}`} className="ui-btn-secondary w-full sm:w-auto">
+            <Link href={`/admin/schedule?lang=${lang}`} className="ui-btn-secondary">
               {t.sections.goSchedule}
             </Link>
           </div>
         </article>
 
-        <article className="admin-panel-shell grid gap-4">
+        <article className="section-panel section-panel-compact grid gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="admin-section-title">{t.sections.nextBlock}</h2>
-            <Link href={`/admin/schedule?lang=${lang}`} className="text-sm font-medium text-brand-700 no-underline hover:text-brand-900">
+            <Link href={`/admin/schedule?lang=${lang}`} className="text-sm font-medium no-underline" style={{ color: "var(--text-3)" }}>
               {t.sections.goSchedule}
             </Link>
           </div>
           {nextBlock ? (
-            <div className="grid gap-3 rounded-[1.4rem] border border-brand-100 bg-brand-50/55 p-4">
+            <div className="grid gap-3 rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.sections.time}</p>
-                <p className="mt-2 text-lg font-semibold text-brand-900">{formatDateTime(nextBlock.startAt, locale)}</p>
-                <p className="text-sm text-brand-700">{formatDateTime(nextBlock.endAt, locale)}</p>
+                <p className="section-eyebrow">{t.sections.time}</p>
+                <p className="mt-1.5 font-semibold" style={{ color: "var(--text)" }}>{formatDateTime(nextBlock.startAt, locale)}</p>
+                <p className="text-sm" style={{ color: "var(--text-3)" }}>{formatDateTime(nextBlock.endAt, locale)}</p>
               </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.sections.reason}</p>
-                <p className="mt-2 text-sm leading-7 text-brand-800">{nextBlock.reason || t.sections.none}</p>
+              <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                <p className="section-eyebrow">{t.sections.reason}</p>
+                <p className="mt-1 text-sm" style={{ color: "var(--text-2)" }}>{nextBlock.reason || t.sections.none}</p>
               </div>
             </div>
           ) : (
@@ -296,28 +295,32 @@ export default async function AdminHomePage({ searchParams }: Props) {
           )}
         </article>
 
-        <article className="admin-panel-shell grid gap-4">
+        <article className="section-panel section-panel-compact grid gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="admin-section-title">{t.sections.lineConfig}</h2>
-            <Link href={`/admin/line?lang=${lang}`} className="text-sm font-medium text-brand-700 no-underline hover:text-brand-900">
+            <Link href={`/admin/line?lang=${lang}`} className="text-sm font-medium no-underline" style={{ color: "var(--text-3)" }}>
               {t.sections.goLine}
             </Link>
           </div>
-          <div className="grid gap-3 rounded-[1.4rem] border border-brand-100 bg-brand-50/55 p-4">
-            <div className={`rounded-2xl border px-4 py-3 ${lineConfig.enabled ? "border-emerald-100 bg-emerald-50 text-emerald-800" : "border-amber-100 bg-amber-50 text-amber-800"}`}>
-              <p className="text-sm font-semibold">{lineConfig.enabled ? t.sections.lineReady : t.sections.lineMissing}</p>
+          <div className="grid gap-2">
+            <div className="rounded-lg px-3 py-2.5 text-sm font-medium" style={lineConfig.enabled
+              ? { border: "1px solid var(--ok-border)", background: "var(--ok-bg)", color: "var(--ok-text)" }
+              : { border: "1px solid var(--err-border)", background: "var(--err-bg)", color: "var(--err-text)" }}>
+              {lineConfig.enabled ? t.sections.lineReady : t.sections.lineMissing}
             </div>
-            <div className={`rounded-2xl border px-4 py-3 ${lineConfig.appBaseUrl ? "border-brand-100 bg-white/80 text-brand-800" : "border-amber-100 bg-amber-50 text-amber-800"}`}>
-              <p className="text-sm font-semibold">{lineConfig.appBaseUrl ? t.sections.appBaseReady : t.sections.appBaseMissing}</p>
+            <div className="rounded-lg px-3 py-2.5 text-sm font-medium" style={lineConfig.appBaseUrl
+              ? { border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text-2)" }
+              : { border: "1px solid var(--err-border)", background: "var(--err-bg)", color: "var(--err-text)" }}>
+              {lineConfig.appBaseUrl ? t.sections.appBaseReady : t.sections.appBaseMissing}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">Webhook</p>
-                <p className="mt-2 text-sm text-brand-800">/api/line/webhook</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                <p className="section-eyebrow">Webhook</p>
+                <p className="mt-1 text-sm" style={{ color: "var(--text-2)" }}>/api/line/webhook</p>
               </div>
-              <div className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">APP_BASE_URL</p>
-                <p className="mt-2 truncate text-sm text-brand-800">{lineConfig.appBaseUrl || "-"}</p>
+              <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
+                <p className="section-eyebrow">APP_BASE_URL</p>
+                <p className="mt-1 truncate text-sm" style={{ color: "var(--text-2)" }}>{lineConfig.appBaseUrl || "-"}</p>
               </div>
             </div>
           </div>
