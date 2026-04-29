@@ -65,6 +65,14 @@ export async function POST(request: NextRequest) {
 
       const user = await upsertLineUser(source.userId);
 
+      // Ensure customer record exists for any interaction, not just follow events.
+      // This handles users who followed before the webhook was configured.
+      if (event.type !== "unfollow" && !user.customerId) {
+        await prisma.$transaction(async (tx) => {
+          await ensureLineCustomer(tx, user);
+        });
+      }
+
       if (event.type === "unfollow") {
         await prisma.lineUser.update({
           where: { id: user.id },

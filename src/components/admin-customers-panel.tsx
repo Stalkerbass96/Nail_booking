@@ -294,7 +294,15 @@ export default function AdminCustomersPanel({ lang }: Props) {
     try {
       const res = await fetch("/api/admin/line/sync-followers", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.details || data?.error || t.syncFailed);
+      if (!res.ok) {
+        const detail = data?.details || data?.error || t.syncFailed;
+        if (detail?.includes("403") || detail?.includes("not available")) {
+          throw new Error(lang === "ja"
+            ? "LINE API の制限により一括同期できません。既存フォロワーにメッセージを送るよう依頼してください。"
+            : "LINE 免费账号不支持批量同步。请让已关注的用户向你发一条消息，系统会自动建档。");
+        }
+        throw new Error(detail);
+      }
       setNotice(`${t.syncSuccess} · +${data.synced}`);
       await loadLineFollowers();
     } catch (err) {
