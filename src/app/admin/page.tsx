@@ -1,6 +1,7 @@
 ﻿import { AppointmentStatus, LineMessageDirection } from "@prisma/client";
 import Link from "next/link";
 import AdminNav from "@/components/admin-nav";
+import AdminCalendarPanel from "@/components/admin-calendar-panel";
 import { prisma } from "@/lib/db";
 import { getLineConfig } from "@/lib/line";
 import { resolveLang } from "@/lib/lang";
@@ -325,6 +326,10 @@ export default async function AdminHomePage({ searchParams }: Props) {
             </div>
           </div>
         </article>
+      </section>
+
+      <section className="mt-5">
+        <AdminCalendarPanel lang={lang} />
       </section>
     </main>
   );
