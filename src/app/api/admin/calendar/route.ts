@@ -4,7 +4,6 @@ import {
   formatYmdInOffset
 } from "@/lib/booking-rules";
 import { getBusinessWindowByDate } from "@/lib/business-hours";
-import { getAdminFromRequest } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,11 +11,6 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await getAdminFromRequest(request);
-    if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const from = request.nextUrl.searchParams.get("from") ?? "";
     const to = request.nextUrl.searchParams.get("to") ?? "";
 
