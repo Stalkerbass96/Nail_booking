@@ -15,14 +15,14 @@ export default async function BookingSuccessPage({ params, searchParams }: Props
   const galleryHref = `/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`;
 
   return (
-    <PublicSiteFrame lang={lang} entryToken={entryToken}>
-      <main className="mx-auto flex min-h-[72vh] w-full max-w-3xl items-center px-4 py-6 sm:px-6 sm:py-8">
+    <PublicSiteFrame lang={lang} entryToken={entryToken} minimalHeader>
+      <main className="mx-auto flex w-full max-w-md px-4 py-4 sm:max-w-3xl sm:px-6 sm:py-8">
         <section className="success-panel success-panel-lite w-full">
           <div className="success-badge">{pickText(lang, "等待确认", "確認待ち")}</div>
           <h1 className="text-2xl font-semibold tracking-tight text-brand-900 sm:text-3xl">
             {pickText(lang, "预约已经发送给店长", "予約を送信しました")}
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-7 text-brand-700 sm:text-base">
+          <p className="mt-3 max-w-xl text-sm leading-7 text-brand-700">
             {pickText(
               lang,
               "店长确认后会继续通过 LINE 联系你。先保留预约号，后续查看详情或沟通时都会用到。",
@@ -35,7 +35,7 @@ export default async function BookingSuccessPage({ params, searchParams }: Props
             <strong>{bookingNo}</strong>
           </div>
 
-          <div className="success-card-stack mt-5">
+          <div className="success-card-stack mt-4">
             <div className="compact-info-card">
               <p className="text-sm font-medium text-brand-900">{pickText(lang, "接下来会发生什么", "このあとについて")}</p>
               <p className="mt-2 text-sm leading-7 text-brand-700">
@@ -58,7 +58,7 @@ export default async function BookingSuccessPage({ params, searchParams }: Props
             </div>
           </div>
 
-          <div className="mt-6 grid gap-2 sm:grid-cols-2">
+          <div className="mt-5 grid gap-2 sm:grid-cols-2">
             <Link className="ui-btn-primary w-full" href={detailHref}>
               {pickText(lang, "查看预约详情", "予約詳細を見る")}
             </Link>

@@ -23,17 +23,6 @@ const LINKS = [
   { href: "/admin/settings", zh: "\u8bbe\u7f6e", ja: "\u8a2d\u5b9a" }
 ];
 
-const TEXT = {
-  zh: {
-    langZh: "\u4e2d\u6587",
-    langJa: "\u65e5\u672c\u8a9e"
-  },
-  ja: {
-    langZh: "\u4e2d\u6587",
-    langJa: "\u65e5\u672c\u8a9e"
-  }
-};
-
 function buildHref(pathname: string, rawSearch: string, lang: Lang): string {
   const params = new URLSearchParams(rawSearch);
   params.set("lang", lang);
@@ -42,49 +31,57 @@ function buildHref(pathname: string, rawSearch: string, lang: Lang): string {
 }
 
 export default function AdminNav({ lang }: Props) {
-  const t = TEXT[lang];
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const rawSearch = searchParams.toString();
 
   return (
-    <nav className="mb-4 flex flex-wrap items-center gap-2 sm:mb-5">
-      {LINKS.map((item) => (
-        <Link
-          key={item.href}
-          href={buildHref(item.href, rawSearch, lang)}
-          className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-sm transition-colors duration-200 ${
-            pathname === item.href
-              ? "border-brand-700 bg-brand-700 text-white"
-              : "border-brand-300 bg-white text-brand-900 hover:border-brand-500 hover:bg-brand-50"
-          }`}
-        >
-          {lang === "ja" ? item.ja : item.zh}
+    <nav className="sticky top-0 z-30 -mx-4 mb-5 border-b border-neutral-200 bg-stone-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 lg:flex-row lg:items-center">
+        <Link href={buildHref("/admin", rawSearch, lang)} className="flex items-center gap-3 text-neutral-950 no-underline">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-950 text-[11px] font-semibold tracking-[0.12em] text-white">TS</span>
+          <span className="text-sm font-semibold">Tsuzuri Admin</span>
         </Link>
-      ))}
 
-      <div className="ml-auto flex items-center gap-2">
-        <Link
-          href={buildHref(pathname, rawSearch, "zh")}
-          className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-sm transition-colors duration-200 ${
-            lang === "zh"
-              ? "border-brand-700 bg-brand-700 text-white"
-              : "border-brand-300 bg-white text-brand-900 hover:border-brand-500 hover:bg-brand-50"
-          }`}
-        >
-          {t.langZh}
-        </Link>
-        <Link
-          href={buildHref(pathname, rawSearch, "ja")}
-          className={`inline-flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-sm transition-colors duration-200 ${
-            lang === "ja"
-              ? "border-brand-700 bg-brand-700 text-white"
-              : "border-brand-300 bg-white text-brand-900 hover:border-brand-500 hover:bg-brand-50"
-          }`}
-        >
-          {t.langJa}
-        </Link>
-        <AdminLogoutButton lang={lang} />
+        <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto pb-1 lg:pb-0">
+          {LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={buildHref(item.href, rawSearch, lang)}
+              className={`inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
+                pathname === item.href
+                  ? "border-neutral-950 bg-neutral-950 text-white"
+                  : "border-transparent bg-transparent text-neutral-600 hover:bg-white hover:text-neutral-950"
+              }`}
+            >
+              {lang === "ja" ? item.ja : item.zh}
+            </Link>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2 lg:ml-auto">
+          <Link
+            href={buildHref(pathname, rawSearch, "zh")}
+            className={`inline-flex min-h-9 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
+              lang === "zh"
+                ? "border-neutral-950 bg-neutral-950 text-white"
+                : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400"
+            }`}
+          >
+            {"\u4e2d\u6587"}
+          </Link>
+          <Link
+            href={buildHref(pathname, rawSearch, "ja")}
+            className={`inline-flex min-h-9 items-center justify-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${
+              lang === "ja"
+                ? "border-neutral-950 bg-neutral-950 text-white"
+                : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400"
+            }`}
+          >
+            JP
+          </Link>
+          <AdminLogoutButton lang={lang} />
+        </div>
       </div>
     </nav>
   );

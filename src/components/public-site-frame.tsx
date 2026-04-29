@@ -23,20 +23,17 @@ export default function PublicSiteFrame({ lang, children, entryToken, minimalHea
 
   return (
     <div className="site-shell">
-      <div className="site-orb site-orb-left" aria-hidden="true" />
-      <div className="site-orb site-orb-right" aria-hidden="true" />
       <header className={`site-header ${minimalHeader ? "site-header-minimal" : ""}`}>
         <div className={`site-header-inner ${minimalHeader ? "site-header-inner-compact" : "site-header-inner-stream"}`}>
-          <div className={`flex w-full ${minimalHeader ? "items-center justify-between gap-2" : "flex-col gap-3 sm:w-auto sm:flex-row sm:items-center"}`}>
-            {!minimalHeader ? (
-              <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
-                <span className="brand-mark">NA</span>
+          <div className="flex min-w-0 items-center gap-3">
+            <Link className="site-brand site-brand-stream" href={withLangAndEntry("/", lang, entryToken)}>
+              <span className="brand-mark">TS</span>
+              {!minimalHeader ? (
                 <span className="site-brand-copy">
-                  <strong className="brand-wordmark">Nail Atelier</strong>
-                  <small className="brand-wordmark-sub">{pickText(lang, "\u4f5c\u54c1\u9884\u7ea6", "Gallery Booking")}</small>
+                  <strong className="brand-wordmark">Tsuzuri</strong>
                 </span>
-              </Link>
-            ) : null}
+              ) : null}
+            </Link>
 
             <nav className={`site-nav ${minimalHeader ? "site-nav-compact" : "site-nav-stream"}`} aria-label="Primary">
               <Link className={`site-nav-link ${minimalHeader ? "site-nav-link-compact" : "site-nav-link-stream"}`} href={withLangAndEntry("/", lang, entryToken)}>
@@ -46,24 +43,14 @@ export default function PublicSiteFrame({ lang, children, entryToken, minimalHea
                 {pickText(lang, "\u5957\u9910", "\u30e1\u30cb\u30e5\u30fc")}
               </Link>
             </nav>
-
-            {minimalHeader ? (
-              <div className="site-header-tools shrink-0">
-                <Link className="site-lang-switch site-lang-switch-compact" href={withLangAndEntry("/", altLang, entryToken)}>
-                  {altLang === "ja" ? "\u65e5\u672c\u8a9e" : "\u4e2d\u6587"}
-                </Link>
-              </div>
-            ) : null}
           </div>
 
-          {!minimalHeader ? (
-            <div className="site-header-tools">
-              <Link className="site-lang-switch site-lang-switch-stream" href={withLangAndEntry("/", altLang, entryToken)}>
-                {altLang === "ja" ? "\u65e5\u672c\u8a9e" : "\u4e2d\u6587"}
-              </Link>
-              {entryToken ? <span className="site-entry-pill">{pickText(lang, "LINE \u9884\u7ea6\u4e2d", "LINE \u4e88\u7d04\u4e2d")}</span> : null}
-            </div>
-          ) : null}
+          <div className="site-header-tools shrink-0">
+            {entryToken && !minimalHeader ? <span className="site-entry-pill">LINE</span> : null}
+            <Link className={`site-lang-switch ${minimalHeader ? "site-lang-switch-compact" : "site-lang-switch-stream"}`} href={withLangAndEntry("/", altLang, entryToken)}>
+              {altLang === "ja" ? "JP" : "\u4e2d\u6587"}
+            </Link>
+          </div>
         </div>
       </header>
 

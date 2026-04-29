@@ -4,11 +4,11 @@ import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: {
-    default: "Nail Booking",
-    template: "%s | Nail Booking"
+    default: "Tsuzuri",
+    template: "%s | Tsuzuri"
   },
-  description: "Single-store nail appointment and salon management system",
-  applicationName: "Nail Booking"
+  description: "Tsuzuri nail appointment and salon management system",
+  applicationName: "Tsuzuri"
 };
 
 type RootLayoutProps = {

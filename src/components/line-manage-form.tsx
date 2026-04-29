@@ -18,7 +18,7 @@ type Props = {
 const TEXT = {
   zh: {
     title: "LINE 管理",
-    desc: "用预约号和邮箱查看当前绑定状态，并在需要时解除 LINE 绑定。",
+    desc: "输入预约号和邮箱，查看或解除绑定。",
     bookingNo: "预约号",
     email: "邮箱",
     lookup: "查询绑定状态",
@@ -36,7 +36,7 @@ const TEXT = {
   },
   ja: {
     title: "LINE 管理",
-    desc: "予約番号とメールアドレスで現在の連携状態を確認し、必要に応じて LINE 連携を解除できます。",
+    desc: "予約番号とメールアドレスで連携状態を確認します。",
     bookingNo: "予約番号",
     email: "メールアドレス",
     lookup: "連携状態を確認",
@@ -113,11 +113,11 @@ export default function LineManageForm({ lang }: Props) {
   }
 
   return (
-    <div className="section-panel">
-      <h2 className="text-2xl font-semibold text-brand-900">{t.title}</h2>
+    <div className="section-panel section-panel-compact">
+      <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
       <p className="section-copy mt-2">{t.desc}</p>
 
-      <form className="mt-5 grid gap-4" onSubmit={lookup}>
+      <form className="mt-4 grid gap-3" onSubmit={lookup}>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-brand-800">{t.bookingNo}</span>
           <input className="ui-input" value={bookingNo} onChange={(event) => setBookingNo(event.target.value)} required />
@@ -131,7 +131,7 @@ export default function LineManageForm({ lang }: Props) {
         {error ? <p className="ui-state-error">{error}</p> : null}
         {ok ? <p className="ui-state-success">{ok}</p> : null}
 
-        <button className="ui-btn-primary w-full sm:w-auto" type="submit" disabled={loading}>
+        <button className="ui-btn-primary w-full" type="submit" disabled={loading}>
           {loading ? "..." : t.lookup}
         </button>
       </form>
@@ -147,7 +147,7 @@ export default function LineManageForm({ lang }: Props) {
           {linkedLineUser.linkedAt ? (
             <p className="text-sm text-brand-700">{t.linkedAt}: {new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(linkedLineUser.linkedAt))}</p>
           ) : null}
-          <button className="ui-btn-secondary w-full sm:w-auto" type="button" onClick={() => void unlink()} disabled={unlinking}>
+          <button className="ui-btn-secondary mt-3 w-full" type="button" onClick={() => void unlink()} disabled={unlinking}>
             {unlinking ? `${t.unlink}...` : t.unlink}
           </button>
         </div>

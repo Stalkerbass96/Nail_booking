@@ -170,45 +170,38 @@ export default async function AdminHomePage({ searchParams }: Props) {
     ]);
 
   const statCards = [
-    { label: t.stats.today, value: todayCount, accent: "from-rose-100 via-white to-white" },
-    { label: t.stats.pending, value: pendingCount, accent: "from-amber-100 via-white to-white" },
-    { label: t.stats.customers, value: customerCount, accent: "from-sky-100 via-white to-white" },
-    { label: t.stats.lineLinked, value: lineLinkedCount, accent: "from-emerald-100 via-white to-white" },
-    { label: t.stats.incoming7d, value: incoming7dCount, accent: "from-fuchsia-100 via-white to-white" },
-    { label: t.stats.menus, value: menuCount, accent: "from-orange-100 via-white to-white" }
+    { label: t.stats.today, value: todayCount },
+    { label: t.stats.pending, value: pendingCount },
+    { label: t.stats.customers, value: customerCount },
+    { label: t.stats.lineLinked, value: lineLinkedCount },
+    { label: t.stats.incoming7d, value: incoming7dCount },
+    { label: t.stats.menus, value: menuCount }
   ];
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto w-full max-w-6xl px-4 pb-8 sm:px-6 sm:pb-10">
       <AdminNav lang={lang} />
 
-      <section className="grid gap-5 rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_24px_70px_rgba(120,25,55,0.09)] backdrop-blur-xl lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-5 border-b border-neutral-200 pb-5 lg:grid-cols-[1fr_auto]">
         <div className="flex flex-col justify-between gap-5">
           <div>
-            <p className="section-eyebrow">Salon Ops</p>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-brand-900 sm:text-4xl">{t.title}</h1>
-            <p className="mt-3 max-w-2xl text-base leading-8 text-brand-700">{t.desc}</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl">{t.title}</h1>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {statCards.map((item) => (
               <article
                 key={item.label}
-                className={`rounded-[1.4rem] border border-brand-100 bg-gradient-to-br ${item.accent} p-4 shadow-[0_10px_30px_rgba(120,25,55,0.06)]`}
+                className="rounded-xl border border-neutral-200 bg-white p-4"
               >
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand-500">{item.label}</p>
-                <strong className="mt-3 block text-3xl font-semibold text-brand-900">{item.value}</strong>
+                <p className="text-xs font-medium text-neutral-500">{item.label}</p>
+                <strong className="mt-2 block text-3xl font-semibold text-neutral-950">{item.value}</strong>
               </article>
             ))}
           </div>
         </div>
 
-        <aside className="grid gap-4 rounded-[1.75rem] border border-brand-100 bg-[linear-gradient(160deg,rgba(255,248,243,0.95),rgba(255,255,255,0.86))] p-5 shadow-[0_16px_40px_rgba(120,25,55,0.06)]">
-          <div>
-            <p className="section-eyebrow">{t.quickTitle}</p>
-            <p className="mt-2 text-sm leading-7 text-brand-700">{t.quickDesc}</p>
-          </div>
-          <div className="grid gap-3">
+        <aside className="grid content-end gap-2 lg:w-48">
             {t.quickActions.map((item) => (
               <Link
                 key={item.href}
@@ -218,7 +211,6 @@ export default async function AdminHomePage({ searchParams }: Props) {
                 {item.label}
               </Link>
             ))}
-          </div>
         </aside>
       </section>
 

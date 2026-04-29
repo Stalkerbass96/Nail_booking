@@ -37,7 +37,7 @@ export default function AdminLogoutButton({ lang }: Props) {
 
   return (
     <button
-      className="inline-flex min-h-10 items-center justify-center rounded-lg border border-brand-300 bg-white px-3 py-2 text-sm text-brand-900 transition-colors duration-200 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex min-h-9 items-center justify-center rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:border-neutral-400 hover:text-neutral-950 disabled:cursor-not-allowed disabled:opacity-60"
       onClick={logout}
       disabled={loading}
       type="button"

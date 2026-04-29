@@ -11,18 +11,18 @@ type Props = {
 
 const TEXT = {
   zh: {
-    email: "邮箱",
-    password: "密码",
-    submit: "登录",
-    submitting: "登录中...",
-    loginFailed: "登录失败"
+    email: "\u90ae\u7bb1",
+    password: "\u5bc6\u7801",
+    submit: "\u767b\u5f55",
+    submitting: "\u767b\u5f55\u4e2d...",
+    loginFailed: "\u767b\u5f55\u5931\u8d25"
   },
   ja: {
-    email: "メール",
-    password: "パスワード",
-    submit: "ログイン",
-    submitting: "ログイン中...",
-    loginFailed: "ログインに失敗しました"
+    email: "\u30e1\u30fc\u30eb",
+    password: "\u30d1\u30b9\u30ef\u30fc\u30c9",
+    submit: "\u30ed\u30b0\u30a4\u30f3",
+    submitting: "\u30ed\u30b0\u30a4\u30f3\u4e2d...",
+    loginFailed: "\u30ed\u30b0\u30a4\u30f3\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
   }
 };
 
@@ -64,7 +64,7 @@ export default function AdminLoginForm({ nextPath, lang }: Props) {
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <label className="grid gap-1.5" htmlFor="admin-login-email">
-        <span className="text-sm font-medium text-brand-800">{t.email}</span>
+        <span className="text-sm font-medium text-neutral-700">{t.email}</span>
         <input
           id="admin-login-email"
           className="admin-input"
@@ -76,7 +76,7 @@ export default function AdminLoginForm({ nextPath, lang }: Props) {
       </label>
 
       <label className="grid gap-1.5" htmlFor="admin-login-password">
-        <span className="text-sm font-medium text-brand-800">{t.password}</span>
+        <span className="text-sm font-medium text-neutral-700">{t.password}</span>
         <input
           id="admin-login-password"
           className="admin-input"
@@ -89,7 +89,7 @@ export default function AdminLoginForm({ nextPath, lang }: Props) {
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
 
-      <button className="admin-btn-primary w-full sm:w-auto" type="submit" disabled={loading}>
+      <button className="admin-btn-primary w-full" type="submit" disabled={loading}>
         {loading ? t.submitting : t.submit}
       </button>
     </form>

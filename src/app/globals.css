@@ -853,6 +853,580 @@ a:focus-visible {
   }
 }
 
+@layer components {
+  .site-shell {
+    @apply min-h-screen bg-stone-50 text-neutral-950;
+  }
+
+  .site-orb {
+    @apply hidden;
+  }
+
+  .site-header {
+    @apply sticky top-0 z-20 border-b border-neutral-200 bg-stone-50/90 backdrop-blur-xl;
+  }
+
+  .site-header-minimal {
+    @apply bg-stone-50/95;
+  }
+
+  .site-header-inner {
+    @apply mx-auto flex w-full max-w-6xl flex-row items-center justify-between gap-3 px-4 py-3 sm:px-6;
+  }
+
+  .site-header-inner-compact {
+    @apply py-2.5;
+  }
+
+  .site-brand,
+  .site-brand strong,
+  .brand-wordmark {
+    @apply text-neutral-950;
+  }
+
+  .brand-mark,
+  .site-brand-badge {
+    @apply h-9 w-9 rounded-lg bg-neutral-950 text-[11px] tracking-[0.12em] text-white shadow-none;
+  }
+
+  .brand-wordmark {
+    @apply text-sm font-semibold tracking-normal;
+  }
+
+  .brand-wordmark-sub,
+  .site-brand small {
+    @apply hidden;
+  }
+
+  .site-nav {
+    @apply flex items-center gap-1.5;
+  }
+
+  .site-nav-link,
+  .site-lang-switch,
+  .site-filter-chip {
+    @apply min-h-9 rounded-lg border border-transparent bg-transparent px-3 py-1.5 text-sm font-medium text-neutral-600 shadow-none transition-colors duration-150 hover:bg-white hover:text-neutral-950;
+  }
+
+  .site-lang-switch {
+    @apply border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300;
+  }
+
+  .site-entry-pill,
+  .metric-pill,
+  .metric-pill-soft {
+    @apply rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-600 shadow-none;
+  }
+
+  .site-filter-chip {
+    @apply border-neutral-200 bg-white;
+  }
+
+  .site-filter-chip-active,
+  .booking-progress-step-active,
+  .slot-chip-active {
+    @apply border-neutral-950 bg-neutral-950 text-white shadow-none;
+  }
+
+  .site-main {
+    @apply relative z-10;
+  }
+
+  .site-footer {
+    @apply mt-8 border-t border-neutral-200 bg-stone-50;
+  }
+
+  .site-footer-inner {
+    @apply mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-5 text-sm text-neutral-500 sm:px-6;
+  }
+
+  .section-panel,
+  .feature-card,
+  .product-card,
+  .success-panel,
+  .ui-card,
+  .admin-panel-shell,
+  .booking-summary-card,
+  .compact-shell {
+    @apply rounded-xl border border-neutral-200 bg-white p-4 shadow-none sm:p-5;
+  }
+
+  .section-panel-compact,
+  .booking-summary-card-compact {
+    @apply p-4;
+  }
+
+  .section-eyebrow,
+  .hero-eyebrow,
+  .feature-kicker {
+    @apply text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-400;
+  }
+
+  .section-title,
+  .hero-title {
+    font-family: inherit;
+    @apply text-2xl font-semibold tracking-normal text-neutral-950 sm:text-3xl;
+  }
+
+  .section-copy,
+  .hero-text,
+  .admin-note,
+  .booking-helper-copy,
+  .field-hint {
+    @apply text-sm leading-6 text-neutral-500;
+  }
+
+  .gallery-grid-stable {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .gallery-tile {
+    @apply mb-0 overflow-hidden rounded-xl border border-neutral-200 bg-white p-0 shadow-none transition-colors duration-150 hover:border-neutral-300;
+  }
+
+  .gallery-tile-media-wrap {
+    @apply overflow-hidden rounded-none;
+  }
+
+  .gallery-tile-media,
+  .gallery-tile-media-stable {
+    aspect-ratio: 0.86;
+    @apply rounded-none bg-cover bg-center transition-transform duration-300;
+  }
+
+  .gallery-tile-body {
+    @apply gap-3 px-3 pb-3 pt-3;
+  }
+
+  .gallery-price,
+  .gallery-package,
+  .booking-design-package,
+  .summary-row dd,
+  .summary-row strong,
+  .admin-section-title {
+    @apply text-neutral-950;
+  }
+
+  .gallery-package,
+  .summary-row dt,
+  .summary-row span {
+    @apply text-neutral-500;
+  }
+
+  .menu-row-card,
+  .admin-item,
+  .admin-subsection,
+  .compact-info-card,
+  .booking-note-card {
+    @apply rounded-xl border border-neutral-200 bg-white p-4 shadow-none;
+  }
+
+  .booking-flow-shell {
+    @apply grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start;
+  }
+
+  .booking-design-strip {
+    @apply flex items-start gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-none lg:col-span-2;
+  }
+
+  .booking-design-media {
+    @apply w-24 shrink-0 rounded-lg bg-cover bg-center sm:w-32;
+  }
+
+  .booking-progress-bar {
+    @apply flex flex-wrap gap-1.5;
+  }
+
+  .booking-progress-step {
+    @apply inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-500 shadow-none;
+  }
+
+  .booking-progress-step strong {
+    @apply hidden;
+  }
+
+  .slot-chip {
+    @apply min-h-11 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-900 shadow-none transition-colors duration-150 hover:border-neutral-400 hover:bg-neutral-50;
+  }
+
+  .booking-submit-bar {
+    @apply sticky bottom-3 z-10 rounded-xl border border-neutral-200 bg-white/95 px-3 py-3 shadow-none backdrop-blur;
+  }
+
+  .ui-input,
+  .admin-input,
+  .admin-input-sm {
+    @apply rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-950 shadow-none placeholder:text-neutral-400 hover:border-neutral-400 focus-visible:border-neutral-950;
+  }
+
+  .ui-btn-primary,
+  .admin-btn-primary {
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg bg-neutral-950 px-4 py-2 text-sm font-medium text-white shadow-none transition-colors duration-150 hover:bg-neutral-800 disabled:bg-neutral-300;
+  }
+
+  .ui-btn-secondary,
+  .admin-btn-secondary,
+  .admin-btn-ghost {
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-none transition-colors duration-150 hover:border-neutral-500 hover:bg-neutral-50;
+  }
+
+  .admin-btn-danger {
+    @apply inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 shadow-none hover:bg-red-50;
+  }
+
+  .ui-state-info,
+  .ui-state-success,
+  .ui-state-error,
+  .admin-success,
+  .admin-danger {
+    @apply rounded-lg border px-3 py-2 text-sm shadow-none;
+  }
+
+  .ui-state-info {
+    @apply border-neutral-200 bg-neutral-50 text-neutral-600;
+  }
+
+  .ui-state-success,
+  .admin-success {
+    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+
+  .ui-state-error,
+  .admin-danger {
+    @apply border-red-200 bg-red-50 text-red-700;
+  }
+}
+
+body {
+  color: #171717;
+  background: #fafaf9;
+}
+
+.text-brand-500,
+.text-brand-600,
+.text-brand-700,
+.text-brand-800 {
+  color: #737373 !important;
+}
+
+.text-brand-900 {
+  color: #171717 !important;
+}
+
+.bg-brand-50,
+.bg-brand-50\/35,
+.bg-brand-50\/45,
+.bg-brand-50\/55,
+.bg-brand-50\/60,
+.bg-brand-50\/80,
+.bg-brand-100 {
+  background-color: #fafafa !important;
+}
+
+.border-brand-100,
+.border-brand-100\/70,
+.border-brand-100\/80,
+.border-brand-100\/90,
+.border-brand-200,
+.border-brand-300 {
+  border-color: #e5e5e5 !important;
+}
+
+.booking-summary-card,
+.success-panel,
+.showcase-panel {
+  background: #ffffff !important;
+}
+
+.site-footer-links a {
+  color: #525252 !important;
+}
+
+.site-footer-links a:hover {
+  color: #171717 !important;
+}
+
+@media (max-width: 640px) {
+  body {
+    background: #fafaf9;
+  }
+
+  .site-header {
+    position: sticky;
+  }
+
+  .site-header-inner,
+  .site-header-inner-compact,
+  .site-header-inner-stream {
+    min-height: 3.5rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .brand-mark,
+  .site-brand-badge {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.55rem;
+    font-size: 10px;
+  }
+
+  .brand-wordmark {
+    max-width: 6rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-nav {
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .site-nav::-webkit-scrollbar,
+  .compact-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav-link,
+  .site-lang-switch,
+  .site-filter-chip {
+    min-height: 2rem;
+    flex-shrink: 0;
+    border-radius: 0.65rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 13px;
+  }
+
+  .site-header-tools {
+    gap: 0.35rem;
+  }
+
+  .site-main > main {
+    padding: 0.75rem;
+  }
+
+  .site-footer {
+    margin-top: 1.5rem;
+  }
+
+  .site-footer-inner {
+    padding-top: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .compact-filter-row {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+  }
+
+  .gallery-grid-stable {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .gallery-tile {
+    border-radius: 0.8rem;
+  }
+
+  .gallery-tile-media,
+  .gallery-tile-media-stable {
+    aspect-ratio: 0.82;
+  }
+
+  .gallery-tile-body {
+    gap: 0.5rem;
+    padding: 0.55rem;
+  }
+
+  .gallery-tile-meta-row {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .gallery-price,
+  .gallery-package {
+    font-size: 12px;
+  }
+
+  .gallery-book-btn,
+  .ui-btn-primary,
+  .ui-btn-secondary,
+  .admin-btn-primary,
+  .admin-btn-secondary {
+    min-height: 2.65rem;
+    border-radius: 0.7rem;
+    padding: 0.65rem 0.8rem;
+    font-size: 14px;
+  }
+
+  .section-panel,
+  .feature-card,
+  .product-card,
+  .success-panel,
+  .ui-card,
+  .admin-panel-shell,
+  .booking-summary-card,
+  .compact-shell,
+  .menu-row-card,
+  .admin-item,
+  .admin-subsection,
+  .compact-info-card,
+  .booking-note-card {
+    border-radius: 0.9rem;
+    padding: 0.9rem;
+  }
+
+  .section-title,
+  .hero-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .section-copy,
+  .hero-text,
+  .admin-note,
+  .booking-helper-copy,
+  .field-hint {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .booking-flow-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: calc(4.6rem + env(safe-area-inset-bottom));
+  }
+
+  .booking-design-strip {
+    align-items: center;
+    gap: 0.7rem;
+    border-radius: 0.9rem;
+    padding: 0.7rem;
+  }
+
+  .booking-design-media {
+    width: 4.75rem;
+    border-radius: 0.7rem;
+  }
+
+  .booking-design-heading {
+    align-items: flex-start;
+  }
+
+  .booking-design-package {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .booking-design-meta-copy,
+  .booking-design-customer {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .metric-pill {
+    border-radius: 0.6rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .booking-step-header {
+    gap: 0.5rem;
+  }
+
+  .booking-step-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .ui-input,
+  .admin-input,
+  .admin-input-sm {
+    min-height: 2.9rem;
+    border-radius: 0.7rem;
+    font-size: 16px;
+  }
+
+  textarea.ui-input {
+    min-height: 5.5rem;
+  }
+
+  .slot-chip {
+    min-height: 2.55rem;
+    border-radius: 0.7rem;
+    font-size: 14px;
+  }
+
+  .booking-submit-bar {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    border-radius: 0.9rem;
+    padding: 0.65rem;
+  }
+
+  .booking-submit-bar .ui-btn-primary {
+    min-height: 2.65rem;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .success-panel-lite {
+    padding: 1rem;
+  }
+
+  .success-badge {
+    margin-bottom: 0.75rem;
+    border-radius: 0.65rem;
+    padding: 0.3rem 0.55rem;
+    font-size: 11px;
+  }
+
+  .success-ticket-lite {
+    padding: 0.85rem;
+  }
+
+  .success-ticket strong {
+    font-size: 1.05rem;
+    word-break: break-all;
+  }
+
+  .success-card-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-detail-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .booking-detail-media {
+    aspect-ratio: 1.35;
+  }
+
+  .booking-detail-copy {
+    padding: 0.9rem;
+  }
+
+  .summary-row {
+    gap: 0.75rem;
+  }
+
+  .summary-row dd,
+  .summary-row strong {
+    max-width: 58%;
+    word-break: break-word;
+  }
+}
+
 
 
 

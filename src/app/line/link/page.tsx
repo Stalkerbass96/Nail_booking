@@ -12,15 +12,14 @@ export default async function LineLinkPage({ searchParams }: Props) {
   const sessionToken = typeof query?.session === "string" ? query.session : "";
 
   return (
-    <PublicSiteFrame lang={lang}>
-      <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
-        <section className="section-panel">
-          <p className="section-eyebrow">LINE Linking</p>
+    <PublicSiteFrame lang={lang} minimalHeader>
+      <main className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 py-4 sm:px-6 sm:py-8">
+        <section className="section-panel section-panel-compact">
           <h1 className="section-title">
-            {pickText(lang, "把 LINE 与你的预约身份连接起来。", "LINE と予約情報を安全に連携します。")}
+            {pickText(lang, "\u7ed1\u5b9a LINE", "LINE \u9023\u643a")}
           </h1>
-          <p className="section-copy">
-            {pickText(lang, "验证后会跳转到 LINE 官方确认页，绑定完成后店长就能在后台与你一对一沟通。", "確認後に LINE 公式の連携画面へ進み、完了すると店長が管理画面から 1 対 1 で対応できるようになります。")}
+          <p className="section-copy mt-2">
+            {pickText(lang, "\u8f93\u5165\u9884\u7ea6\u4fe1\u606f\u540e\u7ee7\u7eed\u5230 LINE \u786e\u8ba4\u9875\u3002", "\u4e88\u7d04\u60c5\u5831\u3092\u5165\u529b\u3057\u3066 LINE \u306e\u78ba\u8a8d\u753b\u9762\u3078\u9032\u307f\u307e\u3059\u3002")}
           </p>
         </section>
 

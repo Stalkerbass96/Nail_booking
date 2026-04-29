@@ -11,26 +11,26 @@ type Props = {
 const TEXT = {
   zh: {
     title: "绑定你的 LINE 与预约身份",
-    desc: "请输入预约号和邮箱，验证通过后会跳转到 LINE 官方绑定页。",
+    desc: "输入预约号和邮箱，继续到 LINE 确认页。",
     bookingNo: "预约号",
     email: "邮箱",
     submit: "验证并继续",
     submitting: "跳转中...",
     invalidSession: "当前绑定链接无效或已过期，请联系店长重新发送绑定链接。",
     failed: "绑定验证失败",
-    help: "如果你只是想解除绑定，请使用下方的 LINE 管理入口。",
+    help: "想解除绑定？请进入 LINE 管理。",
     manage: "前往 LINE 管理"
   },
   ja: {
     title: "LINE と予約情報を連携する",
-    desc: "予約番号とメールアドレスを入力すると、確認後に LINE 公式の連携画面へ移動します。",
+    desc: "予約番号とメールアドレスを入力して LINE 確認へ進みます。",
     bookingNo: "予約番号",
     email: "メールアドレス",
     submit: "確認して進む",
     submitting: "遷移中...",
     invalidSession: "この連携リンクは無効または期限切れです。店長に再送を依頼してください。",
     failed: "連携確認に失敗しました",
-    help: "解除だけ行いたい場合は、下の LINE 管理ページを利用してください。",
+    help: "解除したい場合は LINE 管理へ進んでください。",
     manage: "LINE 管理へ"
   }
 } as const;
@@ -71,11 +71,11 @@ export default function LineLinkForm({ lang, sessionToken }: Props) {
   }
 
   return (
-    <div className="section-panel">
-      <h2 className="text-2xl font-semibold text-brand-900">{t.title}</h2>
+    <div className="section-panel section-panel-compact">
+      <h2 className="text-xl font-semibold text-brand-900">{t.title}</h2>
       <p className="section-copy mt-2">{t.desc}</p>
 
-      <form className="mt-5 grid gap-4" onSubmit={onSubmit}>
+      <form className="mt-4 grid gap-3" onSubmit={onSubmit}>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-brand-800">{t.bookingNo}</span>
           <input className="ui-input" value={bookingNo} onChange={(event) => setBookingNo(event.target.value)} required />
@@ -88,13 +88,13 @@ export default function LineLinkForm({ lang, sessionToken }: Props) {
 
         {error ? <p className="ui-state-error">{error}</p> : null}
 
-        <button className="ui-btn-primary w-full sm:w-auto" type="submit" disabled={loading || !sessionToken}>
+        <button className="ui-btn-primary w-full" type="submit" disabled={loading || !sessionToken}>
           {loading ? t.submitting : t.submit}
         </button>
       </form>
 
       <p className="field-hint">{t.help}</p>
-      <a className="ui-btn-secondary mt-3 w-full sm:w-auto" href={`/line/manage?lang=${lang}`}>
+      <a className="ui-btn-secondary mt-3 w-full" href={`/line/manage?lang=${lang}`}>
         {t.manage}
       </a>
     </div>
