@@ -523,7 +523,7 @@ export default function AdminCustomersPanel({ lang }: Props) {
       {saving ? <p className="ui-state-info" aria-live="polite">{t.saving}</p> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-[0.92fr_1.08fr]">
-        <div className="grid gap-2">
+        <div className="grid max-h-[72vh] gap-2 overflow-y-auto pr-1">
           {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
           {items.map((item) => (
             <button
@@ -617,8 +617,8 @@ export default function AdminCustomersPanel({ lang }: Props) {
 
               <div>
                 <p className="font-medium text-brand-900">{t.recentAppointments}</p>
-                <div className="mt-2 grid gap-2 text-sm text-brand-700">
-                  {detail.appointments.slice(0, 8).map((appt) => (
+                <div className="mt-2 grid max-h-80 gap-2 overflow-y-auto pr-1 text-sm text-brand-700">
+                  {detail.appointments.map((appt) => (
                     <div key={appt.id} className="rounded-2xl border border-brand-100 bg-white px-3 py-2">
                       <p className="font-medium text-brand-900">#{appt.bookingNo}</p>
                       <p>{sourceChannelLabel(lang, appt.sourceChannel)}</p>

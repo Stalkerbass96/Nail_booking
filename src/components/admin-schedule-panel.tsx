@@ -407,7 +407,7 @@ export default function AdminSchedulePanel({ lang }: Props) {
               </button>
             </form>
 
-            <div className="grid gap-2">
+            <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
               {specialDates.length === 0 ? <p className="ui-state-info mt-0">{t.noSpecial}</p> : null}
               {specialDates.map((item) => (
                 <article key={item.id} className="rounded-[1.2rem] border border-brand-100 bg-white p-3.5 shadow-sm">
@@ -444,7 +444,7 @@ export default function AdminSchedulePanel({ lang }: Props) {
               </button>
             </form>
 
-            <div className="grid gap-2">
+            <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
               {bookingBlocks.length === 0 ? <p className="ui-state-info mt-0">{t.noBlocks}</p> : null}
               {bookingBlocks.map((item) => (
                 <article key={item.id} className="rounded-[1.2rem] border border-brand-100 bg-white p-3.5 shadow-sm">

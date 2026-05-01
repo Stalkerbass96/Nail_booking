@@ -283,6 +283,24 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
     return keywordFilteredItems.filter((item) => item.status === status);
   }, [keywordFilteredItems, status]);
 
+  const sortedItems = useMemo(() => {
+    const statusOrder: Record<AppointmentItem["status"], number> = {
+      pending: 0,
+      confirmed: 1,
+      completed: 2,
+      canceled: 3
+    };
+    const now = Date.now();
+    return [...filteredItems].sort((a, b) => {
+      const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+      if (statusDiff !== 0) return statusDiff;
+      return (
+        Math.abs(new Date(a.startAt).getTime() - now) -
+        Math.abs(new Date(b.startAt).getTime() - now)
+      );
+    });
+  }, [filteredItems]);
+
   const statusCounts = useMemo(() => {
     return keywordFilteredItems.reduce(
       (acc, item) => {
@@ -506,10 +524,10 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
       {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
-      <div className="mt-5 grid gap-3">
-        {filteredItems.length === 0 && !loading ? <p className="ui-state-info">{t.empty}</p> : null}
+      <div className="mt-5 grid max-h-[62vh] gap-3 overflow-y-auto pr-1">
+        {sortedItems.length === 0 && !loading ? <p className="ui-state-info">{t.empty}</p> : null}
 
-        {filteredItems.map((item) => (
+        {sortedItems.map((item) => (
           <article key={item.id} className="rounded-[1.6rem] border border-brand-100 bg-white/92 p-4 shadow-[0_12px_28px_rgba(120,25,55,0.05)]">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="grid flex-1 gap-3">
