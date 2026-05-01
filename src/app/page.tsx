@@ -82,18 +82,19 @@ export default async function HomePage({ searchParams }: Props) {
         ) : (
           <section className="gallery-grid-stable">
             {showcaseItems.map((item) => {
-              const bookingParams = new URLSearchParams({
-                showcaseItemId: item.id.toString(),
-                lang
-              });
-              if (entryToken) {
-                bookingParams.set("entry", entryToken);
-              }
+              const detailParams = new URLSearchParams({ lang });
+              if (entryToken) detailParams.set("entry", entryToken);
+              const detailHref = `/showcase/${item.id.toString()}?${detailParams.toString()}`;
 
               const packageName = lang === "ja" ? item.servicePackage.nameJa : item.servicePackage.nameZh;
 
               return (
-                <article key={item.id.toString()} className="gallery-tile gallery-tile-stable">
+                <Link
+                  key={item.id.toString()}
+                  href={detailHref}
+                  className="gallery-tile gallery-tile-stable"
+                  style={{ textDecoration: "none", display: "block" }}
+                >
                   <div className="gallery-tile-media-wrap">
                     <div
                       className="gallery-tile-media gallery-tile-media-stable"
@@ -105,11 +106,8 @@ export default async function HomePage({ searchParams }: Props) {
                       <span className="gallery-package">{packageName}</span>
                       <span className="gallery-price">¥{Number(item.servicePackage.priceJpy).toLocaleString()}</span>
                     </div>
-                    <Link className="ui-btn-primary gallery-book-btn" href={`/booking?${bookingParams.toString()}`}>
-                      {pickText(lang, "预约", "予約する")}
-                    </Link>
                   </div>
-                </article>
+                </Link>
               );
             })}
           </section>

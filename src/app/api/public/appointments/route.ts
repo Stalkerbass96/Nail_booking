@@ -25,6 +25,16 @@ const lineShowcaseSchema = z.object({
   lang: z.enum(["zh", "ja"]).optional()
 });
 
+const linePackageSchema = z.object({
+  entry: z.string().trim().min(1).max(120),
+  packageId: z.union([z.string(), z.number().int().positive()]),
+  addonIds: z.array(z.union([z.string(), z.number().int().positive()])).optional().default([]),
+  startAt: z.string().datetime({ offset: true }),
+  customerNote: z.string().max(1000).optional().nullable(),
+  name: z.string().trim().min(1).max(80).optional().nullable(),
+  lang: z.enum(["zh", "ja"]).optional()
+});
+
 const legacySchema = z.object({
   name: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(120),
@@ -231,6 +241,133 @@ async function createLegacyAppointment(payload: z.infer<typeof legacySchema>) {
   });
 }
 
+async function createLinePackageAppointment(payload: z.infer<typeof linePackageSchema>) {
+  const packageId = parseSingleBigInt(String(payload.packageId), "packageId");
+  const addonIds = Array.from(
+    new Set((payload.addonIds ?? []).map((v) => parseSingleBigInt(String(v), "addonIds")))
+  );
+
+  const [runtime, lineUser] = await Promise.all([
+    loadRuntimeSettings(),
+    prisma.lineUser.findUnique({
+      where: { homeEntryToken: payload.entry },
+      include: { customer: true }
+    })
+  ]);
+
+  if (!lineUser || !lineUser.customer) {
+    throw new ApiError(403, "This booking link is invalid or expired");
+  }
+
+  const startAt = validateStartAt(payload.startAt, runtime.slotMinutes);
+
+  const servicePackage = await prisma.servicePackage.findFirst({
+    where: { id: packageId, isActive: true },
+    include: { addonLinks: { select: { addonId: true } } }
+  });
+
+  if (!servicePackage) {
+    throw new ApiError(404, "Package not found");
+  }
+
+  const addons = addonIds.length
+    ? await prisma.serviceAddon.findMany({ where: { id: { in: addonIds }, isActive: true } })
+    : [];
+
+  if (addons.length !== addonIds.length) {
+    throw new ApiError(400, "Some addons are invalid or inactive");
+  }
+
+  const allowedAddonSet = new Set(servicePackage.addonLinks.map((l) => l.addonId.toString()));
+  if (addonIds.some((id) => !allowedAddonSet.has(id.toString()))) {
+    throw new ApiError(400, "One or more addons are not allowed for the selected package");
+  }
+
+  const totalDurationMinutes = calculateTotalDurationMinutes(servicePackage, addons);
+  const endAt = addMinutes(startAt, totalDurationMinutes);
+  const bookingYmd = formatYmdInOffset(startAt);
+  const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });
+
+  const created = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${bookingYmd}))`;
+
+    const [hasConflict, blocked] = await Promise.all([
+      tx.appointment.findFirst({
+        where: {
+          status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
+          startAt: { lt: endAt },
+          endAt: { gt: startAt }
+        },
+        select: { id: true }
+      }),
+      findOverlappingBookingBlock(tx, startAt, endAt)
+    ]);
+
+    if (hasConflict) {
+      throw new ApiError(409, "Selected time slot is no longer available");
+    }
+
+    if (blocked) {
+      throw new ApiError(409, blocked.reason || "Selected time is blocked by the store owner");
+    }
+
+    await tx.customer.update({
+      where: { id: lineUser.customer!.id },
+      data: {
+        customerType: CustomerType.active,
+        firstBookedAt: lineUser.customer!.firstBookedAt ?? new Date(),
+        name:
+          payload.name?.trim() ||
+          lineUser.customer!.name ||
+          lineUser.displayName ||
+          `LINE-${lineUser.lineUserId.slice(-8)}`
+      }
+    });
+
+    const bookingNo = await generateUniqueBookingNo(tx);
+
+    return tx.appointment.create({
+      data: {
+        bookingNo,
+        customerId: lineUser.customer!.id,
+        packageId,
+        sourceChannel: AppointmentSourceChannel.line_showcase,
+        customerNote: payload.customerNote ?? null,
+        startAt,
+        endAt,
+        status: AppointmentStatus.pending,
+        autoCancelAt,
+        addons: {
+          create: addons.map((addon) => ({
+            addonId: addon.id,
+            priceSnapshotJpy: addon.priceJpy,
+            durationSnapshotMin: addon.durationIncreaseMin
+          }))
+        }
+      },
+      select: {
+        bookingNo: true,
+        status: true,
+        autoCancelAt: true,
+        startAt: true,
+        endAt: true
+      }
+    });
+  });
+
+  if (payload.lang && lineUser.isFollowing) {
+    await sendPendingBookingMessage(prisma, {
+      lineUserDbId: lineUser.id,
+      linePlatformUserId: lineUser.lineUserId,
+      bookingNo: created.bookingNo,
+      entryToken: lineUser.homeEntryToken,
+      lang: payload.lang
+    });
+  }
+
+  return created;
+}
+
 async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcaseSchema>) {
   const showcaseItemId = parseSingleBigInt(String(payload.showcaseItemId), "showcaseItemId");
   const runtime = await loadRuntimeSettings();
@@ -338,10 +475,13 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
     const lineParsed = lineShowcaseSchema.safeParse(rawBody);
+    const linePkgParsed = !lineParsed.success ? linePackageSchema.safeParse(rawBody) : null;
 
     const created = lineParsed.success
       ? await createLineShowcaseAppointment(lineParsed.data)
-      : await createLegacyAppointment(legacySchema.parse(rawBody));
+      : linePkgParsed?.success
+        ? await createLinePackageAppointment(linePkgParsed.data)
+        : await createLegacyAppointment(legacySchema.parse(rawBody));
 
     return NextResponse.json(
       {
