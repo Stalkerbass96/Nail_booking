@@ -1,5 +1,33 @@
 ﻿# CHANGELOG
 
+## 2026-05-01
+
+### 文档清理
+- 删除遗留的一次性脚本：`scripts/git-push.ps1`、`scripts/bootstrap-dev.ps1`、`scripts/cleanup-workspace.ps1`（均为前次 Cowork 会话遗留）。
+- 删除 E2E 测试跑批产物：`docs/testing/artifacts/e2e-2026-03-07/`。
+- 删除被新版本取代的文档：`docs/prd/prd-v2.md`、`docs/requirements/requirements-v1.1.md`。
+- 全面更新所有架构与运营文档，与 2.0 LINE-first 代码当前实际状态保持一致。
+- 修正 `README.md` 中环境变量表（删除不存在的 `NEXTAUTH_SECRET`/`NEXTAUTH_URL`，补充 `ADMIN_AUTH_SECRET`/`APP_BASE_URL`/`CRON_SECRET`）。
+
+## 2026-03-08
+
+### LINE-first 2.0 完整落地
+- LINE Webhook 完整接入：`follow / unfollow / message / accountLink` 事件处理。
+- `follow` 事件自动创建顾客档案（`customerType=lead`）并仅首次推送图墙首页链接。
+- 图墙前台首页完成切换，支持分类筛选，点击图墙项进入固定套餐预约流程。
+- 预约创建写入 `showcaseItemId` 与 `sourceChannel=line_showcase`，首次预约将顾客从 `lead` 转为 `active`。
+- 提交预约后 LINE 自动推送待确认消息（含预约号与详情链接）。
+- 店长在后台确认预约后，LINE 自动推送已确认通知。
+- 后台新增图墙管理页（`/admin/showcase`）：创建、编辑、删除、排序、上下架。
+- 后台新增 LINE 会话页（`/admin/line`）：1 对 1 文本消息、未读状态管理、手动绑定顾客。
+- 后台顾客页升级：潜在客户/正式顾客状态、LINE 关联档案、预约来源溯源。
+- 后台预约页升级：展示来源图墙项、顾客 LINE 关联情况。
+- 公开预约详情页（`/booking/{bookingNo}`）作为 LINE 消息落点页面完成接入。
+- 新增预约封锁区间（BookingBlock）与特殊营业日管理。
+- 完成暖色系 UI 重构（ivory 背景、warm tone 调色板、无 TS 徽标）。
+- 完成所有架构与数据模型文档（data-model-v2.0、api-endpoints、frontend-routes、task-breakdown）。
+- `npm run build` ✅，`npm run lint` ✅，`npm run test:e2e` 5/5 ✅。
+
 ## 2026-03-07
 
 ### 产品与功能

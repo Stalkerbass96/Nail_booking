@@ -23,7 +23,7 @@
 | 消息 | LINE Messaging API + LIFF |
 | 部署 | PM2 + Nginx + Let's Encrypt |
 
-## 当前状态（2026-04-29）
+## 当前状态（2026-05-01）
 
 - `npm run build` 通过
 - `npm run lint` 通过
@@ -79,13 +79,13 @@ npm run dev
 | 变量 | 说明 |
 |------|------|
 | `DATABASE_URL` | PostgreSQL 连接字符串 |
-| `NEXTAUTH_SECRET` | NextAuth 签名密钥（`openssl rand -hex 32`） |
-| `NEXTAUTH_URL` | 生产域名，如 `https://example.com` |
-| `NEXT_PUBLIC_BASE_URL` | 同上，供前端使用 |
-| `LINE_CHANNEL_ACCESS_TOKEN` | LINE Messaging API Channel Access Token |
-| `LINE_CHANNEL_SECRET` | LINE Channel Secret |
-| `LINE_LIFF_ID` | LIFF App ID（用于预约页身份识别） |
+| `ADMIN_AUTH_SECRET` | 管理端 JWT 签名密钥（`openssl rand -hex 32`） |
 | `ADMIN_SEED_PASSWORD` | 种子数据管理员密码 |
+| `APP_BASE_URL` | 应用公开地址，如 `https://example.com`，LINE 消息链接依赖此值 |
+| `CRON_SECRET` | 系统定时任务鉴权密钥 |
+| `LINE_CHANNEL_ACCESS_TOKEN` | LINE Messaging API Channel Access Token |
+| `LINE_CHANNEL_SECRET` | LINE Channel Secret（Webhook 签名验证） |
+| `LINE_AUTO_REPLY_TEXT` | 收到顾客消息时的自动回复文案（可选） |
 
 ## 常用命令
 
