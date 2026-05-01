@@ -1,6 +1,7 @@
 import { LineMessageDirection, LineMessageStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { Lang } from "@/lib/lang";
+import { formatDateTimeInOffset } from "@/lib/booking-rules";
 import { buildLineHomeUrl, buildPublicBookingDetailUrl, pushLineTextMessage } from "@/lib/line";
 
 const TEXT = {
@@ -21,6 +22,14 @@ const TEXT = {
   confirmed: {
     zh: "\u4f60\u7684\u9884\u7ea6\u5df2\u786e\u8ba4\u3002\u671f\u5f85\u4f60\u7684\u5230\u6765\u3002",
     ja: "\u3054\u4e88\u7d04\u304c\u78ba\u5b9a\u3057\u307e\u3057\u305f\u3002\u3054\u6765\u5e97\u3092\u304a\u5f85\u3061\u3057\u3066\u3044\u307e\u3059\u3002"
+  },
+  rescheduled: {
+    zh: "你的预约时间已更改，请查看新时间。",
+    ja: "ご予約の時間が変更されました。新しい時間をご確認ください。"
+  },
+  newTime: {
+    zh: "新时间",
+    ja: "新しい日時"
   },
   gallery: {
     zh: [
@@ -154,6 +163,46 @@ export async function sendPendingBookingMessage(tx: Tx, input: {
       lineUserId: input.lineUserDbId,
       text,
       messageType: "booking_pending",
+      status: LineMessageStatus.failed
+    });
+    return false;
+  }
+}
+
+export async function sendRescheduledBookingMessage(tx: Tx, input: {
+  lineUserDbId: bigint;
+  linePlatformUserId: string;
+  bookingNo: string;
+  newStartAt: Date;
+  entryToken?: string | null;
+  lang: Lang;
+}) {
+  const locale = input.lang === "ja" ? "ja-JP" : "zh-CN";
+  const formattedTime = formatDateTimeInOffset(input.newStartAt, locale);
+  const detailUrl = buildPublicBookingDetailUrl(input.bookingNo, input.entryToken ?? undefined, input.lang);
+  const text = [
+    TEXT.rescheduled[input.lang],
+    `${TEXT.newTime[input.lang]}: ${formattedTime}`,
+    `${bookingLabel(input.lang)}: ${input.bookingNo}`,
+    detailUrl ? `${detailLabel(input.lang)}: ${detailUrl}` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    await pushLineTextMessage(input.linePlatformUserId, text);
+    await recordLineMessage(tx, {
+      lineUserId: input.lineUserDbId,
+      text,
+      messageType: "booking_rescheduled",
+      status: LineMessageStatus.sent
+    });
+    return true;
+  } catch {
+    await recordLineMessage(tx, {
+      lineUserId: input.lineUserDbId,
+      text,
+      messageType: "booking_rescheduled",
       status: LineMessageStatus.failed
     });
     return false;

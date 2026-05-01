@@ -42,6 +42,10 @@ type CompleteDraft = {
   note: string;
 };
 
+type RescheduleDraft = {
+  newStartAt: string;
+};
+
 type SourceFilter = "all" | AppointmentItem["sourceChannel"];
 
 type Props = {
@@ -99,7 +103,12 @@ const TEXT = {
     completedHint: "\u670d\u52a1\u5df2\u5b8c\u6210\uff0c\u53ef\u7528\u4e8e\u79ef\u5206\u7ed3\u7b97\u3002",
     canceledHint: "\u5df2\u53d6\u6d88\uff0c\u6863\u671f\u5df2\u91ca\u653e\u3002",
     allHint: "\u663e\u793a\u5f53\u524d\u7b5b\u9009\u6761\u4ef6\u4e0b\u7684\u5168\u90e8\u9884\u7ea6\u3002",
-    openLineConversation: "\u6253\u5f00 LINE \u4f1a\u8bdd"
+    openLineConversation: "\u6253\u5f00 LINE \u4f1a\u8bdd",
+    reschedule: "\u4fee\u6539\u65f6\u95f4",
+    rescheduleTitle: "\u4fee\u6539\u9884\u7ea6\u65f6\u95f4",
+    newTime: "\u65b0\u65f6\u95f4",
+    saveReschedule: "\u4fdd\u5b58\u65b0\u65f6\u95f4",
+    rescheduleLineSent: "\u5df2\u901a\u8fc7 LINE \u901a\u77e5\u987e\u5ba2"
   },
   ja: {
     title: "\u4e88\u7d04\u7ba1\u7406",
@@ -151,7 +160,12 @@ const TEXT = {
     completedHint: "\u65bd\u8853\u5b8c\u4e86\u6e08\u307f\u3067\u3001\u30dd\u30a4\u30f3\u30c8\u8a08\u7b97\u5bfe\u8c61\u3067\u3059\u3002",
     canceledHint: "\u30ad\u30e3\u30f3\u30bb\u30eb\u6e08\u307f\u3067\u3001\u67a0\u306f\u89e3\u653e\u6e08\u307f\u3067\u3059\u3002",
     allHint: "\u73fe\u5728\u306e\u6761\u4ef6\u3067\u53d6\u5f97\u3057\u305f\u4e88\u7d04\u3092\u3059\u3079\u3066\u8868\u793a\u3057\u307e\u3059\u3002",
-    openLineConversation: "LINE \u4f1a\u8a71\u3092\u958b\u304f"
+    openLineConversation: "LINE \u4f1a\u8a71\u3092\u958b\u304f",
+    reschedule: "\u65e5\u6642\u5909\u66f4",
+    rescheduleTitle: "\u4e88\u7d04\u65e5\u6642\u306e\u5909\u66f4",
+    newTime: "\u65b0\u3057\u3044\u65e5\u6642",
+    saveReschedule: "\u65b0\u3057\u3044\u65e5\u6642\u3092\u4fdd\u5b58",
+    rescheduleLineSent: "LINE \u3067\u9867\u5ba2\u306b\u901a\u77e5\u3057\u307e\u3057\u305f"
   }
 } as const;
 
@@ -206,6 +220,8 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   const [error, setError] = useState("");
   const [openCompleteId, setOpenCompleteId] = useState<string | null>(null);
   const [completeDraft, setCompleteDraft] = useState<CompleteDraft>(createEmptyDraft());
+  const [openRescheduleId, setOpenRescheduleId] = useState<string | null>(null);
+  const [rescheduleDraft, setRescheduleDraft] = useState<RescheduleDraft>({ newStartAt: "" });
 
   useEffect(() => {
     if (sourceChannel !== "line_showcase" && showcaseItemId !== "all") {
@@ -318,11 +334,59 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
   function openComplete(item: AppointmentItem) {
     setOpenCompleteId(item.id);
     setCompleteDraft(createEmptyDraft());
+    setOpenRescheduleId(null);
   }
 
   function closeComplete() {
     setOpenCompleteId(null);
     setCompleteDraft(createEmptyDraft());
+  }
+
+  function toDatetimeLocal(iso: string): string {
+    // Convert UTC ISO string to JST datetime-local value (YYYY-MM-DDTHH:MM)
+    const d = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
+    const y = d.getUTCFullYear();
+    const mo = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const dy = String(d.getUTCDate()).padStart(2, "0");
+    const hh = String(d.getUTCHours()).padStart(2, "0");
+    const mm = String(d.getUTCMinutes()).padStart(2, "0");
+    return `${y}-${mo}-${dy}T${hh}:${mm}`;
+  }
+
+  function openReschedule(item: AppointmentItem) {
+    setOpenRescheduleId(item.id);
+    setRescheduleDraft({ newStartAt: toDatetimeLocal(item.startAt) });
+    setOpenCompleteId(null);
+  }
+
+  function closeReschedule() {
+    setOpenRescheduleId(null);
+    setRescheduleDraft({ newStartAt: "" });
+  }
+
+  async function submitReschedule(itemId: string) {
+    if (!rescheduleDraft.newStartAt) {
+      setError(lang === "ja" ? "新しい日時を選択してください" : "请选择新时间");
+      return;
+    }
+    // Convert datetime-local (JST) to ISO with offset
+    const isoWithOffset = `${rescheduleDraft.newStartAt}:00+09:00`;
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/appointments/${itemId}/reschedule`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newStartAt: isoWithOffset })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || t.actionFailed);
+      }
+      closeReschedule();
+      await fetchItems();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.actionFailed);
+    }
   }
 
   async function submitComplete(itemId: string) {
@@ -502,6 +566,16 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 {(item.status === "pending" || item.status === "confirmed") ? (
                   <button
                     type="button"
+                    className="admin-btn-secondary min-h-10 px-3 py-2"
+                    onClick={() => openReschedule(item)}
+                  >
+                    {t.reschedule}
+                  </button>
+                ) : null}
+
+                {(item.status === "pending" || item.status === "confirmed") ? (
+                  <button
+                    type="button"
                     className="admin-btn-ghost px-3 py-2"
                     onClick={() => {
                       if (!window.confirm(t.confirmCancel)) return;
@@ -521,6 +595,37 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                 ) : null}
               </div>
             </div>
+
+            {openRescheduleId === item.id ? (
+              <div className="admin-subsection mt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium text-brand-900">{t.rescheduleTitle}</p>
+                  <button type="button" className="admin-btn-ghost" onClick={closeReschedule}>
+                    {t.close}
+                  </button>
+                </div>
+                <label className="grid gap-1 text-sm text-brand-800">
+                  <span>{t.newTime}</span>
+                  <input
+                    type="datetime-local"
+                    className="admin-input"
+                    value={rescheduleDraft.newStartAt}
+                    onChange={(event) => setRescheduleDraft({ newStartAt: event.target.value })}
+                  />
+                </label>
+                <p className="text-xs text-brand-600">
+                  {lang === "ja" ? "※ 日本時間（JST）で入力してください" : "※ 请以日本时间（JST）输入"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="admin-btn-primary" onClick={() => void submitReschedule(item.id)}>
+                    {t.saveReschedule}
+                  </button>
+                  <button type="button" className="admin-btn-ghost" onClick={closeReschedule}>
+                    {t.close}
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             {openCompleteId === item.id ? (
               <div className="admin-subsection mt-4">
