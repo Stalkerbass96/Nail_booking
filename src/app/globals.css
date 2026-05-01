@@ -63,7 +63,9 @@ input, select, textarea, button {
   color: inherit;
 }
 
-/* Prevent date/time/datetime-local inputs from overflowing their container */
+/* Prevent date/time/datetime-local inputs from overflowing their container.
+   -webkit-appearance: none removes the native browser chrome (calendar icon,
+   clear button) that LINE/iOS WebKit renders outside the CSS box boundary. */
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
@@ -72,6 +74,8 @@ input[type="datetime-local"] {
   min-width: 0;
   width: 100%;
   max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 button, select {
@@ -885,6 +889,7 @@ a:focus-visible {
   .booking-flow-shell {
     display: grid;
     gap: 16px;
+    min-width: 0;
   }
 
   @media (min-width: 1280px) {

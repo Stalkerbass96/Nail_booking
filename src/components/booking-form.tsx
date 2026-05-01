@@ -244,7 +244,7 @@ export default function BookingForm({ lang, showcaseItem, entryToken, customerNa
           <p className="ui-state-error mt-3">{t.lineMissing}</p>
         )}
 
-        <div className="mt-4">
+        <div className="mt-4 min-w-0 overflow-hidden">
           <label className="grid min-w-0 gap-2" htmlFor="booking-date">
             <span className="text-sm font-medium" style={{ color: "var(--text-2)" }}>{t.date}</span>
             <input
