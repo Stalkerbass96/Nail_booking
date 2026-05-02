@@ -61,6 +61,12 @@ export default function PublicSiteFrame({
                   >
                     {pickText(lang, "套餐", "メニュー")}
                   </Link>
+                  <Link
+                    className="site-nav-link"
+                    href={withLangAndEntry("/addons", lang, entryToken)}
+                  >
+                    {pickText(lang, "加项", "オプション")}
+                  </Link>
                 </nav>
               </>
             )}
@@ -91,6 +97,9 @@ export default function PublicSiteFrame({
               </Link>
               <Link href={withLangAndEntry("/services", lang, entryToken)}>
                 {pickText(lang, "套餐", "メニュー")}
+              </Link>
+              <Link href={withLangAndEntry("/addons", lang, entryToken)}>
+                {pickText(lang, "加项", "オプション")}
               </Link>
               <span style={{ color: "var(--border-mid)" }}>·</span>
               <span>© 2025 Tsuzuri</span>
