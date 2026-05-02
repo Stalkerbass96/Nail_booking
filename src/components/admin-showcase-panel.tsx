@@ -18,6 +18,17 @@ type PackageItem = {
   isActive?: boolean;
 };
 
+type AvailableAddon = {
+  id: string;
+  nameZh: string;
+  nameJa: string;
+  priceJpy: number;
+  durationIncreaseMin: number;
+  maxQty: number;
+  isActive: boolean;
+  currentQty: number;
+};
+
 type ShowcaseItem = {
   id: string;
   titleZh: string;
@@ -95,7 +106,12 @@ const TEXT = {
     deleteFailed: "删除图墙失败",
     deleteSuccess: "图墙项已删除",
     deleteConfirm: "确定要删除这个图墙项吗？如果已经产生预约，系统会拒绝删除。",
-    deleteBlocked: "这个图墙项已有预约历史，不能删除。"
+    deleteBlocked: "这个图墙项已有预约历史，不能删除。",
+    addonsTitle: "固定加项组合",
+    addonsSaveSuccess: "加项已保存",
+    addonsSaveFailed: "保存加项失败",
+    addonsNone: "此套餐暂无可用加项",
+    addonsLoading: "加载加项..."
   },
   ja: {
     title: "ギャラリー管理",
@@ -141,7 +157,12 @@ const TEXT = {
     deleteFailed: "ギャラリー項目の削除に失敗しました",
     deleteSuccess: "ギャラリー項目を削除しました",
     deleteConfirm: "このギャラリー項目を削除しますか？予約履歴がある場合は削除できません。",
-    deleteBlocked: "このギャラリー項目には予約履歴があるため削除できません。"
+    deleteBlocked: "このギャラリー項目には予約履歴があるため削除できません。",
+    addonsTitle: "固定オプション組み合わせ",
+    addonsSaveSuccess: "オプションを保存しました",
+    addonsSaveFailed: "オプションの保存に失敗しました",
+    addonsNone: "このメニューには利用可能なオプションがありません",
+    addonsLoading: "オプションを読み込み中..."
   }
 } as const;
 
@@ -192,6 +213,9 @@ export default function AdminShowcasePanel({ lang }: Props) {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [publishFilter, setPublishFilter] = useState<PublishFilter>("all");
   const [keyword, setKeyword] = useState("");
+  const [showcaseAddons, setShowcaseAddons] = useState<AvailableAddon[]>([]);
+  const [addonQtys, setAddonQtys] = useState<Record<string, number>>({});
+  const [addonsLoading, setAddonsLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -332,7 +356,24 @@ export default function AdminShowcasePanel({ lang }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || t.updateFailed);
+
+      // Save fixed add-ons if any are shown
+      if (showcaseAddons.length > 0) {
+        const addonPayload = Object.entries(addonQtys)
+          .filter(([, qty]) => qty > 0)
+          .map(([addonId, qty]) => ({ addonId, qty }));
+        const addonRes = await fetch(`/api/admin/showcase/${editingId}/addons`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addons: addonPayload })
+        });
+        const addonData = await addonRes.json();
+        if (!addonRes.ok) throw new Error(addonData?.error || t.addonsSaveFailed);
+      }
+
       setEditingId(null);
+      setShowcaseAddons([]);
+      setAddonQtys({});
       setNotice(t.saveSuccess);
       await refresh();
     } catch (err) {
@@ -398,6 +439,29 @@ export default function AdminShowcasePanel({ lang }: Props) {
       setError(err instanceof Error ? err.message : t.updateFailed);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function startEdit(item: ShowcaseItem) {
+    setEditingId(item.id);
+    setEditForm(fromItem(item));
+    setShowcaseAddons([]);
+    setAddonQtys({});
+    setAddonsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/showcase/${item.id}/addons`);
+      const data = await res.json();
+      const addons: AvailableAddon[] = data.availableAddons ?? [];
+      setShowcaseAddons(addons);
+      const qtys: Record<string, number> = {};
+      for (const a of addons) {
+        qtys[a.id] = a.currentQty;
+      }
+      setAddonQtys(qtys);
+    } catch {
+      // silently ignore — addon management is optional
+    } finally {
+      setAddonsLoading(false);
     }
   }
 
@@ -530,7 +594,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={reorderLocked || index === 0 || saving}>{t.moveUp}</button>
                     <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={reorderLocked || index === filteredItems.length - 1 || saving}>{t.moveDown}</button>
                     <button className="admin-btn-ghost" onClick={() => void togglePublish(item)} type="button" disabled={saving}>{item.isPublished ? t.unpublishNow : t.publishNow}</button>
-                    <button className="admin-btn-ghost" onClick={() => { setEditingId(item.id); setEditForm(fromItem(item)); }} type="button">{t.edit}</button>
+                    <button className="admin-btn-ghost" onClick={() => void startEdit(item)} type="button">{t.edit}</button>
                     <button className="admin-btn-danger" onClick={() => void deleteItem(item)} type="button" disabled={saving}>{t.remove}</button>
                   </div>
                 </div>
@@ -567,9 +631,67 @@ export default function AdminShowcasePanel({ lang }: Props) {
                   </label>
                 </div>
                 {renderPreview(editForm.imageUrl)}
+
+                {/* Fixed add-ons */}
+                <div>
+                  <p className="font-medium text-brand-900 mb-2">{t.addonsTitle}</p>
+                  {addonsLoading ? (
+                    <p className="text-sm text-brand-600">{t.addonsLoading}</p>
+                  ) : showcaseAddons.length === 0 ? (
+                    <p className="text-sm text-brand-500">{t.addonsNone}</p>
+                  ) : (
+                    <div className="grid gap-2">
+                      {showcaseAddons.map((addon) => {
+                        const qty = addonQtys[addon.id] ?? 0;
+                        const isSelected = qty > 0;
+                        const name = displayName(lang, addon.nameZh, addon.nameJa);
+                        return (
+                          <div
+                            key={addon.id}
+                            className="flex items-center gap-3 rounded-lg border border-brand-200 bg-white px-3 py-2"
+                          >
+                            <label className="flex flex-1 cursor-pointer items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="admin-check"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  setAddonQtys((prev) => ({
+                                    ...prev,
+                                    [addon.id]: e.target.checked ? 1 : 0
+                                  }));
+                                }}
+                              />
+                              <span className="text-sm text-brand-900">{name}</span>
+                              <span className="text-xs text-brand-500">
+                                +¥{addon.priceJpy.toLocaleString()} +{addon.durationIncreaseMin}min
+                              </span>
+                            </label>
+                            {isSelected && addon.maxQty > 1 && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  className="admin-btn-ghost px-2 py-0.5 text-xs"
+                                  onClick={() => setAddonQtys((prev) => ({ ...prev, [addon.id]: Math.max(1, qty - 1) }))}
+                                >−</button>
+                                <span className="w-6 text-center text-sm font-medium">{qty}</span>
+                                <button
+                                  type="button"
+                                  className="admin-btn-ghost px-2 py-0.5 text-xs"
+                                  onClick={() => setAddonQtys((prev) => ({ ...prev, [addon.id]: Math.min(addon.maxQty, qty + 1) }))}
+                                >+</button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-2">
                   <button className="admin-btn-primary px-3 py-1.5" type="submit">{t.save}</button>
-                  <button className="admin-btn-ghost" type="button" onClick={() => setEditingId(null)}>{t.cancel}</button>
+                  <button className="admin-btn-ghost" type="button" onClick={() => { setEditingId(null); setShowcaseAddons([]); setAddonQtys({}); }}>{t.cancel}</button>
                 </div>
               </form>
             ) : null}

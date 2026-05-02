@@ -59,7 +59,8 @@ export default async function ServicesPage({ searchParams }: Props) {
                   descZh: true,
                   descJa: true,
                   priceJpy: true,
-                  durationIncreaseMin: true
+                  durationIncreaseMin: true,
+                  maxQty: true
                 }
               }
             },

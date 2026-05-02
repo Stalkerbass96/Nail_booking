@@ -11,6 +11,7 @@ type AddonItem = {
   descJa?: string | null;
   priceJpy: number;
   durationIncreaseMin: number;
+  maxQty: number;
   isActive: boolean;
   packageIds: string[];
 };
@@ -22,6 +23,7 @@ type AddonFormState = {
   descJa: string;
   priceJpy: string;
   durationIncreaseMin: string;
+  maxQty: string;
   isActive: boolean;
 };
 
@@ -39,6 +41,7 @@ const TEXT = {
     nameJa: "日文名",
     price: "价格",
     duration: "时长增量(30倍数)",
+    maxQty: "最大数量",
     descZh: "中文描述",
     descJa: "日文描述",
     create: "新建加项",
@@ -69,6 +72,7 @@ const TEXT = {
     nameJa: "日本語名",
     price: "価格",
     duration: "時間追加(30分単位)",
+    maxQty: "最大数量",
     descZh: "中国語説明",
     descJa: "日本語説明",
     create: "作成",
@@ -100,6 +104,7 @@ function createEmptyFormState(): AddonFormState {
     descJa: "",
     priceJpy: "0",
     durationIncreaseMin: "30",
+    maxQty: "1",
     isActive: true
   };
 }
@@ -112,6 +117,7 @@ function fromAddon(item: AddonItem): AddonFormState {
     descJa: item.descJa ?? "",
     priceJpy: String(item.priceJpy),
     durationIncreaseMin: String(item.durationIncreaseMin),
+    maxQty: String(item.maxQty ?? 1),
     isActive: item.isActive
   };
 }
@@ -150,6 +156,7 @@ export default function AdminAddonsPanel({ lang }: Props) {
       descJa: form.descJa.trim() || null,
       priceJpy: Number.parseInt(form.priceJpy, 10) || 0,
       durationIncreaseMin: Number.parseInt(form.durationIncreaseMin, 10) || 0,
+      maxQty: Math.max(1, Number.parseInt(form.maxQty, 10) || 1),
       isActive: form.isActive
     };
   }
@@ -266,11 +273,12 @@ export default function AdminAddonsPanel({ lang }: Props) {
       <form className="admin-subsection" onSubmit={createAddon}>
         <p className="font-medium text-brand-900">{t.createTitle}</p>
 
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           <input className="admin-input-sm" placeholder={t.nameZh} value={createForm.nameZh} onChange={(e) => patchCreateForm({ nameZh: e.target.value })} />
           <input className="admin-input-sm" placeholder={t.nameJa} value={createForm.nameJa} onChange={(e) => patchCreateForm({ nameJa: e.target.value })} />
           <input className="admin-input-sm" placeholder={t.price} value={createForm.priceJpy} onChange={(e) => patchCreateForm({ priceJpy: e.target.value })} />
           <input className="admin-input-sm" placeholder={t.duration} value={createForm.durationIncreaseMin} onChange={(e) => patchCreateForm({ durationIncreaseMin: e.target.value })} />
+          <input className="admin-input-sm" placeholder={t.maxQty} value={createForm.maxQty} onChange={(e) => patchCreateForm({ maxQty: e.target.value })} />
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -287,7 +295,7 @@ export default function AdminAddonsPanel({ lang }: Props) {
           <article key={item.id} className="admin-item">
             <p className="font-medium text-brand-900">{item.nameZh} / {item.nameJa}</p>
             <p className="text-sm text-brand-700">
-              {item.priceJpy} JPY · +{item.durationIncreaseMin} min · {t.usedBy} {item.packageIds.length} {t.packageSuffix} · {item.isActive ? t.enabled : t.disabled}
+              {item.priceJpy} JPY · +{item.durationIncreaseMin} min · {t.maxQty}: {item.maxQty ?? 1} · {t.usedBy} {item.packageIds.length} {t.packageSuffix} · {item.isActive ? t.enabled : t.disabled}
             </p>
 
             <div className="mt-2 flex gap-2">
@@ -297,11 +305,12 @@ export default function AdminAddonsPanel({ lang }: Props) {
 
             {editingId === item.id ? (
               <form className="mt-3 grid gap-3 rounded-xl border border-brand-100 p-3" onSubmit={saveEdit}>
-                <div className="grid gap-3 md:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-5">
                   <input className="admin-input-sm" value={editForm.nameZh} onChange={(e) => patchEditForm({ nameZh: e.target.value })} />
                   <input className="admin-input-sm" value={editForm.nameJa} onChange={(e) => patchEditForm({ nameJa: e.target.value })} />
                   <input className="admin-input-sm" value={editForm.priceJpy} onChange={(e) => patchEditForm({ priceJpy: e.target.value })} />
                   <input className="admin-input-sm" value={editForm.durationIncreaseMin} onChange={(e) => patchEditForm({ durationIncreaseMin: e.target.value })} />
+                  <input className="admin-input-sm" value={editForm.maxQty} onChange={(e) => patchEditForm({ maxQty: e.target.value })} />
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">

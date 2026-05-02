@@ -127,10 +127,12 @@ model ServiceAddon {
   descJa              String? @map("desc_ja")
   priceJpy            Int     @map("price_jpy")
   durationIncreaseMin Int     @map("duration_increase_min")
+  maxQty              Int     @default(1) @map("max_qty")
   isActive            Boolean @default(true) @map("is_active")
 
-  packageLinks      PackageAddonLink[]
-  appointmentAddons AppointmentAddon[]
+  packageLinks       PackageAddonLink[]
+  appointmentAddons  AppointmentAddon[]
+  showcaseItemLinks  ShowcaseItemAddon[]
 
   @@map("service_addons")
 }
@@ -184,6 +186,7 @@ model AppointmentAddon {
   id                  BigInt @id @default(autoincrement())
   appointmentId       BigInt @map("appointment_id")
   addonId             BigInt @map("addon_id")
+  qty                 Int    @default(1)
   priceSnapshotJpy    Int    @map("price_snapshot_jpy")
   durationSnapshotMin Int    @map("duration_snapshot_min")
 
@@ -271,14 +274,28 @@ model ShowcaseItem {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  category       ServiceCategory @relation(fields: [categoryId], references: [id])
-  servicePackage ServicePackage  @relation(fields: [servicePackageId], references: [id])
+  category       ServiceCategory   @relation(fields: [categoryId], references: [id])
+  servicePackage ServicePackage    @relation(fields: [servicePackageId], references: [id])
   appointments   Appointment[]
+  addonLinks     ShowcaseItemAddon[]
 
   @@index([categoryId, sortOrder])
   @@index([servicePackageId])
   @@index([isPublished, sortOrder])
   @@map("showcase_items")
+}
+
+model ShowcaseItemAddon {
+  id             BigInt @id @default(autoincrement())
+  showcaseItemId BigInt @map("showcase_item_id")
+  addonId        BigInt @map("addon_id")
+  qty            Int    @default(1)
+
+  showcaseItem ShowcaseItem @relation(fields: [showcaseItemId], references: [id], onDelete: Cascade)
+  addon        ServiceAddon @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@unique([showcaseItemId, addonId])
+  @@map("showcase_item_addons")
 }
 
 model LineUser {

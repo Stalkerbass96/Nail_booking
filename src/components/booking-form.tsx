@@ -43,6 +43,7 @@ type AddonInfo = {
   descJa?: string | null;
   priceJpy: number;
   durationIncreaseMin: number;
+  maxQty: number;
 };
 
 type Slot = { startAt: string; endAt: string };
@@ -155,7 +156,7 @@ export default function BookingForm(props: Props) {
   const [selectedStartAt, setSelectedStartAt] = useState("");
   const [bookingName, setBookingName] = useState(customerName ?? "");
   const [customerNote, setCustomerNote] = useState("");
-  const [selectedAddonIds, setSelectedAddonIds] = useState<Set<string>>(new Set());
+  const [addonQtys, setAddonQtys] = useState<Record<string, number>>({});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -168,7 +169,6 @@ export default function BookingForm(props: Props) {
 
   // Derived values for package mode
   const availableAddons = props.mode === "package" ? props.availableAddons : [];
-  const selectedAddons = availableAddons.filter((a) => selectedAddonIds.has(a.id));
 
   const basePrice = props.mode === "showcase"
     ? props.showcaseItem.priceJpy
@@ -178,8 +178,15 @@ export default function BookingForm(props: Props) {
     ? props.showcaseItem.durationMin
     : props.pkg.durationMin;
 
-  const addonPriceTotal = selectedAddons.reduce((s, a) => s + a.priceJpy, 0);
-  const addonDurationTotal = selectedAddons.reduce((s, a) => s + a.durationIncreaseMin, 0);
+  const addonPriceTotal = availableAddons.reduce((s, a) => {
+    const qty = addonQtys[a.id] ?? 0;
+    return s + a.priceJpy * qty;
+  }, 0);
+  const addonDurationTotal = availableAddons.reduce((s, a) => {
+    const qty = addonQtys[a.id] ?? 0;
+    return s + a.durationIncreaseMin * qty;
+  }, 0);
+  const selectedAddons = availableAddons.filter((a) => (addonQtys[a.id] ?? 0) > 0);
   const totalPrice = basePrice + addonPriceTotal;
   const totalDuration = baseDuration + addonDurationTotal;
 
@@ -197,7 +204,7 @@ export default function BookingForm(props: Props) {
 
   // ── availability fetch ──────────────────────────────────────────────────
 
-  async function refreshAvailability(nextDate: string, addonIds?: string[]) {
+  async function refreshAvailability(nextDate: string) {
     if (!nextDate) {
       setSlots([]);
       setSelectedStartAt("");
@@ -211,8 +218,11 @@ export default function BookingForm(props: Props) {
       qs.set("showcaseItemId", props.showcaseItem.id);
     } else {
       qs.set("packageId", props.pkg.id);
-      const ids = addonIds ?? [...selectedAddonIds];
-      if (ids.length > 0) qs.set("addonIds", ids.join(","));
+      const addonParam = availableAddons
+        .filter((a) => (addonQtys[a.id] ?? 0) > 0)
+        .map((a) => `${a.id}:${addonQtys[a.id]}`)
+        .join(",");
+      if (addonParam) qs.set("addons", addonParam);
     }
 
     try {
@@ -230,25 +240,20 @@ export default function BookingForm(props: Props) {
     }
   }
 
+  // Stable key representing current addon selection — used as effect dep
+  const addonQtysKey = availableAddons
+    .filter((a) => (addonQtys[a.id] ?? 0) > 0)
+    .map((a) => `${a.id}:${addonQtys[a.id]}`)
+    .sort()
+    .join(",");
+
   // Re-fetch slots when add-ons change (package mode only)
   useEffect(() => {
     if (props.mode === "package" && date) {
-      void refreshAvailability(date, [...selectedAddonIds]);
+      void refreshAvailability(date);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAddonIds]);
-
-  function toggleAddon(addonId: string) {
-    setSelectedAddonIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(addonId)) {
-        next.delete(addonId);
-      } else {
-        next.add(addonId);
-      }
-      return next;
-    });
-  }
+  }, [addonQtysKey]);
 
   // ── submit ──────────────────────────────────────────────────────────────
 
@@ -282,7 +287,9 @@ export default function BookingForm(props: Props) {
           : {
               entry: entryToken,
               packageId: props.pkg.id,
-              addonIds: [...selectedAddonIds],
+              addons: availableAddons
+                .filter((a) => (addonQtys[a.id] ?? 0) > 0)
+                .map((a) => ({ addonId: a.id, qty: addonQtys[a.id] })),
               startAt: selectedStartAt,
               name: bookingName.trim(),
               customerNote,
@@ -367,43 +374,84 @@ export default function BookingForm(props: Props) {
           </h2>
           <div className="grid gap-2">
             {availableAddons.map((addon) => {
-              const checked = selectedAddonIds.has(addon.id);
+              const qty = addonQtys[addon.id] ?? 0;
+              const isSelected = qty > 0;
               const addonName = pick(lang, addon.nameZh, addon.nameJa);
               const addonDesc = lang === "ja" ? addon.descJa : addon.descZh;
+              const unitPrice = addon.priceJpy;
+              const totalAddonPrice = unitPrice * qty;
+
               return (
-                <label
+                <div
                   key={addon.id}
-                  className="flex cursor-pointer items-start gap-3 rounded-xl px-3 py-3"
+                  className="rounded-xl px-3 py-3"
                   style={{
-                    border: `1px solid ${checked ? "var(--brand-300, #c8bdb2)" : "var(--border)"}`,
-                    background: checked ? "var(--surface)" : "var(--bg)",
+                    border: `1px solid ${isSelected ? "var(--brand-300, #c8bdb2)" : "var(--border)"}`,
+                    background: isSelected ? "var(--surface)" : "var(--bg)",
                     transition: "border-color 0.15s, background 0.15s"
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 shrink-0"
-                    checked={checked}
-                    onChange={() => toggleAddon(addon.id)}
-                    style={{ accentColor: "var(--brand-500, #978b82)", width: 16, height: 16 }}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-                      {addonName}
-                    </p>
-                    {addonDesc && (
-                      <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)", lineHeight: 1.5 }}>
-                        {addonDesc}
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 shrink-0 cursor-pointer"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        setAddonQtys((prev) => ({
+                          ...prev,
+                          [addon.id]: e.target.checked ? 1 : 0
+                        }));
+                      }}
+                      style={{ accentColor: "var(--brand-500, #978b82)", width: 16, height: 16 }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                        {addonName}
                       </p>
-                    )}
-                    <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)" }}>
-                      {t.plus}{addon.durationIncreaseMin} {t.addonDuration}
-                    </p>
+                      {addonDesc && (
+                        <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)", lineHeight: 1.5 }}>
+                          {addonDesc}
+                        </p>
+                      )}
+                      {addon.durationIncreaseMin > 0 && (
+                        <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)" }}>
+                          {t.plus}{addon.durationIncreaseMin * Math.max(qty, 1)} {t.addonDuration}
+                        </p>
+                      )}
+                    </div>
+                    <span className="metric-pill metric-pill-soft shrink-0 text-xs">
+                      {t.plus}¥{Number(isSelected ? totalAddonPrice : unitPrice).toLocaleString()}
+                    </span>
                   </div>
-                  <span className="metric-pill metric-pill-soft shrink-0 text-xs">
-                    {t.plus}¥{Number(addon.priceJpy).toLocaleString()}
-                  </span>
-                </label>
+
+                  {/* Qty stepper — only shown when selected and maxQty > 1 */}
+                  {isSelected && addon.maxQty > 1 && (
+                    <div className="mt-2 flex items-center gap-2 pl-6">
+                      <button
+                        type="button"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-sm font-semibold"
+                        style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                        onClick={() => setAddonQtys((prev) => ({ ...prev, [addon.id]: Math.max(1, qty - 1) }))}
+                      >
+                        −
+                      </button>
+                      <span className="w-6 text-center text-sm font-semibold" style={{ color: "var(--text)" }}>
+                        {qty}
+                      </span>
+                      <button
+                        type="button"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-sm font-semibold"
+                        style={{ border: "1px solid var(--border)", background: "var(--bg)", color: "var(--text)" }}
+                        onClick={() => setAddonQtys((prev) => ({ ...prev, [addon.id]: Math.min(addon.maxQty, qty + 1) }))}
+                      >
+                        +
+                      </button>
+                      <span className="text-xs" style={{ color: "var(--text-3)" }}>
+                        / {addon.maxQty}
+                      </span>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -454,7 +502,7 @@ export default function BookingForm(props: Props) {
               onChange={(e) => {
                 const nextDate = e.target.value;
                 setDate(nextDate);
-                void refreshAvailability(nextDate, [...selectedAddonIds]);
+                void refreshAvailability(nextDate);
               }}
             />
           </label>

@@ -15,22 +15,28 @@ const TEXT = {
     package: "套餐",
     category: "分类",
     duration: "时长",
-    addons: "可选加项",
+    addons: "已含加项",
     addonDuration: "分钟",
     book: "预约此款设计",
     min: "分钟",
-    plus: "+"
+    plus: "+",
+    qty: "×",
+    totalPrice: "总价",
+    totalDuration: "时长"
   },
   ja: {
     back: "← ギャラリーに戻る",
     package: "メニュー",
     category: "カテゴリ",
     duration: "所要時間",
-    addons: "オプション追加",
+    addons: "含まれるオプション",
     addonDuration: "分",
     book: "このデザインを予約",
     min: "分",
-    plus: "+"
+    plus: "+",
+    qty: "×",
+    totalPrice: "合計金額",
+    totalDuration: "所要時間"
   }
 } as const;
 
@@ -53,25 +59,31 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
     include: {
       category: { select: { nameZh: true, nameJa: true } },
       servicePackage: {
-        include: {
-          addonLinks: {
-            where: { addon: { isActive: true } },
-            include: {
-              addon: {
-                select: {
-                  id: true,
-                  nameZh: true,
-                  nameJa: true,
-                  descZh: true,
-                  descJa: true,
-                  priceJpy: true,
-                  durationIncreaseMin: true
-                }
-              }
-            },
-            orderBy: { id: "asc" }
-          }
+        select: {
+          isActive: true,
+          nameZh: true,
+          nameJa: true,
+          descZh: true,
+          descJa: true,
+          priceJpy: true,
+          durationMin: true
         }
+      },
+      addonLinks: {
+        include: {
+          addon: {
+            select: {
+              id: true,
+              nameZh: true,
+              nameJa: true,
+              descZh: true,
+              descJa: true,
+              priceJpy: true,
+              durationIncreaseMin: true
+            }
+          }
+        },
+        orderBy: { id: "asc" }
       }
     }
   });
@@ -81,7 +93,13 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
   }
 
   const pkg = item.servicePackage;
-  const addons = pkg.addonLinks.map((l) => l.addon);
+  // Fixed add-ons set by admin for this showcase item
+  const fixedAddons = item.addonLinks;
+  const totalAddonPrice = fixedAddons.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
+  const totalAddonDuration = fixedAddons.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+  const totalPrice = Number(pkg.priceJpy) + totalAddonPrice;
+  const totalDuration = pkg.durationMin + totalAddonDuration;
+
   const categoryName = lang === "ja" ? item.category.nameJa : item.category.nameZh;
   const pkgName = lang === "ja" ? pkg.nameJa : pkg.nameZh;
   const pkgDesc = lang === "ja" ? pkg.descJa : pkg.descZh;
@@ -132,17 +150,17 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
           )}
         </div>
 
-        {/* Package info */}
+        {/* Package info + total */}
         <section className="section-panel section-panel-compact">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="section-eyebrow">{t.package}</p>
               <p className="mt-1 font-semibold" style={{ color: "var(--text)" }}>{pkgName}</p>
             </div>
-            <span className="metric-pill shrink-0">¥{Number(pkg.priceJpy).toLocaleString()}</span>
+            <span className="metric-pill shrink-0">¥{totalPrice.toLocaleString()}</span>
           </div>
           <p className="mt-1.5 text-sm" style={{ color: "var(--text-3)" }}>
-            {pkg.durationMin} {t.min}
+            {totalDuration} {t.min}
           </p>
           {pkgDesc && (
             <p className="mt-3 text-sm" style={{ color: "var(--text-2)", lineHeight: 1.75 }}>
@@ -151,14 +169,17 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
           )}
         </section>
 
-        {/* Add-ons */}
-        {addons.length > 0 && (
+        {/* Fixed add-ons included in this showcase item */}
+        {fixedAddons.length > 0 && (
           <section className="section-panel section-panel-compact">
             <p className="section-eyebrow mb-3">{t.addons}</p>
             <div className="grid gap-2">
-              {addons.map((addon) => {
+              {fixedAddons.map((link) => {
+                const addon = link.addon;
                 const addonName = lang === "ja" ? addon.nameJa : addon.nameZh;
                 const addonDesc = lang === "ja" ? addon.descJa : addon.descZh;
+                const addonPrice = addon.priceJpy * link.qty;
+                const addonDuration = addon.durationIncreaseMin * link.qty;
                 return (
                   <div
                     key={addon.id.toString()}
@@ -167,19 +188,21 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-                        {addonName}
+                        {addonName}{link.qty > 1 ? ` ${t.qty}${link.qty}` : ""}
                       </p>
                       {addonDesc && (
                         <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)", lineHeight: 1.5 }}>
                           {addonDesc}
                         </p>
                       )}
-                      <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)" }}>
-                        {t.plus}{addon.durationIncreaseMin} {t.addonDuration}
-                      </p>
+                      {addonDuration > 0 && (
+                        <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)" }}>
+                          {t.plus}{addonDuration} {t.addonDuration}
+                        </p>
+                      )}
                     </div>
                     <span className="metric-pill metric-pill-soft shrink-0">
-                      {t.plus}¥{Number(addon.priceJpy).toLocaleString()}
+                      {t.plus}¥{addonPrice.toLocaleString()}
                     </span>
                   </div>
                 );

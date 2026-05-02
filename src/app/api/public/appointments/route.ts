@@ -28,7 +28,12 @@ const lineShowcaseSchema = z.object({
 const linePackageSchema = z.object({
   entry: z.string().trim().min(1).max(120),
   packageId: z.union([z.string(), z.number().int().positive()]),
-  addonIds: z.array(z.union([z.string(), z.number().int().positive()])).optional().default([]),
+  addons: z.array(
+    z.object({
+      addonId: z.union([z.string(), z.number().int().positive()]),
+      qty: z.number().int().min(1).max(99)
+    })
+  ).optional().default([]),
   startAt: z.string().datetime({ offset: true }),
   customerNote: z.string().max(1000).optional().nullable(),
   name: z.string().trim().min(1).max(80).optional().nullable(),
@@ -243,9 +248,12 @@ async function createLegacyAppointment(payload: z.infer<typeof legacySchema>) {
 
 async function createLinePackageAppointment(payload: z.infer<typeof linePackageSchema>) {
   const packageId = parseSingleBigInt(String(payload.packageId), "packageId");
-  const addonIds = Array.from(
-    new Set((payload.addonIds ?? []).map((v) => parseSingleBigInt(String(v), "addonIds")))
-  );
+  // Deduplicate by addonId, keeping the last qty if somehow duplicated
+  const addonQtyMap = new Map<string, number>();
+  for (const entry of payload.addons ?? []) {
+    addonQtyMap.set(String(entry.addonId), entry.qty);
+  }
+  const addonIdsBig = Array.from(addonQtyMap.keys()).map((v) => parseSingleBigInt(v, "addonId"));
 
   const [runtime, lineUser] = await Promise.all([
     loadRuntimeSettings(),
@@ -270,20 +278,22 @@ async function createLinePackageAppointment(payload: z.infer<typeof linePackageS
     throw new ApiError(404, "Package not found");
   }
 
-  const addons = addonIds.length
-    ? await prisma.serviceAddon.findMany({ where: { id: { in: addonIds }, isActive: true } })
+  const addons = addonIdsBig.length
+    ? await prisma.serviceAddon.findMany({ where: { id: { in: addonIdsBig }, isActive: true } })
     : [];
 
-  if (addons.length !== addonIds.length) {
+  if (addons.length !== addonIdsBig.length) {
     throw new ApiError(400, "Some addons are invalid or inactive");
   }
 
   const allowedAddonSet = new Set(servicePackage.addonLinks.map((l) => l.addonId.toString()));
-  if (addonIds.some((id) => !allowedAddonSet.has(id.toString()))) {
+  if (addonIdsBig.some((id) => !allowedAddonSet.has(id.toString()))) {
     throw new ApiError(400, "One or more addons are not allowed for the selected package");
   }
 
-  const totalDurationMinutes = calculateTotalDurationMinutes(servicePackage, addons);
+  // Total duration accounts for qty
+  const addonDuration = addons.reduce((s, a) => s + a.durationIncreaseMin * (addonQtyMap.get(a.id.toString()) ?? 1), 0);
+  const totalDurationMinutes = servicePackage.durationMin + addonDuration;
   const endAt = addMinutes(startAt, totalDurationMinutes);
   const bookingYmd = formatYmdInOffset(startAt);
   const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });
@@ -340,6 +350,7 @@ async function createLinePackageAppointment(payload: z.infer<typeof linePackageS
         addons: {
           create: addons.map((addon) => ({
             addonId: addon.id,
+            qty: addonQtyMap.get(addon.id.toString()) ?? 1,
             priceSnapshotJpy: addon.priceJpy,
             durationSnapshotMin: addon.durationIncreaseMin
           }))
@@ -387,7 +398,19 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
   const showcaseItem = await prisma.showcaseItem.findFirst({
     where: { id: showcaseItemId, isPublished: true },
     include: {
-      servicePackage: true
+      servicePackage: true,
+      addonLinks: {
+        include: {
+          addon: {
+            select: {
+              id: true,
+              priceJpy: true,
+              durationIncreaseMin: true,
+              isActive: true
+            }
+          }
+        }
+      }
     }
   });
 
@@ -395,7 +418,9 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
     throw new ApiError(404, "Showcase item not found");
   }
 
-  const totalDurationMinutes = showcaseItem.servicePackage.durationMin;
+  const fixedAddonLinks = showcaseItem.addonLinks.filter((l) => l.addon.isActive);
+  const addonDuration = fixedAddonLinks.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+  const totalDurationMinutes = showcaseItem.servicePackage.durationMin + addonDuration;
   const endAt = addMinutes(startAt, totalDurationMinutes);
   const bookingYmd = formatYmdInOffset(startAt);
   const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });
@@ -446,7 +471,15 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
         startAt,
         endAt,
         status: AppointmentStatus.pending,
-        autoCancelAt
+        autoCancelAt,
+        addons: {
+          create: fixedAddonLinks.map((l) => ({
+            addonId: l.addon.id,
+            qty: l.qty,
+            priceSnapshotJpy: l.addon.priceJpy,
+            durationSnapshotMin: l.addon.durationIncreaseMin
+          }))
+        }
       },
       select: {
         bookingNo: true,

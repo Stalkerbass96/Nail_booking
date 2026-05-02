@@ -10,6 +10,7 @@ const updateAddonSchema = z.object({
   descJa: z.string().trim().max(5000).optional().nullable(),
   priceJpy: z.number().int().min(0).optional(),
   durationIncreaseMin: z.number().int().min(0).optional(),
+  maxQty: z.number().int().min(1).max(99).optional(),
   isActive: z.boolean().optional()
 });
 

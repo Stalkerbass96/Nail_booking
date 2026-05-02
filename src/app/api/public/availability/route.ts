@@ -3,10 +3,8 @@ import { overlapsWithBlockedRanges } from "@/lib/booking-blocks";
 import { prisma } from "@/lib/db";
 import {
   addMinutes,
-  calculateTotalDurationMinutes,
   generateStartSlots,
   overlapsWithAppointments,
-  parseBigIntList,
   parseRuntimeSettings,
   parseSingleBigInt
 } from "@/lib/booking-rules";
@@ -15,21 +13,39 @@ import { NextRequest, NextResponse } from "next/server";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+// Parse "id:qty,id:qty,..." format; falls back to treating plain IDs as qty=1
+function parseAddonQtyPairs(raw: string | null): Map<string, number> {
+  const result = new Map<string, number>();
+  if (!raw) return result;
+  for (const part of raw.split(",")) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const colonIdx = trimmed.indexOf(":");
+    if (colonIdx > 0) {
+      const id = trimmed.slice(0, colonIdx).trim();
+      const qty = Math.max(1, Number.parseInt(trimmed.slice(colonIdx + 1), 10) || 1);
+      result.set(id, qty);
+    } else {
+      result.set(trimmed, 1);
+    }
+  }
+  return result;
+}
+
 async function resolvePackageDuration(params: {
   packageIdRaw: string | null;
   showcaseItemIdRaw: string | null;
-  addonIdsRaw: string | null;
+  addonsRaw: string | null;
 }) {
   if (params.showcaseItemIdRaw) {
     const showcaseItemId = parseSingleBigInt(params.showcaseItemIdRaw, "showcaseItemId");
     const showcaseItem = await prisma.showcaseItem.findFirst({
       where: { id: showcaseItemId, isPublished: true },
       include: {
-        servicePackage: {
+        servicePackage: { select: { isActive: true, durationMin: true } },
+        addonLinks: {
           include: {
-            addonLinks: {
-              select: { addonId: true }
-            }
+            addon: { select: { durationIncreaseMin: true, isActive: true } }
           }
         }
       }
@@ -39,9 +55,13 @@ async function resolvePackageDuration(params: {
       return null;
     }
 
+    const addonDuration = showcaseItem.addonLinks
+      .filter((l) => l.addon.isActive)
+      .reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+
     return {
       packageId: showcaseItem.servicePackageId,
-      totalDurationMinutes: showcaseItem.servicePackage.durationMin,
+      totalDurationMinutes: showcaseItem.servicePackage.durationMin + addonDuration,
       packageFound: true
     };
   }
@@ -51,15 +71,12 @@ async function resolvePackageDuration(params: {
   }
 
   const packageId = parseSingleBigInt(params.packageIdRaw, "packageId");
-  const addonIds = Array.from(new Set(parseBigIntList(params.addonIdsRaw)));
+  const addonQtyMap = parseAddonQtyPairs(params.addonsRaw);
+  const addonIds = Array.from(addonQtyMap.keys()).map((v) => parseSingleBigInt(v, "addonId"));
 
   const servicePackage = await prisma.servicePackage.findFirst({
     where: { id: packageId, isActive: true },
-    include: {
-      addonLinks: {
-        select: { addonId: true }
-      }
-    }
+    include: { addonLinks: { select: { addonId: true } } }
   });
 
   if (!servicePackage) {
@@ -67,12 +84,7 @@ async function resolvePackageDuration(params: {
   }
 
   const addons = addonIds.length
-    ? await prisma.serviceAddon.findMany({
-        where: {
-          id: { in: addonIds },
-          isActive: true
-        }
-      })
+    ? await prisma.serviceAddon.findMany({ where: { id: { in: addonIds }, isActive: true } })
     : [];
 
   if (addons.length !== addonIds.length) {
@@ -84,9 +96,11 @@ async function resolvePackageDuration(params: {
     throw new Error("One or more addons are not allowed for the selected package");
   }
 
+  const addonDuration = addons.reduce((s, a) => s + a.durationIncreaseMin * (addonQtyMap.get(a.id.toString()) ?? 1), 0);
+
   return {
     packageId,
-    totalDurationMinutes: calculateTotalDurationMinutes(servicePackage, addons),
+    totalDurationMinutes: servicePackage.durationMin + addonDuration,
     packageFound: true
   };
 }
@@ -96,7 +110,8 @@ export async function GET(request: NextRequest) {
     const packageIdRaw = request.nextUrl.searchParams.get("packageId");
     const showcaseItemIdRaw = request.nextUrl.searchParams.get("showcaseItemId");
     const date = request.nextUrl.searchParams.get("date") ?? "";
-    const addonIdsRaw = request.nextUrl.searchParams.get("addonIds");
+    // "addons" param: "addonId:qty,addonId:qty,..." — used by package mode booking form
+    const addonsRaw = request.nextUrl.searchParams.get("addons");
 
     if ((!packageIdRaw && !showcaseItemIdRaw) || !DATE_PATTERN.test(date)) {
       return NextResponse.json(
@@ -111,7 +126,7 @@ export async function GET(request: NextRequest) {
           key: { in: ["slot_minutes", "pending_auto_cancel_hours"] }
         }
       }),
-      resolvePackageDuration({ packageIdRaw, showcaseItemIdRaw, addonIdsRaw })
+      resolvePackageDuration({ packageIdRaw, showcaseItemIdRaw, addonsRaw })
     ]);
 
     if (!resolved) {

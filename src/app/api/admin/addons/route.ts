@@ -10,6 +10,7 @@ type AddonWithLinks = {
   descJa: string | null;
   priceJpy: number;
   durationIncreaseMin: number;
+  maxQty: number;
   isActive: boolean;
   packageLinks: Array<{ packageId: bigint }>;
 };
@@ -21,6 +22,7 @@ const createAddonSchema = z.object({
   descJa: z.string().trim().max(5000).optional().nullable(),
   priceJpy: z.number().int().min(0),
   durationIncreaseMin: z.number().int().min(0),
+  maxQty: z.number().int().min(1).max(99).optional().default(1),
   isActive: z.boolean().optional().default(true)
 });
 
@@ -53,6 +55,7 @@ export async function GET(request: NextRequest) {
         descJa: item.descJa,
         priceJpy: item.priceJpy,
         durationIncreaseMin: item.durationIncreaseMin,
+        maxQty: item.maxQty,
         isActive: item.isActive,
         packageIds: item.packageLinks.map((link) => link.packageId.toString())
       }))
@@ -78,6 +81,7 @@ export async function POST(request: NextRequest) {
         descJa: payload.descJa ?? null,
         priceJpy: payload.priceJpy,
         durationIncreaseMin: payload.durationIncreaseMin,
+        maxQty: payload.maxQty,
         isActive: payload.isActive
       }
     });

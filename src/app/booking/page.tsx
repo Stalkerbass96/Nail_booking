@@ -60,7 +60,8 @@ export default async function BookingPage({ searchParams }: Props) {
                     descZh: true,
                     descJa: true,
                     priceJpy: true,
-                    durationIncreaseMin: true
+                    durationIncreaseMin: true,
+                    maxQty: true
                   }
                 }
               },
@@ -145,7 +146,8 @@ export default async function BookingPage({ searchParams }: Props) {
                   descZh: l.addon.descZh,
                   descJa: l.addon.descJa,
                   priceJpy: l.addon.priceJpy,
-                  durationIncreaseMin: l.addon.durationIncreaseMin
+                  durationIncreaseMin: l.addon.durationIncreaseMin,
+                  maxQty: l.addon.maxQty
                 }))}
               />
             )
