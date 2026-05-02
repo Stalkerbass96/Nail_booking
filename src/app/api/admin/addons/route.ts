@@ -27,8 +27,8 @@ const createAddonSchema = z.object({
 });
 
 function ensureDuration(minutes: number) {
-  if (minutes % 30 !== 0) {
-    throw new Error("Invalid durationIncreaseMin: must be a multiple of 30");
+  if (minutes % 5 !== 0) {
+    throw new Error("Invalid durationIncreaseMin: must be a multiple of 5");
   }
 }
 

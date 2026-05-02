@@ -13,6 +13,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
+// Round actual service duration up to the nearest booking slot boundary for slot blocking.
+function roundUpToSlot(minutes: number, slotMinutes: number): number {
+  return Math.ceil(minutes / slotMinutes) * slotMinutes;
+}
+
 // Parse "id:qty,id:qty,..." format; falls back to treating plain IDs as qty=1
 function parseAddonQtyPairs(raw: string | null): Map<string, number> {
   const result = new Map<string, number>();
@@ -150,13 +155,17 @@ export async function GET(request: NextRequest) {
     }
 
     const runtime = parseRuntimeSettings(settings);
+    // Actual duration shown to customer; blocked duration rounded up to slot boundary.
+    const actualDuration = resolved.totalDurationMinutes;
+    const blockedDuration = roundUpToSlot(actualDuration, runtime.slotMinutes);
+
     const businessWindow = await getBusinessWindowByDate(prisma, date);
 
     if (!businessWindow.isOpen || !businessWindow.openAt || !businessWindow.closeAt) {
       return NextResponse.json({
         date,
         slotMinutes: runtime.slotMinutes,
-        totalDurationMinutes: resolved.totalDurationMinutes,
+        totalDurationMinutes: actualDuration,
         slots: []
       });
     }
@@ -195,13 +204,13 @@ export async function GET(request: NextRequest) {
     const candidateStarts = generateStartSlots(
       businessWindow.openAt,
       businessWindow.closeAt,
-      resolved.totalDurationMinutes,
+      blockedDuration,
       runtime.slotMinutes
     );
 
     const slots = candidateStarts
       .filter((startAt) => {
-        const endAt = addMinutes(startAt, resolved.totalDurationMinutes);
+        const endAt = addMinutes(startAt, blockedDuration);
         if (overlapsWithAppointments(startAt, endAt, occupiedAppointments)) {
           return false;
         }
@@ -214,13 +223,13 @@ export async function GET(request: NextRequest) {
       })
       .map((startAt) => ({
         startAt: startAt.toISOString(),
-        endAt: addMinutes(startAt, resolved.totalDurationMinutes).toISOString()
+        endAt: addMinutes(startAt, blockedDuration).toISOString()
       }));
 
     return NextResponse.json({
       date,
       slotMinutes: runtime.slotMinutes,
-      totalDurationMinutes: resolved.totalDurationMinutes,
+      totalDurationMinutes: actualDuration,
       slots,
       blockedCount: bookingBlocks.length
     });

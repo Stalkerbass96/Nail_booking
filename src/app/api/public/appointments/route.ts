@@ -57,6 +57,10 @@ const legacySchema = z.object({
   lang: z.enum(["zh", "ja"]).optional()
 });
 
+function roundUpToSlot(minutes: number, slotMinutes: number): number {
+  return Math.ceil(minutes / slotMinutes) * slotMinutes;
+}
+
 class ApiError extends Error {
   readonly status: number;
 
@@ -164,7 +168,7 @@ async function createLegacyAppointment(payload: z.infer<typeof legacySchema>) {
 
   const startAt = validateStartAt(payload.startAt, runtime.slotMinutes);
   const totalDurationMinutes = calculateTotalDurationMinutes(servicePackage, addons);
-  const endAt = addMinutes(startAt, totalDurationMinutes);
+  const endAt = addMinutes(startAt, roundUpToSlot(totalDurationMinutes, runtime.slotMinutes));
   const bookingYmd = formatYmdInOffset(startAt);
   const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });
   const normalizedEmail = normalizeEmail(payload.email);
@@ -297,10 +301,10 @@ async function createLinePackageAppointment(payload: z.infer<typeof linePackageS
     throw new ApiError(400, "One or more addons are not allowed for the selected package");
   }
 
-  // Total duration accounts for qty
+  // Total duration accounts for qty; endAt rounded up to slot boundary for calendar blocking
   const addonDuration = addons.reduce((s, a) => s + a.durationIncreaseMin * (addonQtyMap.get(a.id.toString()) ?? 1), 0);
   const totalDurationMinutes = servicePackage.durationMin + addonDuration;
-  const endAt = addMinutes(startAt, totalDurationMinutes);
+  const endAt = addMinutes(startAt, roundUpToSlot(totalDurationMinutes, runtime.slotMinutes));
   const bookingYmd = formatYmdInOffset(startAt);
   const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });
 
@@ -459,7 +463,7 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
     0
   );
   const totalDurationMinutes = showcaseItem.servicePackage.durationMin + fixedDuration + optionalDuration;
-  const endAt = addMinutes(startAt, totalDurationMinutes);
+  const endAt = addMinutes(startAt, roundUpToSlot(totalDurationMinutes, runtime.slotMinutes));
   const bookingYmd = formatYmdInOffset(startAt);
   const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });
 

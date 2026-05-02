@@ -15,8 +15,8 @@ const updateAddonSchema = z.object({
 });
 
 function ensureDuration(minutes?: number) {
-  if (minutes !== undefined && minutes % 30 !== 0) {
-    throw new Error("Invalid durationIncreaseMin: must be a multiple of 30");
+  if (minutes !== undefined && minutes % 5 !== 0) {
+    throw new Error("Invalid durationIncreaseMin: must be a multiple of 5");
   }
 }
 
@@ -49,7 +49,7 @@ export async function PATCH(
       );
     }
 
-    if (error instanceof Error && (error.message.startsWith("Invalid ") || error.message.includes("multiple of 30"))) {
+    if (error instanceof Error && (error.message.startsWith("Invalid ") || error.message.includes("multiple of"))) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 

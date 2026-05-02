@@ -103,7 +103,7 @@ function createEmptyFormState(): AddonFormState {
     descZh: "",
     descJa: "",
     priceJpy: "0",
-    durationIncreaseMin: "30",
+    durationIncreaseMin: "5",
     maxQty: "1",
     isActive: true
   };
