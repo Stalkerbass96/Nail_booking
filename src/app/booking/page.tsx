@@ -39,6 +39,11 @@ export default async function BookingPage({ searchParams }: Props) {
                 durationMin: true,
                 isActive: true
               }
+            },
+            addonLinks: {
+              include: {
+                addon: { select: { priceJpy: true, durationIncreaseMin: true, isActive: true } }
+              }
             }
           }
         })
@@ -93,28 +98,35 @@ export default async function BookingPage({ searchParams }: Props) {
           !showcaseItem || !showcaseItem.servicePackage.isActive
             ? unavailable
             : (
-              <BookingForm
-                lang={lang}
-                entryToken={entryToken}
-                customerName={customerName}
-                mode="showcase"
-                showcaseItem={{
-                  id: showcaseItem.id.toString(),
-                  titleZh: showcaseItem.titleZh,
-                  titleJa: showcaseItem.titleJa,
-                  descriptionZh: showcaseItem.descriptionZh,
-                  descriptionJa: showcaseItem.descriptionJa,
-                  imageUrl: showcaseItem.imageUrl,
-                  categoryNameZh: showcaseItem.category.nameZh,
-                  categoryNameJa: showcaseItem.category.nameJa,
-                  packageNameZh: showcaseItem.servicePackage.nameZh,
-                  packageNameJa: showcaseItem.servicePackage.nameJa,
-                  packageDescriptionZh: showcaseItem.servicePackage.descZh,
-                  packageDescriptionJa: showcaseItem.servicePackage.descJa,
-                  priceJpy: showcaseItem.servicePackage.priceJpy,
-                  durationMin: showcaseItem.servicePackage.durationMin
-                }}
-              />
+              (() => {
+                const activeAddonLinks = showcaseItem.addonLinks.filter((l) => l.addon.isActive);
+                const addonPrice = activeAddonLinks.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
+                const addonDuration = activeAddonLinks.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+                return (
+                  <BookingForm
+                    lang={lang}
+                    entryToken={entryToken}
+                    customerName={customerName}
+                    mode="showcase"
+                    showcaseItem={{
+                      id: showcaseItem.id.toString(),
+                      titleZh: showcaseItem.titleZh,
+                      titleJa: showcaseItem.titleJa,
+                      descriptionZh: showcaseItem.descriptionZh,
+                      descriptionJa: showcaseItem.descriptionJa,
+                      imageUrl: showcaseItem.imageUrl,
+                      categoryNameZh: showcaseItem.category.nameZh,
+                      categoryNameJa: showcaseItem.category.nameJa,
+                      packageNameZh: showcaseItem.servicePackage.nameZh,
+                      packageNameJa: showcaseItem.servicePackage.nameJa,
+                      packageDescriptionZh: showcaseItem.servicePackage.descZh,
+                      packageDescriptionJa: showcaseItem.servicePackage.descJa,
+                      priceJpy: showcaseItem.servicePackage.priceJpy + addonPrice,
+                      durationMin: showcaseItem.servicePackage.durationMin + addonDuration
+                    }}
+                  />
+                );
+              })()
             )
         )}
 
