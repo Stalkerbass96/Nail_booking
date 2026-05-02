@@ -11,14 +11,14 @@ const createPackageSchema = z.object({
   descJa: z.string().trim().max(5000).optional().nullable(),
   imageUrl: z.string().trim().max(1000).optional().nullable(),
   priceJpy: z.number().int().min(0),
-  durationMin: z.number().int().min(30),
+  durationMin: z.number().int().min(5),
   isActive: z.boolean().optional().default(true),
   addonIds: z.array(z.union([z.string(), z.number().int().positive()])).optional().default([])
 });
 
 function ensureDuration(minutes: number) {
-  if (minutes % 30 !== 0) {
-    throw new Error("Invalid durationMin: must be a multiple of 30");
+  if (minutes % 5 !== 0) {
+    throw new Error("Invalid durationMin: must be a multiple of 5");
   }
 }
 
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error instanceof Error && (error.message.startsWith("Invalid ") || error.message.includes("not found") || error.message.includes("invalid") || error.message.includes("multiple of 30"))) {
+    if (error instanceof Error && (error.message.startsWith("Invalid ") || error.message.includes("not found") || error.message.includes("invalid") || error.message.includes("multiple of"))) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
