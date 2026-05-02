@@ -38,6 +38,7 @@ type ShowcaseItem = {
   imageUrl: string;
   sortOrder: number;
   isPublished: boolean;
+  hideAddonDetails: boolean;
   appointmentCount: number;
   category: CategoryItem;
   servicePackage: PackageItem & { isActive: boolean };
@@ -53,6 +54,7 @@ type ShowcaseFormState = {
   imageUrl: string;
   sortOrder: string;
   isPublished: boolean;
+  hideAddonDetails: boolean;
 };
 
 type PublishFilter = "all" | "published" | "unpublished";
@@ -111,7 +113,8 @@ const TEXT = {
     addonsSaveSuccess: "加项已保存",
     addonsSaveFailed: "保存加项失败",
     addonsNone: "此套餐暂无可用加项",
-    addonsLoading: "加载加项..."
+    addonsLoading: "加载加项...",
+    hideAddonDetails: "隐藏加项明细（价格/时长）"
   },
   ja: {
     title: "ギャラリー管理",
@@ -162,7 +165,8 @@ const TEXT = {
     addonsSaveSuccess: "オプションを保存しました",
     addonsSaveFailed: "オプションの保存に失敗しました",
     addonsNone: "このメニューには利用可能なオプションがありません",
-    addonsLoading: "オプションを読み込み中..."
+    addonsLoading: "オプションを読み込み中...",
+    hideAddonDetails: "オプション明細（金額/時間）を非表示"
   }
 } as const;
 
@@ -180,7 +184,8 @@ function createEmptyForm(categoryId = "", servicePackageId = ""): ShowcaseFormSt
     descriptionJa: "",
     imageUrl: "",
     sortOrder: "0",
-    isPublished: true
+    isPublished: true,
+    hideAddonDetails: false
   };
 }
 
@@ -194,7 +199,8 @@ function fromItem(item: ShowcaseItem): ShowcaseFormState {
     descriptionJa: item.descriptionJa ?? "",
     imageUrl: item.imageUrl,
     sortOrder: String(item.sortOrder),
-    isPublished: item.isPublished
+    isPublished: item.isPublished,
+    hideAddonDetails: item.hideAddonDetails
   };
 }
 
@@ -314,6 +320,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
       descriptionZh: form.descriptionZh.trim() || null,
       descriptionJa: form.descriptionJa.trim() || null,
       imageUrl: form.imageUrl.trim(),
+      hideAddonDetails: form.hideAddonDetails,
       sortOrder: Number.parseInt(form.sortOrder, 10) || 0,
       isPublished: form.isPublished
     };
@@ -570,6 +577,10 @@ export default function AdminShowcasePanel({ lang }: Props) {
             {t.published}
           </label>
         </div>
+        <label className="admin-note flex items-center gap-2">
+          <input className="admin-check" type="checkbox" checked={createForm.hideAddonDetails} onChange={(e) => patchCreateForm({ hideAddonDetails: e.target.checked })} />
+          {t.hideAddonDetails}
+        </label>
         {renderPreview(createForm.imageUrl)}
         <button className="admin-btn-primary w-fit" type="submit">{t.create}</button>
       </form>
@@ -630,6 +641,10 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     {t.published}
                   </label>
                 </div>
+                <label className="admin-note flex items-center gap-2">
+                  <input className="admin-check" type="checkbox" checked={editForm.hideAddonDetails} onChange={(e) => patchEditForm({ hideAddonDetails: e.target.checked })} />
+                  {t.hideAddonDetails}
+                </label>
                 {renderPreview(editForm.imageUrl)}
 
                 {/* Fixed add-ons */}

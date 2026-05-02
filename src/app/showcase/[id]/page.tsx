@@ -173,13 +173,17 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
         {fixedAddons.length > 0 && (
           <section className="section-panel section-panel-compact">
             <p className="section-eyebrow mb-3">{t.addons}</p>
-            <div className="grid gap-2">
+            <div
+              className="grid gap-2"
+              style={fixedAddons.length > 3 ? { maxHeight: 220, overflowY: "auto", paddingRight: 2 } : undefined}
+            >
               {fixedAddons.map((link) => {
                 const addon = link.addon;
                 const addonName = lang === "ja" ? addon.nameJa : addon.nameZh;
                 const addonDesc = lang === "ja" ? addon.descJa : addon.descZh;
                 const addonPrice = addon.priceJpy * link.qty;
                 const addonDuration = addon.durationIncreaseMin * link.qty;
+                const showDetails = !item.hideAddonDetails;
                 return (
                   <div
                     key={addon.id.toString()}
@@ -195,15 +199,17 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
                           {addonDesc}
                         </p>
                       )}
-                      {addonDuration > 0 && (
+                      {showDetails && addonDuration > 0 && (
                         <p className="mt-0.5 text-xs" style={{ color: "var(--text-3)" }}>
                           {t.plus}{addonDuration} {t.addonDuration}
                         </p>
                       )}
                     </div>
-                    <span className="metric-pill metric-pill-soft shrink-0">
-                      {t.plus}¥{addonPrice.toLocaleString()}
-                    </span>
+                    {showDetails && (
+                      <span className="metric-pill metric-pill-soft shrink-0">
+                        {t.plus}¥{addonPrice.toLocaleString()}
+                      </span>
+                    )}
                   </div>
                 );
               })}

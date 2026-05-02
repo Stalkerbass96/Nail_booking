@@ -153,7 +153,10 @@ export default async function ServicesPage({ searchParams }: Props) {
                         {addons.length > 0 && (
                           <div className="mt-4">
                             <p className="section-eyebrow mb-2">{t.addons}</p>
-                            <div className="grid gap-1.5">
+                            <div
+                              className="grid gap-1.5"
+                              style={addons.length > 3 ? { maxHeight: 200, overflowY: "auto", paddingRight: 2 } : undefined}
+                            >
                               {addons.map((addon) => {
                                 const addonName = lang === "ja" ? addon.nameJa : addon.nameZh;
                                 const addonDesc = lang === "ja" ? addon.descJa : addon.descZh;

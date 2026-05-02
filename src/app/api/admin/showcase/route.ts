@@ -11,7 +11,8 @@ const showcaseSchema = z.object({
   descriptionJa: z.string().trim().max(2000).nullable().optional(),
   imageUrl: z.string().trim().url().max(2000),
   sortOrder: z.number().int().min(0).max(9999),
-  isPublished: z.boolean().optional().default(true)
+  isPublished: z.boolean().optional().default(true),
+  hideAddonDetails: z.boolean().optional().default(false)
 });
 
 function toBigInt(value: string | number, fieldName: string) {
@@ -32,7 +33,8 @@ function normalizePayload(payload: z.infer<typeof showcaseSchema>) {
     descriptionJa: payload.descriptionJa?.trim() || null,
     imageUrl: payload.imageUrl.trim(),
     sortOrder: payload.sortOrder,
-    isPublished: payload.isPublished
+    isPublished: payload.isPublished,
+    hideAddonDetails: payload.hideAddonDetails
   };
 }
 
@@ -63,6 +65,7 @@ export async function GET() {
         imageUrl: item.imageUrl,
         sortOrder: item.sortOrder,
         isPublished: item.isPublished,
+        hideAddonDetails: item.hideAddonDetails,
         appointmentCount: item._count.appointments,
         category: {
           id: item.category.id.toString(),
