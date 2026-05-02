@@ -85,7 +85,10 @@ export default function ShowcaseAddonPicker({
       {optionalAddons.length > 0 && (
         <section className="section-panel section-panel-compact">
           <p className="section-eyebrow mb-3">{t.optionalAddons}</p>
-          <div className="grid gap-2">
+          <div
+            className="grid gap-2"
+            style={optionalAddons.length > 3 ? { maxHeight: 280, overflowY: "auto", paddingRight: 2 } : undefined}
+          >
             {optionalAddons.map((addon) => {
               const qty = addonQtys[addon.id] ?? 0;
               const isSelected = qty > 0;

@@ -398,7 +398,10 @@ export default function BookingForm(props: Props) {
           <h2 className="text-base font-semibold mb-3" style={{ color: "var(--text)" }}>
             {t.addons}
           </h2>
-          <div className="grid gap-2">
+          <div
+            className="grid gap-2"
+            style={availableAddons.length > 3 ? { maxHeight: 280, overflowY: "auto", paddingRight: 2 } : undefined}
+          >
             {availableAddons.map((addon) => {
               const qty = addonQtys[addon.id] ?? 0;
               const isSelected = qty > 0;
