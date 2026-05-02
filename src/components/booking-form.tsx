@@ -20,6 +20,7 @@ type ShowcaseItem = {
   packageDescriptionZh?: string | null;
   packageDescriptionJa?: string | null;
   priceJpy: number;
+  customPriceJpy?: number | null;
   durationMin: number;
 };
 
@@ -53,7 +54,7 @@ type Props = {
   entryToken?: string;
   customerName?: string | null;
 } & (
-  | { mode: "showcase"; showcaseItem: ShowcaseItem }
+  | { mode: "showcase"; showcaseItem: ShowcaseItem; availableAddons?: AddonInfo[]; initialAddonQtys?: Record<string, number> }
   | { mode: "package"; pkg: PackageInfo; availableAddons: AddonInfo[] }
 );
 
@@ -156,7 +157,8 @@ export default function BookingForm(props: Props) {
   const [selectedStartAt, setSelectedStartAt] = useState("");
   const [bookingName, setBookingName] = useState(customerName ?? "");
   const [customerNote, setCustomerNote] = useState("");
-  const [addonQtys, setAddonQtys] = useState<Record<string, number>>({});
+  const initialQtys = props.mode === "showcase" ? (props.initialAddonQtys ?? {}) : {};
+  const [addonQtys, setAddonQtys] = useState<Record<string, number>>(initialQtys);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -167,12 +169,21 @@ export default function BookingForm(props: Props) {
     return today.toISOString().slice(0, 10);
   }, []);
 
-  // Derived values for package mode
-  const availableAddons = props.mode === "package" ? props.availableAddons : [];
+  const availableAddons = props.mode === "package"
+    ? props.availableAddons
+    : (props.availableAddons ?? []);
 
   const basePrice = props.mode === "showcase"
-    ? props.showcaseItem.priceJpy
+    ? (props.showcaseItem.customPriceJpy ?? props.showcaseItem.priceJpy)
     : props.pkg.priceJpy;
+
+  // For showcase mode: show struck-through original when custom price is active
+  const strikePriceJpy = props.mode === "showcase"
+    && props.showcaseItem.customPriceJpy !== null
+    && props.showcaseItem.customPriceJpy !== undefined
+    && props.showcaseItem.customPriceJpy < props.showcaseItem.priceJpy
+    ? props.showcaseItem.priceJpy
+    : undefined;
 
   const baseDuration = props.mode === "showcase"
     ? props.showcaseItem.durationMin
@@ -216,6 +227,11 @@ export default function BookingForm(props: Props) {
     const qs = new URLSearchParams({ date: nextDate });
     if (props.mode === "showcase") {
       qs.set("showcaseItemId", props.showcaseItem.id);
+      const addonParam = availableAddons
+        .filter((a) => (addonQtys[a.id] ?? 0) > 0)
+        .map((a) => `${a.id}:${addonQtys[a.id]}`)
+        .join(",");
+      if (addonParam) qs.set("addons", addonParam);
     } else {
       qs.set("packageId", props.pkg.id);
       const addonParam = availableAddons
@@ -247,9 +263,9 @@ export default function BookingForm(props: Props) {
     .sort()
     .join(",");
 
-  // Re-fetch slots when add-ons change (package mode only)
+  // Re-fetch slots when optional add-ons change (package mode, or showcase with optional addons)
   useEffect(() => {
-    if (props.mode === "package" && date) {
+    if (date && (props.mode === "package" || availableAddons.length > 0)) {
       void refreshAvailability(date);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,6 +295,9 @@ export default function BookingForm(props: Props) {
           ? {
               entry: entryToken,
               showcaseItemId: props.showcaseItem.id,
+              addons: availableAddons
+                .filter((a) => (addonQtys[a.id] ?? 0) > 0)
+                .map((a) => ({ addonId: a.id, qty: addonQtys[a.id] })),
               startAt: selectedStartAt,
               name: bookingName.trim(),
               customerNote,
@@ -338,9 +357,16 @@ export default function BookingForm(props: Props) {
                   {categoryName} · {totalDuration} min
                 </p>
               </div>
-              <span className="metric-pill shrink-0">
-                ¥{Number(totalPrice).toLocaleString()}
-              </span>
+              <div className="flex shrink-0 flex-col items-end gap-0.5">
+                <span className="metric-pill">
+                  ¥{Number(totalPrice).toLocaleString()}
+                </span>
+                {strikePriceJpy !== undefined && (
+                  <span className="text-xs" style={{ color: "var(--text-3)", textDecoration: "line-through" }}>
+                    ¥{Number(strikePriceJpy + addonPriceTotal).toLocaleString()}
+                  </span>
+                )}
+              </div>
             </div>
             <p className="booking-design-customer">{customerName || t.customer}</p>
           </div>
@@ -366,8 +392,8 @@ export default function BookingForm(props: Props) {
         </section>
       )}
 
-      {/* ── Add-ons (package mode only) ── */}
-      {props.mode === "package" && availableAddons.length > 0 && (
+      {/* ── Add-ons (package mode, or showcase with optional addons) ── */}
+      {availableAddons.length > 0 && (
         <section className="section-panel section-panel-compact">
           <h2 className="text-base font-semibold mb-3" style={{ color: "var(--text)" }}>
             {t.addons}
@@ -585,7 +611,7 @@ export default function BookingForm(props: Props) {
             <dt>{t.packageLabel}</dt>
             <dd>{packageName}</dd>
           </div>
-          {props.mode === "package" && selectedAddons.length > 0 && (
+          {selectedAddons.length > 0 && (
             <div className="summary-row">
               <dt>{t.addons}</dt>
               <dd>{selectedAddons.map((a) => pick(lang, a.nameZh, a.nameJa)).join("、")}</dd>

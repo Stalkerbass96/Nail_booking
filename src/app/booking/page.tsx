@@ -9,9 +9,20 @@ type Props = {
     lang?: string;
     showcaseItemId?: string;
     packageId?: string;
+    addons?: string;
     entry?: string;
   }>;
 };
+
+function parseAddonQtys(raw: string | undefined): Record<string, number> {
+  if (!raw) return {};
+  const result: Record<string, number> = {};
+  for (const part of raw.split(",")) {
+    const [id, qty] = part.trim().split(":");
+    if (id && qty) result[id.trim()] = Math.max(1, parseInt(qty, 10) || 1);
+  }
+  return result;
+}
 
 export default async function BookingPage({ searchParams }: Props) {
   const query = await searchParams;
@@ -19,6 +30,7 @@ export default async function BookingPage({ searchParams }: Props) {
   const entryToken = query?.entry?.trim() || undefined;
   const showcaseItemId = query?.showcaseItemId?.trim();
   const packageId = query?.packageId?.trim();
+  const initialAddonQtys = parseAddonQtys(query?.addons);
 
   const [entryUser, showcaseItem, packageItem] = await Promise.all([
     entryToken ? findLineEntryByToken(entryToken) : Promise.resolve(null),
@@ -37,12 +49,30 @@ export default async function BookingPage({ searchParams }: Props) {
                 descJa: true,
                 priceJpy: true,
                 durationMin: true,
-                isActive: true
+                isActive: true,
+                addonLinks: {
+                  where: { addon: { isActive: true } },
+                  select: {
+                    addon: {
+                      select: {
+                        id: true,
+                        nameZh: true,
+                        nameJa: true,
+                        descZh: true,
+                        descJa: true,
+                        priceJpy: true,
+                        durationIncreaseMin: true,
+                        maxQty: true
+                      }
+                    }
+                  },
+                  orderBy: { id: "asc" }
+                }
               }
             },
             addonLinks: {
               include: {
-                addon: { select: { priceJpy: true, durationIncreaseMin: true, isActive: true } }
+                addon: { select: { id: true, priceJpy: true, durationIncreaseMin: true, isActive: true } }
               }
             }
           }
@@ -97,11 +127,28 @@ export default async function BookingPage({ searchParams }: Props) {
         {showcaseItemId && (
           !showcaseItem || !showcaseItem.servicePackage.isActive
             ? unavailable
-            : (
-              (() => {
-                const activeAddonLinks = showcaseItem.addonLinks.filter((l) => l.addon.isActive);
-                const addonPrice = activeAddonLinks.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
-                const addonDuration = activeAddonLinks.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+            : (() => {
+                const activeFixedLinks = showcaseItem.addonLinks.filter((l) => l.addon.isActive);
+                const fixedAddonIdSet = new Set(activeFixedLinks.map((l) => l.addon.id.toString()));
+                const fixedAddonPrice = activeFixedLinks.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
+                const fixedAddonDuration = activeFixedLinks.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+                const originalPrice = Number(showcaseItem.servicePackage.priceJpy) + fixedAddonPrice;
+                const customPriceJpy = showcaseItem.customPriceJpy ?? null;
+
+                // Optional addons: package's addon links minus fixed showcase addons
+                const optionalAddons = showcaseItem.servicePackage.addonLinks
+                  .filter((l) => !fixedAddonIdSet.has(l.addon.id.toString()))
+                  .map((l) => ({
+                    id: l.addon.id.toString(),
+                    nameZh: l.addon.nameZh,
+                    nameJa: l.addon.nameJa,
+                    descZh: l.addon.descZh,
+                    descJa: l.addon.descJa,
+                    priceJpy: l.addon.priceJpy,
+                    durationIncreaseMin: l.addon.durationIncreaseMin,
+                    maxQty: l.addon.maxQty
+                  }));
+
                 return (
                   <BookingForm
                     lang={lang}
@@ -121,13 +168,15 @@ export default async function BookingPage({ searchParams }: Props) {
                       packageNameJa: showcaseItem.servicePackage.nameJa,
                       packageDescriptionZh: showcaseItem.servicePackage.descZh,
                       packageDescriptionJa: showcaseItem.servicePackage.descJa,
-                      priceJpy: showcaseItem.servicePackage.priceJpy + addonPrice,
-                      durationMin: showcaseItem.servicePackage.durationMin + addonDuration
+                      priceJpy: originalPrice,
+                      customPriceJpy,
+                      durationMin: showcaseItem.servicePackage.durationMin + fixedAddonDuration
                     }}
+                    availableAddons={optionalAddons}
+                    initialAddonQtys={initialAddonQtys}
                   />
                 );
               })()
-            )
         )}
 
         {/* ── Package mode ── */}

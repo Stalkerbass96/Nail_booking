@@ -272,6 +272,7 @@ model ShowcaseItem {
   sortOrder        Int      @default(0) @map("sort_order")
   isPublished      Boolean  @default(true) @map("is_published")
   hideAddonDetails Boolean  @default(false) @map("hide_addon_details")
+  customPriceJpy   Int?     @map("custom_price_jpy")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

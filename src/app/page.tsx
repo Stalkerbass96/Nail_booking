@@ -47,6 +47,9 @@ export default async function HomePage({ searchParams }: Props) {
       include: {
         servicePackage: {
           select: { id: true, nameZh: true, nameJa: true, priceJpy: true }
+        },
+        addonLinks: {
+          include: { addon: { select: { priceJpy: true, isActive: true } } }
         }
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
@@ -87,6 +90,12 @@ export default async function HomePage({ searchParams }: Props) {
               const detailHref = `/showcase/${item.id.toString()}?${detailParams.toString()}`;
 
               const packageName = lang === "ja" ? item.servicePackage.nameJa : item.servicePackage.nameZh;
+              const fixedAddonPrice = item.addonLinks
+                .filter((l) => l.addon.isActive)
+                .reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
+              const originalPrice = Number(item.servicePackage.priceJpy) + fixedAddonPrice;
+              const showDiscount = item.customPriceJpy !== null && item.customPriceJpy < originalPrice;
+              const displayPrice = showDiscount ? item.customPriceJpy! : originalPrice;
 
               return (
                 <Link
@@ -104,7 +113,12 @@ export default async function HomePage({ searchParams }: Props) {
                   <div className="gallery-tile-body">
                     <div className="gallery-tile-meta-row">
                       <span className="gallery-package">{packageName}</span>
-                      <span className="gallery-price">¥{Number(item.servicePackage.priceJpy).toLocaleString()}</span>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: 4, flexShrink: 0 }}>
+                        <span className="gallery-price">¥{displayPrice.toLocaleString()}</span>
+                        {showDiscount && (
+                          <span className="gallery-price-original">¥{originalPrice.toLocaleString()}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Link>

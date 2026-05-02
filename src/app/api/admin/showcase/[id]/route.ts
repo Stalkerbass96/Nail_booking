@@ -12,7 +12,8 @@ const showcaseSchema = z.object({
   imageUrl: z.string().trim().url().max(2000),
   sortOrder: z.number().int().min(0).max(9999),
   isPublished: z.boolean(),
-  hideAddonDetails: z.boolean().optional().default(false)
+  hideAddonDetails: z.boolean().optional().default(false),
+  customPriceJpy: z.number().int().positive().nullable().optional()
 });
 
 function toBigInt(value: string | number, fieldName: string) {
@@ -39,7 +40,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       imageUrl: payload.imageUrl.trim(),
       sortOrder: payload.sortOrder,
       isPublished: payload.isPublished,
-      hideAddonDetails: payload.hideAddonDetails
+      hideAddonDetails: payload.hideAddonDetails,
+      customPriceJpy: payload.customPriceJpy ?? null
     };
 
     const updated = await prisma.showcaseItem.update({

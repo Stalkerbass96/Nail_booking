@@ -55,13 +55,29 @@ async function resolvePackageDuration(params: {
       return null;
     }
 
-    const addonDuration = showcaseItem.addonLinks
+    const fixedAddonDuration = showcaseItem.addonLinks
       .filter((l) => l.addon.isActive)
       .reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
 
+    let optionalDuration = 0;
+    if (params.addonsRaw) {
+      const optionalQtyMap = parseAddonQtyPairs(params.addonsRaw);
+      if (optionalQtyMap.size > 0) {
+        const ids = Array.from(optionalQtyMap.keys()).map((v) => parseSingleBigInt(v, "addonId"));
+        const optionalAddons = await prisma.serviceAddon.findMany({
+          where: { id: { in: ids }, isActive: true },
+          select: { id: true, durationIncreaseMin: true }
+        });
+        optionalDuration = optionalAddons.reduce(
+          (s, a) => s + a.durationIncreaseMin * (optionalQtyMap.get(a.id.toString()) ?? 1),
+          0
+        );
+      }
+    }
+
     return {
       packageId: showcaseItem.servicePackageId,
-      totalDurationMinutes: showcaseItem.servicePackage.durationMin + addonDuration,
+      totalDurationMinutes: showcaseItem.servicePackage.durationMin + fixedAddonDuration + optionalDuration,
       packageFound: true
     };
   }

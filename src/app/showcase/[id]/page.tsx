@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PublicSiteFrame from "@/components/public-site-frame";
+import ShowcaseAddonPicker from "@/components/showcase-addon-picker";
 import { prisma } from "@/lib/db";
 import { resolveLang } from "@/lib/lang";
 
@@ -14,29 +15,21 @@ const TEXT = {
     back: "← 返回图墙",
     package: "套餐",
     category: "分类",
-    duration: "时长",
     addons: "已含加项",
     addonDuration: "分钟",
-    book: "预约此款设计",
     min: "分钟",
     plus: "+",
-    qty: "×",
-    totalPrice: "总价",
-    totalDuration: "时长"
+    qty: "×"
   },
   ja: {
     back: "← ギャラリーに戻る",
     package: "メニュー",
     category: "カテゴリ",
-    duration: "所要時間",
     addons: "含まれるオプション",
     addonDuration: "分",
-    book: "このデザインを予約",
     min: "分",
     plus: "+",
-    qty: "×",
-    totalPrice: "合計金額",
-    totalDuration: "所要時間"
+    qty: "×"
   }
 } as const;
 
@@ -59,14 +52,25 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
     include: {
       category: { select: { nameZh: true, nameJa: true } },
       servicePackage: {
-        select: {
-          isActive: true,
-          nameZh: true,
-          nameJa: true,
-          descZh: true,
-          descJa: true,
-          priceJpy: true,
-          durationMin: true
+        include: {
+          addonLinks: {
+            where: { addon: { isActive: true } },
+            include: {
+              addon: {
+                select: {
+                  id: true,
+                  nameZh: true,
+                  nameJa: true,
+                  descZh: true,
+                  descJa: true,
+                  priceJpy: true,
+                  durationIncreaseMin: true,
+                  maxQty: true
+                }
+              }
+            },
+            orderBy: { id: "asc" }
+          }
         }
       },
       addonLinks: {
@@ -93,12 +97,31 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
   }
 
   const pkg = item.servicePackage;
-  // Fixed add-ons set by admin for this showcase item
   const fixedAddons = item.addonLinks;
-  const totalAddonPrice = fixedAddons.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
-  const totalAddonDuration = fixedAddons.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
-  const totalPrice = Number(pkg.priceJpy) + totalAddonPrice;
-  const totalDuration = pkg.durationMin + totalAddonDuration;
+  const fixedAddonIdSet = new Set(fixedAddons.map((l) => l.addon.id.toString()));
+
+  // Original price = package base + all fixed addons (the "real" cost before custom discount)
+  const fixedAddonPrice = fixedAddons.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
+  const fixedAddonDuration = fixedAddons.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
+  const originalPrice = Number(pkg.priceJpy) + fixedAddonPrice;
+  const baseDuration = pkg.durationMin + fixedAddonDuration;
+
+  const showDiscount = item.customPriceJpy !== null && item.customPriceJpy < originalPrice;
+  const displayPrice = showDiscount ? item.customPriceJpy! : originalPrice;
+
+  // Optional addons = package's addon links minus showcase fixed addons
+  const optionalAddons = pkg.addonLinks
+    .filter((l) => !fixedAddonIdSet.has(l.addon.id.toString()))
+    .map((l) => ({
+      id: l.addon.id.toString(),
+      nameZh: l.addon.nameZh,
+      nameJa: l.addon.nameJa,
+      descZh: l.addon.descZh,
+      descJa: l.addon.descJa,
+      priceJpy: l.addon.priceJpy,
+      durationIncreaseMin: l.addon.durationIncreaseMin,
+      maxQty: l.addon.maxQty
+    }));
 
   const categoryName = lang === "ja" ? item.category.nameJa : item.category.nameZh;
   const pkgName = lang === "ja" ? pkg.nameJa : pkg.nameZh;
@@ -108,9 +131,6 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
 
   const galleryParams = new URLSearchParams({ lang });
   if (entryToken) galleryParams.set("entry", entryToken);
-
-  const bookingParams = new URLSearchParams({ showcaseItemId: id, lang });
-  if (entryToken) bookingParams.set("entry", entryToken);
 
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
@@ -150,17 +170,24 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
           )}
         </div>
 
-        {/* Package info + total */}
+        {/* Package info + price */}
         <section className="section-panel section-panel-compact">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="section-eyebrow">{t.package}</p>
               <p className="mt-1 font-semibold" style={{ color: "var(--text)" }}>{pkgName}</p>
             </div>
-            <span className="metric-pill shrink-0">¥{totalPrice.toLocaleString()}</span>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="metric-pill">¥{displayPrice.toLocaleString()}</span>
+              {showDiscount && (
+                <span className="text-xs" style={{ color: "var(--text-3)", textDecoration: "line-through" }}>
+                  ¥{originalPrice.toLocaleString()}
+                </span>
+              )}
+            </div>
           </div>
           <p className="mt-1.5 text-sm" style={{ color: "var(--text-3)" }}>
-            {totalDuration} {t.min}
+            {baseDuration} {t.min}
           </p>
           {pkgDesc && (
             <p className="mt-3 text-sm" style={{ color: "var(--text-2)", lineHeight: 1.75 }}>
@@ -217,14 +244,16 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
           </section>
         )}
 
-        {/* Book CTA */}
-        <Link
-          href={`/booking?${bookingParams}`}
-          className="ui-btn-primary text-center"
-          style={{ padding: "13px 0", fontSize: 15, display: "block" }}
-        >
-          {t.book}
-        </Link>
+        {/* Optional addon picker + Book CTA (client component) */}
+        <ShowcaseAddonPicker
+          showcaseItemId={id}
+          lang={lang}
+          entryToken={entryToken}
+          customPriceJpy={item.customPriceJpy}
+          originalPrice={originalPrice}
+          baseDuration={baseDuration}
+          optionalAddons={optionalAddons}
+        />
 
       </main>
     </PublicSiteFrame>

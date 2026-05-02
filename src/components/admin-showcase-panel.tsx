@@ -39,6 +39,7 @@ type ShowcaseItem = {
   sortOrder: number;
   isPublished: boolean;
   hideAddonDetails: boolean;
+  customPriceJpy: number | null;
   appointmentCount: number;
   category: CategoryItem;
   servicePackage: PackageItem & { isActive: boolean };
@@ -55,6 +56,7 @@ type ShowcaseFormState = {
   sortOrder: string;
   isPublished: boolean;
   hideAddonDetails: boolean;
+  customPriceJpy: string;
 };
 
 type PublishFilter = "all" | "published" | "unpublished";
@@ -114,7 +116,8 @@ const TEXT = {
     addonsSaveFailed: "保存加项失败",
     addonsNone: "此套餐暂无可用加项",
     addonsLoading: "加载加项...",
-    hideAddonDetails: "隐藏加项明细（价格/时长）"
+    hideAddonDetails: "隐藏加项明细（价格/时长）",
+    customPriceJpy: "图墙专属价（留空则显示原价）"
   },
   ja: {
     title: "ギャラリー管理",
@@ -166,7 +169,8 @@ const TEXT = {
     addonsSaveFailed: "オプションの保存に失敗しました",
     addonsNone: "このメニューには利用可能なオプションがありません",
     addonsLoading: "オプションを読み込み中...",
-    hideAddonDetails: "オプション明細（金額/時間）を非表示"
+    hideAddonDetails: "オプション明細（金額/時間）を非表示",
+    customPriceJpy: "ギャラリー専用価格（空白で通常価格表示）"
   }
 } as const;
 
@@ -185,7 +189,8 @@ function createEmptyForm(categoryId = "", servicePackageId = ""): ShowcaseFormSt
     imageUrl: "",
     sortOrder: "0",
     isPublished: true,
-    hideAddonDetails: false
+    hideAddonDetails: false,
+    customPriceJpy: ""
   };
 }
 
@@ -200,7 +205,8 @@ function fromItem(item: ShowcaseItem): ShowcaseFormState {
     imageUrl: item.imageUrl,
     sortOrder: String(item.sortOrder),
     isPublished: item.isPublished,
-    hideAddonDetails: item.hideAddonDetails
+    hideAddonDetails: item.hideAddonDetails,
+    customPriceJpy: item.customPriceJpy !== null ? String(item.customPriceJpy) : ""
   };
 }
 
@@ -321,6 +327,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
       descriptionJa: form.descriptionJa.trim() || null,
       imageUrl: form.imageUrl.trim(),
       hideAddonDetails: form.hideAddonDetails,
+      customPriceJpy: form.customPriceJpy.trim() ? Math.max(1, Number.parseInt(form.customPriceJpy, 10) || 0) || null : null,
       sortOrder: Number.parseInt(form.sortOrder, 10) || 0,
       isPublished: form.isPublished
     };
@@ -577,10 +584,16 @@ export default function AdminShowcasePanel({ lang }: Props) {
             {t.published}
           </label>
         </div>
-        <label className="admin-note flex items-center gap-2">
-          <input className="admin-check" type="checkbox" checked={createForm.hideAddonDetails} onChange={(e) => patchCreateForm({ hideAddonDetails: e.target.checked })} />
-          {t.hideAddonDetails}
-        </label>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="admin-note flex items-center gap-2">
+            <input className="admin-check" type="checkbox" checked={createForm.hideAddonDetails} onChange={(e) => patchCreateForm({ hideAddonDetails: e.target.checked })} />
+            {t.hideAddonDetails}
+          </label>
+          <label className="flex items-center gap-2 text-sm text-brand-800">
+            <span>{t.customPriceJpy}</span>
+            <input className="admin-input-sm w-36" type="number" min="1" placeholder="留空" value={createForm.customPriceJpy} onChange={(e) => patchCreateForm({ customPriceJpy: e.target.value })} />
+          </label>
+        </div>
         {renderPreview(createForm.imageUrl)}
         <button className="admin-btn-primary w-fit" type="submit">{t.create}</button>
       </form>
@@ -597,7 +610,12 @@ export default function AdminShowcasePanel({ lang }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-lg font-semibold text-brand-900">{displayName(lang, item.titleZh, item.titleJa)}</p>
-                    <p className="text-sm text-brand-700">{displayName(lang, item.category.nameZh, item.category.nameJa)} / {displayName(lang, item.servicePackage.nameZh, item.servicePackage.nameJa)} / {item.servicePackage.priceJpy} JPY</p>
+                    <p className="text-sm text-brand-700">
+                      {displayName(lang, item.category.nameZh, item.category.nameJa)} / {displayName(lang, item.servicePackage.nameZh, item.servicePackage.nameJa)} / {item.servicePackage.priceJpy} JPY
+                      {item.customPriceJpy !== null && (
+                        <span className="ml-2 font-medium text-emerald-700">→ ¥{item.customPriceJpy.toLocaleString()}</span>
+                      )}
+                    </p>
                     <p className="text-sm text-brand-700">{item.isPublished ? t.published : t.unpublished} / {t.appointments} {item.appointmentCount} / #{item.sortOrder}</p>
                     {!item.servicePackage.isActive ? <p className="text-sm text-amber-700">{t.activePackageMissing}</p> : null}
                   </div>
@@ -641,10 +659,16 @@ export default function AdminShowcasePanel({ lang }: Props) {
                     {t.published}
                   </label>
                 </div>
-                <label className="admin-note flex items-center gap-2">
-                  <input className="admin-check" type="checkbox" checked={editForm.hideAddonDetails} onChange={(e) => patchEditForm({ hideAddonDetails: e.target.checked })} />
-                  {t.hideAddonDetails}
-                </label>
+                <div className="flex flex-wrap items-center gap-4">
+                  <label className="admin-note flex items-center gap-2">
+                    <input className="admin-check" type="checkbox" checked={editForm.hideAddonDetails} onChange={(e) => patchEditForm({ hideAddonDetails: e.target.checked })} />
+                    {t.hideAddonDetails}
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-brand-800">
+                    <span>{t.customPriceJpy}</span>
+                    <input className="admin-input-sm w-36" type="number" min="1" placeholder="留空" value={editForm.customPriceJpy} onChange={(e) => patchEditForm({ customPriceJpy: e.target.value })} />
+                  </label>
+                </div>
                 {renderPreview(editForm.imageUrl)}
 
                 {/* Fixed add-ons */}
