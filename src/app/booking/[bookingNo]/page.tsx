@@ -99,7 +99,8 @@ export default async function PublicBookingDetailPage({ params, searchParams }: 
                     <p>
                       {pickText(lang, "到店时间", "来店時間")}: {new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "zh-CN", {
                         dateStyle: "medium",
-                        timeStyle: "short"
+                        timeStyle: "short",
+                        timeZone: "Asia/Tokyo"
                       }).format(appointment.startAt)}
                     </p>
                     <p>{pickText(lang, "时长", "所要時間")}: {appointment.servicePackage.durationMin} min</p>
