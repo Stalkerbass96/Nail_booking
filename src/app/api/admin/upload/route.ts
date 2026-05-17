@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "File exceeds 8 MB limit" }, { status: 400 });
   }
 
-  const ext = EXT_MAP[file.type] ?? extname(file.name).toLowerCase() || ".jpg";
+  const ext = EXT_MAP[file.type] ?? (extname(file.name).toLowerCase() || ".jpg");
   const filename = `${Date.now()}-${randomBytes(6).toString("hex")}${ext}`;
 
   const uploadsDir = join(process.cwd(), "public", "uploads");
