@@ -47,11 +47,11 @@ export async function POST(request: NextRequest) {
   const ext = EXT_MAP[file.type] ?? (extname(file.name).toLowerCase() || ".jpg");
   const filename = `${Date.now()}-${randomBytes(6).toString("hex")}${ext}`;
 
-  const uploadsDir = join(process.cwd(), "public", "uploads");
+  const uploadsDir = join(process.cwd(), "uploads");
   await mkdir(uploadsDir, { recursive: true });
 
   const buffer = Buffer.from(await file.arrayBuffer());
   await writeFile(join(uploadsDir, filename), buffer);
 
-  return NextResponse.json({ url: `/uploads/${filename}` }, { status: 201 });
+  return NextResponse.json({ url: `/api/uploads/${filename}` }, { status: 201 });
 }

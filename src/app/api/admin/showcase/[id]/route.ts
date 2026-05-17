@@ -10,7 +10,7 @@ const showcaseSchema = z.object({
   descriptionZh: z.string().trim().max(2000).nullable().optional(),
   descriptionJa: z.string().trim().max(2000).nullable().optional(),
   imageUrl: z.string().trim().min(1).max(2000).refine(
-    (v) => /^\/uploads\//.test(v) || /^https?:\/\//.test(v),
+    (v) => /^\/api\/uploads\//.test(v) || /^\/uploads\//.test(v) || /^https?:\/\//.test(v),
     { message: "Must be a valid URL or an uploaded image path" }
   ),
   sortOrder: z.number().int().min(0).max(9999),
