@@ -116,8 +116,7 @@ export function setAdminSessionCookie(response: NextResponse, token: string) {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: ADMIN_SESSION_TTL_SECONDS
+    secure: process.env.NODE_ENV === "production"
   });
 }
 

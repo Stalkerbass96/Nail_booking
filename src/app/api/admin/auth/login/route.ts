@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const loginSchema = z.object({
-  email: z.string().trim().email().max(120),
+  email: z.string().trim().min(1).max(120),
   password: z.string().min(1).max(200)
 });
 

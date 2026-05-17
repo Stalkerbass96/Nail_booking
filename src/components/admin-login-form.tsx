@@ -11,14 +11,14 @@ type Props = {
 
 const TEXT = {
   zh: {
-    email: "\u90ae\u7bb1",
+    email: "\u7528\u6237\u540d",
     password: "\u5bc6\u7801",
     submit: "\u767b\u5f55",
     submitting: "\u767b\u5f55\u4e2d...",
     loginFailed: "\u767b\u5f55\u5931\u8d25"
   },
   ja: {
-    email: "\u30e1\u30fc\u30eb",
+    email: "\u30e6\u30fc\u30b6\u30fc\u540d",
     password: "\u30d1\u30b9\u30ef\u30fc\u30c9",
     submit: "\u30ed\u30b0\u30a4\u30f3",
     submitting: "\u30ed\u30b0\u30a4\u30f3\u4e2d...",
@@ -28,8 +28,8 @@ const TEXT = {
 
 export default function AdminLoginForm({ nextPath, lang }: Props) {
   const router = useRouter();
-  const [email, setEmail] = useState("owner@nail-booking.local");
-  const [password, setPassword] = useState("dev-only-change-me");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -68,10 +68,10 @@ export default function AdminLoginForm({ nextPath, lang }: Props) {
         <input
           id="admin-login-email"
           className="admin-input"
-          type="email"
+          type="text"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          autoComplete="email"
+          autoComplete="username"
         />
       </label>
 
