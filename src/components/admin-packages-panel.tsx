@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
+import ImageUploadInput from "@/components/image-upload-input";
 
 type CategoryItem = {
   id: string;
@@ -362,7 +363,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
           <textarea className="admin-input min-h-20" placeholder={t.descJa} value={createForm.descJa} onChange={(e) => patchCreateForm({ descJa: e.target.value })} />
         </div>
 
-        <input className="admin-input-sm" placeholder={t.imageUrl} value={createForm.imageUrl} onChange={(e) => patchCreateForm({ imageUrl: e.target.value })} />
+        <ImageUploadInput placeholder={t.imageUrl} value={createForm.imageUrl} onChange={(url) => patchCreateForm({ imageUrl: url })} />
 
         <div className="grid gap-2 md:grid-cols-4">
           {addons.map((addon) => (
@@ -412,7 +413,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
                   <textarea className="admin-input min-h-20" value={editForm.descJa} onChange={(e) => patchEditForm({ descJa: e.target.value })} />
                 </div>
 
-                <input className="admin-input-sm" placeholder={t.imageUrlShort} value={editForm.imageUrl} onChange={(e) => patchEditForm({ imageUrl: e.target.value })} />
+                <ImageUploadInput placeholder={t.imageUrlShort} value={editForm.imageUrl} onChange={(url) => patchEditForm({ imageUrl: url })} />
 
                 <label className="text-sm text-brand-800">
                   <input className="admin-check" type="checkbox" checked={editForm.isActive} onChange={(e) => patchEditForm({ isActive: e.target.checked })} />

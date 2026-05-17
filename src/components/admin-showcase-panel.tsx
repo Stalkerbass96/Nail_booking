@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Lang } from "@/lib/lang";
+import ImageUploadInput from "@/components/image-upload-input";
 
 type CategoryItem = {
   id: string;
@@ -577,7 +578,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
           <textarea className="admin-input min-h-20" placeholder={t.descriptionJa} value={createForm.descriptionJa} onChange={(e) => patchCreateForm({ descriptionJa: e.target.value })} />
         </div>
         <div className="grid gap-3 md:grid-cols-[1fr_140px_120px]">
-          <input className="admin-input-sm" placeholder={t.imageUrl} value={createForm.imageUrl} onChange={(e) => patchCreateForm({ imageUrl: e.target.value })} />
+          <ImageUploadInput placeholder={t.imageUrl} value={createForm.imageUrl} onChange={(url) => patchCreateForm({ imageUrl: url })} />
           <input className="admin-input-sm" placeholder={t.sortOrder} value={createForm.sortOrder} onChange={(e) => patchCreateForm({ sortOrder: e.target.value })} />
           <label className="admin-note flex items-center rounded-xl border border-brand-200 bg-white px-3 py-2">
             <input className="admin-check" type="checkbox" checked={createForm.isPublished} onChange={(e) => patchCreateForm({ isPublished: e.target.checked })} />
@@ -652,7 +653,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
                   <textarea className="admin-input min-h-20" value={editForm.descriptionJa} onChange={(e) => patchEditForm({ descriptionJa: e.target.value })} />
                 </div>
                 <div className="grid gap-3 md:grid-cols-[1fr_140px_120px]">
-                  <input className="admin-input-sm" value={editForm.imageUrl} onChange={(e) => patchEditForm({ imageUrl: e.target.value })} />
+                  <ImageUploadInput value={editForm.imageUrl} onChange={(url) => patchEditForm({ imageUrl: url })} />
                   <input className="admin-input-sm" value={editForm.sortOrder} onChange={(e) => patchEditForm({ sortOrder: e.target.value })} />
                   <label className="admin-note flex items-center rounded-xl border border-brand-200 bg-white px-3 py-2">
                     <input className="admin-check" type="checkbox" checked={editForm.isPublished} onChange={(e) => patchEditForm({ isPublished: e.target.checked })} />
