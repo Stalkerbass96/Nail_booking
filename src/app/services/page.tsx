@@ -125,18 +125,28 @@ export default async function ServicesPage({ searchParams }: Props) {
                         className="section-panel section-panel-compact"
                       >
                         {/* Package header */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="font-semibold" style={{ color: "var(--text)" }}>
-                              {pkgName}
-                            </h3>
-                            <p className="mt-0.5 text-sm" style={{ color: "var(--text-3)" }}>
-                              {pkg.durationMin} {t.duration}
-                            </p>
+                        <div className="flex items-start gap-3">
+                          {pkg.imageUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={pkg.imageUrl}
+                              alt={pkgName}
+                              className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                            />
+                          )}
+                          <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="font-semibold" style={{ color: "var(--text)" }}>
+                                {pkgName}
+                              </h3>
+                              <p className="mt-0.5 text-sm" style={{ color: "var(--text-3)" }}>
+                                {pkg.durationMin} {t.duration}
+                              </p>
+                            </div>
+                            <span className="metric-pill shrink-0">
+                              ¥{Number(pkg.priceJpy).toLocaleString()}
+                            </span>
                           </div>
-                          <span className="metric-pill shrink-0">
-                            ¥{Number(pkg.priceJpy).toLocaleString()}
-                          </span>
                         </div>
 
                         {/* Package description */}

@@ -23,6 +23,10 @@ type CalendarBlock = {
   reason: string | null;
 };
 
+type BlockModal =
+  | { type: "create"; ymd: string; hour: number }
+  | { type: "delete"; block: CalendarBlock };
+
 type DayWindow = {
   isOpen: boolean;
   openAt?: string;
@@ -107,6 +111,15 @@ function formatHour(h: number): string {
   return `${String(h).padStart(2, "0")}:00`;
 }
 
+function ymdHourToIso(ymd: string, hour: number): string {
+  return `${ymd}T${String(hour).padStart(2, "0")}:00:00+09:00`;
+}
+
+function formatJstTime(iso: string): string {
+  const shifted = new Date(new Date(iso).getTime() + JST_OFFSET_MS);
+  return shifted.toISOString().slice(11, 16);
+}
+
 // ---------- status colours ----------
 
 const STATUS_STYLE = {
@@ -143,7 +156,13 @@ const TEXT = {
     completed: "已完成",
     block: "封锁区间",
     closed: "休息",
-    days: ["一", "二", "三", "四", "五", "六", "日"]
+    days: ["一", "二", "三", "四", "五", "六", "日"],
+    addBlock: "添加封锁区间",
+    deleteBlock: "删除封锁区间",
+    reasonPlaceholder: "备注（可选）",
+    save: "保存",
+    cancel: "取消",
+    deleteConfirm: "删除"
   },
   ja: {
     title: "予約カレンダー",
@@ -155,7 +174,13 @@ const TEXT = {
     completed: "完了",
     block: "ブロック枠",
     closed: "休業",
-    days: ["月", "火", "水", "木", "金", "土", "日"]
+    days: ["月", "火", "水", "木", "金", "土", "日"],
+    addBlock: "ブロック枠を追加",
+    deleteBlock: "ブロック枠を削除",
+    reasonPlaceholder: "メモ（任意）",
+    save: "保存",
+    cancel: "キャンセル",
+    deleteConfirm: "削除"
   }
 } as const;
 
@@ -171,6 +196,10 @@ export default function AdminCalendarPanel({ lang }: Props) {
   const todayYmd = utcToJstYmd(new Date());
   const nowTop = useRef<number>(0);
   const [, setTick] = useState(0);
+  const [blockModal, setBlockModal] = useState<BlockModal | null>(null);
+  const [blockReason, setBlockReason] = useState("");
+  const [savingBlock, setSavingBlock] = useState(false);
+  const [blockError, setBlockError] = useState<string | null>(null);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDaysToYmd(mondayYmd, i));
   const hours = Array.from({ length: TOTAL_HOURS }, (_, i) => DISPLAY_START_HOUR + i);
@@ -223,6 +252,67 @@ export default function AdminCalendarPanel({ lang }: Props) {
 
   function blocksByDay(ymd: string): CalendarBlock[] {
     return (data?.bookingBlocks ?? []).filter((b) => utcToJstYmd(new Date(b.startAt)) === ymd);
+  }
+
+  function handleColumnClick(e: React.MouseEvent<HTMLDivElement>, ymd: string) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const hour = DISPLAY_START_HOUR + Math.floor(y / PX_PER_HOUR);
+    const clampedHour = Math.max(DISPLAY_START_HOUR, Math.min(DISPLAY_END_HOUR - 1, hour));
+    setBlockError(null);
+    setBlockReason("");
+    setBlockModal({ type: "create", ymd, hour: clampedHour });
+  }
+
+  async function createBlock() {
+    if (blockModal?.type !== "create") return;
+    setSavingBlock(true);
+    setBlockError(null);
+    try {
+      const res = await fetch("/api/admin/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "block",
+          startAt: ymdHourToIso(blockModal.ymd, blockModal.hour),
+          endAt: ymdHourToIso(blockModal.ymd, blockModal.hour + 1),
+          reason: blockReason.trim() || null
+        })
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string };
+        setBlockError(json.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setBlockModal(null);
+      await fetchWeek(mondayYmd);
+    } catch (err) {
+      setBlockError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingBlock(false);
+    }
+  }
+
+  async function deleteBlock() {
+    if (blockModal?.type !== "delete") return;
+    setSavingBlock(true);
+    setBlockError(null);
+    try {
+      const res = await fetch(`/api/admin/schedule/blocks/${blockModal.block.id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string };
+        setBlockError(json.error ?? `HTTP ${res.status}`);
+        return;
+      }
+      setBlockModal(null);
+      await fetchWeek(mondayYmd);
+    } catch (err) {
+      setBlockError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingBlock(false);
+    }
   }
 
   const totalThisWeek = data?.appointments.length ?? 0;
@@ -378,11 +468,13 @@ export default function AdminCalendarPanel({ lang }: Props) {
               return (
                 <div
                   key={ymd}
+                  onClick={(e) => handleColumnClick(e, ymd)}
                   style={{
                     position: "relative",
                     height: TOTAL_HEIGHT,
                     borderLeft: "1px solid var(--border)",
-                    background: isToday ? "rgba(245,158,11,0.03)" : undefined
+                    background: isToday ? "rgba(245,158,11,0.03)" : undefined,
+                    cursor: "crosshair"
                   }}
                 >
                   {/* Closed / outside-hours overlay */}
@@ -450,6 +542,7 @@ export default function AdminCalendarPanel({ lang }: Props) {
                       <div
                         key={block.id}
                         title={block.reason ?? t.block}
+                        onClick={(e) => { e.stopPropagation(); setBlockError(null); setBlockModal({ type: "delete", block }); }}
                         style={{
                           position: "absolute",
                           top: top + 1,
@@ -460,6 +553,7 @@ export default function AdminCalendarPanel({ lang }: Props) {
                           border: "1px solid #fca5a5",
                           background: "repeating-linear-gradient(45deg, #fff1f2 0px, #fff1f2 4px, #ffe4e6 4px, #ffe4e6 8px)",
                           overflow: "hidden",
+                          cursor: "pointer",
                           zIndex: 1
                         }}
                       >
@@ -483,6 +577,7 @@ export default function AdminCalendarPanel({ lang }: Props) {
                         key={apt.id}
                         href={`/admin/appointments?bookingNo=${apt.bookingNo}&lang=${lang}`}
                         title={`${apt.customerName} · ${pkgName}`}
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           position: "absolute",
                           top: top + 1,
@@ -540,6 +635,107 @@ export default function AdminCalendarPanel({ lang }: Props) {
 
       {loading && (
         <p className="ui-state-info mt-3" aria-live="polite">{t.loading}</p>
+      )}
+
+      {/* ── Block modal ── */}
+      {blockModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 50,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16
+          }}
+          onClick={() => { if (!savingBlock) setBlockModal(null); }}
+        >
+          <div
+            className="section-panel"
+            style={{ maxWidth: 320, width: "100%", padding: 20 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {blockModal.type === "create" ? (
+              <>
+                <h3 className="mb-3 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                  {t.addBlock}
+                </h3>
+                <p className="mb-3 text-sm" style={{ color: "var(--text-2)" }}>
+                  {formatHour(blockModal.hour)} ~ {formatHour(blockModal.hour + 1)}
+                </p>
+                <input
+                  type="text"
+                  className="ui-input mb-3 w-full"
+                  placeholder={t.reasonPlaceholder}
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  maxLength={255}
+                  disabled={savingBlock}
+                  autoFocus
+                />
+                {blockError && (
+                  <p className="ui-state-error mb-2 text-xs">{blockError}</p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="ui-btn-secondary"
+                    onClick={() => setBlockModal(null)}
+                    disabled={savingBlock}
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    type="button"
+                    className="ui-btn-primary"
+                    onClick={createBlock}
+                    disabled={savingBlock}
+                  >
+                    {savingBlock ? "..." : t.save}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="mb-3 text-sm font-semibold" style={{ color: "var(--text)" }}>
+                  {t.deleteBlock}
+                </h3>
+                <p className="mb-1 text-sm" style={{ color: "var(--text-2)" }}>
+                  {formatJstTime(blockModal.block.startAt)} ~ {formatJstTime(blockModal.block.endAt)}
+                </p>
+                {blockModal.block.reason && (
+                  <p className="mb-3 text-xs" style={{ color: "var(--text-3)" }}>
+                    {blockModal.block.reason}
+                  </p>
+                )}
+                {blockError && (
+                  <p className="ui-state-error mb-2 text-xs">{blockError}</p>
+                )}
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="ui-btn-secondary"
+                    onClick={() => setBlockModal(null)}
+                    disabled={savingBlock}
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    type="button"
+                    className="ui-btn-primary"
+                    onClick={deleteBlock}
+                    disabled={savingBlock}
+                    style={{ background: "#ef4444", borderColor: "#ef4444" }}
+                  >
+                    {savingBlock ? "..." : t.deleteConfirm}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </article>
   );
