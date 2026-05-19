@@ -24,7 +24,7 @@ type CalendarBlock = {
 };
 
 type BlockModal =
-  | { type: "create"; ymd: string; hour: number }
+  | { type: "create"; ymd: string; slot: number }
   | { type: "delete"; block: CalendarBlock };
 
 type DayWindow = {
@@ -111,8 +111,16 @@ function formatHour(h: number): string {
   return `${String(h).padStart(2, "0")}:00`;
 }
 
-function ymdHourToIso(ymd: string, hour: number): string {
-  return `${ymd}T${String(hour).padStart(2, "0")}:00:00+09:00`;
+function ymdSlotToIso(ymd: string, slot: number): string {
+  const h = Math.floor(slot);
+  const m = slot % 1 >= 0.5 ? 30 : 0;
+  return `${ymd}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00+09:00`;
+}
+
+function formatSlotTime(slot: number): string {
+  const h = Math.floor(slot);
+  const m = slot % 1 >= 0.5 ? "30" : "00";
+  return `${String(h).padStart(2, "0")}:${m}`;
 }
 
 function formatJstTime(iso: string): string {
@@ -198,6 +206,7 @@ export default function AdminCalendarPanel({ lang }: Props) {
   const [, setTick] = useState(0);
   const [blockModal, setBlockModal] = useState<BlockModal | null>(null);
   const [blockReason, setBlockReason] = useState("");
+  const [blockDuration, setBlockDuration] = useState<30 | 60>(60);
   const [savingBlock, setSavingBlock] = useState(false);
   const [blockError, setBlockError] = useState<string | null>(null);
 
@@ -257,11 +266,13 @@ export default function AdminCalendarPanel({ lang }: Props) {
   function handleColumnClick(e: React.MouseEvent<HTMLDivElement>, ymd: string) {
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    const hour = DISPLAY_START_HOUR + Math.floor(y / PX_PER_HOUR);
-    const clampedHour = Math.max(DISPLAY_START_HOUR, Math.min(DISPLAY_END_HOUR - 1, hour));
+    const rawSlot = DISPLAY_START_HOUR + y / PX_PER_HOUR;
+    // Snap to nearest 30-minute boundary
+    const slot = Math.floor(rawSlot * 2) / 2;
+    const clampedSlot = Math.max(DISPLAY_START_HOUR, Math.min(DISPLAY_END_HOUR - 0.5, slot));
     setBlockError(null);
     setBlockReason("");
-    setBlockModal({ type: "create", ymd, hour: clampedHour });
+    setBlockModal({ type: "create", ymd, slot: clampedSlot });
   }
 
   async function createBlock() {
@@ -274,8 +285,8 @@ export default function AdminCalendarPanel({ lang }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "block",
-          startAt: ymdHourToIso(blockModal.ymd, blockModal.hour),
-          endAt: ymdHourToIso(blockModal.ymd, blockModal.hour + 1),
+          startAt: ymdSlotToIso(blockModal.ymd, blockModal.slot),
+          endAt: ymdSlotToIso(blockModal.ymd, blockModal.slot + blockDuration / 60),
           reason: blockReason.trim() || null
         })
       });
@@ -663,8 +674,29 @@ export default function AdminCalendarPanel({ lang }: Props) {
                   {t.addBlock}
                 </h3>
                 <p className="mb-3 text-sm" style={{ color: "var(--text-2)" }}>
-                  {formatHour(blockModal.hour)} ~ {formatHour(blockModal.hour + 1)}
+                  {formatSlotTime(blockModal.slot)} ~ {formatSlotTime(blockModal.slot + blockDuration / 60)}
                 </p>
+                <div className="mb-3 flex gap-2">
+                  {([30, 60] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setBlockDuration(d)}
+                      style={{
+                        flex: 1,
+                        padding: "4px 0",
+                        borderRadius: 6,
+                        fontSize: 13,
+                        border: `1px solid ${blockDuration === d ? "var(--accent)" : "var(--border)"}`,
+                        background: blockDuration === d ? "var(--accent)" : "var(--bg)",
+                        color: blockDuration === d ? "#fff" : "var(--text-2)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {d === 30 ? "30分钟" : "1小时"}
+                    </button>
+                  ))}
+                </div>
                 <input
                   type="text"
                   className="ui-input mb-3 w-full"
