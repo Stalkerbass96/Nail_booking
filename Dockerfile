@@ -13,7 +13,7 @@ RUN npm ci
 
 COPY . .
 RUN npm run prisma:generate
-RUN npm run build
+RUN NODE_OPTIONS=--max-old-space-size=768 npm run build
 
 ENV NODE_ENV=production
 
