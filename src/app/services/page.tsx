@@ -153,7 +153,7 @@ export default async function ServicesPage({ searchParams }: Props) {
                         {pkgDesc && (
                           <p
                             className="mt-3 text-sm"
-                            style={{ color: "var(--text-2)", lineHeight: 1.75 }}
+                            style={{ color: "var(--text-2)", lineHeight: 1.75, whiteSpace: "pre-wrap" }}
                           >
                             {pkgDesc}
                           </p>
@@ -189,7 +189,7 @@ export default async function ServicesPage({ searchParams }: Props) {
                                       {addonDesc && (
                                         <p
                                           className="mt-0.5 text-xs"
-                                          style={{ color: "var(--text-3)", lineHeight: 1.5 }}
+                                          style={{ color: "var(--text-3)", lineHeight: 1.5, whiteSpace: "pre-wrap" }}
                                         >
                                           {addonDesc}
                                         </p>

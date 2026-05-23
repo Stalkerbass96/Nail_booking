@@ -58,7 +58,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
           <div className="detail-hero-copy">
             <p className="section-eyebrow">{lang === "ja" ? servicePackage.category.nameJa : servicePackage.category.nameZh}</p>
             <h1 className="section-title">{lang === "ja" ? servicePackage.nameJa : servicePackage.nameZh}</h1>
-            <p className="section-copy">
+            <p className="section-copy" style={{ whiteSpace: "pre-wrap" }}>
               {lang === "ja"
                 ? servicePackage.descJa || pickText(lang, "\u9002\u5408\u60f3\u5148\u786e\u8ba4\u5b8c\u6574\u5185\u5bb9\u518d\u9884\u7ea6\u7684\u987e\u5ba2\u3002", "\u5185\u5bb9\u3092\u3057\u3063\u304b\u308a\u78ba\u8a8d\u3057\u3066\u304b\u3089\u4e88\u7d04\u3057\u305f\u3044\u65b9\u5411\u3051\u3067\u3059\u3002")
                 : servicePackage.descZh || pickText(lang, "\u9002\u5408\u60f3\u5148\u786e\u8ba4\u5b8c\u6574\u5185\u5bb9\u518d\u9884\u7ea6\u7684\u987e\u5ba2\u3002", "\u5185\u5bb9\u3092\u3057\u3063\u304b\u308a\u78ba\u8a8d\u3057\u3066\u304b\u3089\u4e88\u7d04\u3057\u305f\u3044\u65b9\u5411\u3051\u3067\u3059\u3002")}
@@ -88,7 +88,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
                 <article key={item.addon.id.toString()} className="detail-addon-card">
                   <div>
                     <strong>{lang === "ja" ? item.addon.nameJa : item.addon.nameZh}</strong>
-                    <p>{lang === "ja" ? item.addon.descJa || "-" : item.addon.descZh || "-"}</p>
+                    <p style={{ whiteSpace: "pre-wrap" }}>{lang === "ja" ? item.addon.descJa || "-" : item.addon.descZh || "-"}</p>
                   </div>
                   <div className="text-right text-sm font-medium text-brand-800">
                     <div>+{item.addon.priceJpy} JPY</div>
