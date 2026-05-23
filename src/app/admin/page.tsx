@@ -1,7 +1,6 @@
 ﻿import { AppointmentStatus, LineMessageDirection } from "@prisma/client";
 import Link from "next/link";
 import AdminNav from "@/components/admin-nav";
-import AdminCalendarPanel from "@/components/admin-calendar-panel";
 import { prisma } from "@/lib/db";
 import { getLineConfig } from "@/lib/line";
 import { resolveLang } from "@/lib/lang";
@@ -11,7 +10,7 @@ import {
   formatTimeInOffset,
   formatYmdInOffset
 } from "@/lib/booking-rules";
-import { getBusinessWindowByDate } from "@/lib/business-hours";
+import { getOpenSlotsForDate, slotsToWindows } from "@/lib/day-slots";
 
 type Props = {
   searchParams: Promise<{ lang?: string }>;
@@ -117,8 +116,7 @@ function formatDateTime(value: Date | null, locale: string) {
   return formatDateTimeInOffset(value, locale);
 }
 
-function formatTimeRange(openAt?: Date, closeAt?: Date) {
-  if (!openAt || !closeAt) return "-";
+function formatWindow(openAt: Date, closeAt: Date) {
   return `${formatTimeInOffset(openAt)} - ${formatTimeInOffset(closeAt)}`;
 }
 
@@ -134,9 +132,9 @@ export default async function AdminHomePage({ searchParams }: Props) {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const lineConfig = getLineConfig();
 
-  const [todayWindow, todayCount, pendingCount, customerCount, lineLinkedCount, incoming7dCount, menuCount, nextBooking, nextBlock] =
+  const [todayOpenSlots, todayCount, pendingCount, customerCount, lineLinkedCount, incoming7dCount, menuCount, nextBooking] =
     await Promise.all([
-      getBusinessWindowByDate(prisma, todayYmd),
+      getOpenSlotsForDate(prisma, todayYmd),
       prisma.appointment.count({
         where: {
           startAt: { gte: todayStart, lt: tomorrowStart },
@@ -163,12 +161,10 @@ export default async function AdminHomePage({ searchParams }: Props) {
           customer: { select: { name: true, email: true } },
           servicePackage: { select: { nameZh: true, nameJa: true } }
         }
-      }),
-      prisma.bookingBlock.findFirst({
-        where: { endAt: { gte: now } },
-        orderBy: { startAt: "asc" }
       })
     ]);
+
+  const todayWindows = slotsToWindows(todayYmd, todayOpenSlots);
 
   const statCards = [
     { label: t.stats.today, value: todayCount },
@@ -254,46 +250,29 @@ export default async function AdminHomePage({ searchParams }: Props) {
         <article className="section-panel section-panel-compact grid gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="admin-section-title">{t.sections.todayHours}</h2>
-            <span className="metric-pill" style={todayWindow.isOpen ? {} : { color: "var(--text-3)" }}>
-              {todayWindow.isOpen ? t.sections.open : t.sections.closed}
+            <span className="metric-pill" style={todayWindows.length > 0 ? {} : { color: "var(--text-3)" }}>
+              {todayWindows.length > 0 ? t.sections.open : t.sections.closed}
             </span>
           </div>
           <div className="grid gap-3 rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
             <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
               <p className="section-eyebrow">{todayYmd}</p>
-              <p className="mt-1 text-xl font-semibold" style={{ color: "var(--text)" }}>{formatTimeRange(todayWindow.openAt, todayWindow.closeAt)}</p>
-              <p className="mt-1 text-sm" style={{ color: "var(--text-3)" }}>
-                {todayWindow.source === "special" ? t.sections.sourceSpecial : t.sections.sourceWeekly}
-              </p>
+              {todayWindows.length === 0 ? (
+                <p className="mt-1 text-xl font-semibold" style={{ color: "var(--text-3)" }}>{t.sections.closed}</p>
+              ) : (
+                <div className="mt-1 grid gap-1">
+                  {todayWindows.map((w, i) => (
+                    <p key={i} className="text-xl font-semibold" style={{ color: "var(--text)" }}>
+                      {formatWindow(w.openAt, w.closeAt)}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
             <Link href={`/admin/schedule?lang=${lang}`} className="ui-btn-secondary">
               {t.sections.goSchedule}
             </Link>
           </div>
-        </article>
-
-        <article className="section-panel section-panel-compact grid gap-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="admin-section-title">{t.sections.nextBlock}</h2>
-            <Link href={`/admin/schedule?lang=${lang}`} className="text-sm font-medium no-underline" style={{ color: "var(--text-3)" }}>
-              {t.sections.goSchedule}
-            </Link>
-          </div>
-          {nextBlock ? (
-            <div className="grid gap-3 rounded-xl p-3" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
-              <div>
-                <p className="section-eyebrow">{t.sections.time}</p>
-                <p className="mt-1.5 font-semibold" style={{ color: "var(--text)" }}>{formatDateTime(nextBlock.startAt, locale)}</p>
-                <p className="text-sm" style={{ color: "var(--text-3)" }}>{formatDateTime(nextBlock.endAt, locale)}</p>
-              </div>
-              <div className="rounded-lg px-3 py-2.5" style={{ border: "1px solid var(--border)", background: "var(--surface)" }}>
-                <p className="section-eyebrow">{t.sections.reason}</p>
-                <p className="mt-1 text-sm" style={{ color: "var(--text-2)" }}>{nextBlock.reason || t.sections.none}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="ui-state-info mt-0">{t.sections.noBlock}</p>
-          )}
         </article>
 
         <article className="section-panel section-panel-compact grid gap-3">
@@ -328,9 +307,6 @@ export default async function AdminHomePage({ searchParams }: Props) {
         </article>
       </section>
 
-      <section className="mt-5">
-        <AdminCalendarPanel lang={lang} />
-      </section>
     </main>
   );
 }
