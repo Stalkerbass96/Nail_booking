@@ -355,7 +355,7 @@ export default function AdminScheduleCalendar({ lang }: Props) {
               background: "#fff"
             }}
           >
-            <div style={{ height: 42 }} />
+            <div style={{ height: 42, position: "sticky", left: 0, zIndex: 11, background: "#fff" }} />
             {dates.map((date) => {
               const isToday = date === today;
               return (
@@ -397,7 +397,7 @@ export default function AdminScheduleCalendar({ lang }: Props) {
             >
               {Array.from({ length: SLOTS_PER_DAY }, (_, slot) => (
                 <>
-                  {/* Time label — touch here scrolls vertically */}
+                  {/* Time label — sticky left so it stays visible on horizontal scroll */}
                   <div
                     key={`lbl-${slot}`}
                     style={{
@@ -410,7 +410,10 @@ export default function AdminScheduleCalendar({ lang }: Props) {
                       borderBottom: `1px solid ${COLOR_BORDER}`,
                       background: "#fafafa",
                       flexShrink: 0,
-                      touchAction: "pan-y"
+                      touchAction: "pan-y",
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 2
                     }}
                   >
                     {slot % 2 === 0 ? slotLabel(slot) : ""}
