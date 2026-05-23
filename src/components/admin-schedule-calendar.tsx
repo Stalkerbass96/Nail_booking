@@ -392,13 +392,12 @@ export default function AdminScheduleCalendar({ lang }: Props) {
               style={{
                 display: "grid",
                 gridTemplateColumns: `${LABEL_W}px repeat(7, 1fr)`,
-                userSelect: "none",
-                touchAction: "none"
+                userSelect: "none"
               }}
             >
               {Array.from({ length: SLOTS_PER_DAY }, (_, slot) => (
                 <>
-                  {/* Time label (every full hour) */}
+                  {/* Time label — touch here scrolls vertically */}
                   <div
                     key={`lbl-${slot}`}
                     style={{
@@ -410,13 +409,14 @@ export default function AdminScheduleCalendar({ lang }: Props) {
                       color: "#9ca3af",
                       borderBottom: `1px solid ${COLOR_BORDER}`,
                       background: "#fafafa",
-                      flexShrink: 0
+                      flexShrink: 0,
+                      touchAction: "pan-y"
                     }}
                   >
                     {slot % 2 === 0 ? slotLabel(slot) : ""}
                   </div>
 
-                  {/* Day cells */}
+                  {/* Day cells — touch-action:none so pointer events fire for drag */}
                   {dates.map((date) => {
                     const bg = getCellColor(date, slot);
                     const cursor = getCellCursor(date, slot);
@@ -439,7 +439,8 @@ export default function AdminScheduleCalendar({ lang }: Props) {
                             ? "1px solid #d1d5db"
                             : `1px solid ${COLOR_BORDER}`,
                           background: bg === COLOR_CLOSED && isToday ? "#fffbfb" : bg,
-                          cursor
+                          cursor,
+                          touchAction: "none"
                         }}
                       />
                     );
