@@ -81,6 +81,9 @@ type DragState = {
   startSlot: number;
   endSlot: number;
   isOpening: boolean;
+  startX: number;
+  startY: number;
+  direction: "pending" | "fill" | "scroll";
 };
 
 type Props = { lang: Lang };
@@ -139,6 +142,7 @@ export default function AdminScheduleCalendar({ lang }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const didInitialScroll = useRef(false);
   const gridRef = useRef<HTMLDivElement>(null);
+  const lastScrollX = useRef(0);
 
   // ── load ──────────────────────────────────────────────────────────────────
 
@@ -207,14 +211,41 @@ export default function AdminScheduleCalendar({ lang }: Props) {
   }
 
   function handlePointerDown(e: React.PointerEvent, date: string, slot: number) {
-    // Don't start drag on booked cells — handled on pointerUp as click
     e.preventDefault();
     const currentlyOpen = localSlots[date]?.has(slot) ?? false;
-    setDrag({ date, startSlot: slot, endSlot: slot, isOpening: !currentlyOpen });
+    lastScrollX.current = e.clientX;
+    setDrag({
+      date, startSlot: slot, endSlot: slot, isOpening: !currentlyOpen,
+      startX: e.clientX, startY: e.clientY, direction: "pending"
+    });
   }
 
   function handlePointerMove(e: React.PointerEvent) {
     if (!drag) return;
+
+    if (drag.direction === "pending") {
+      const dx = Math.abs(e.clientX - drag.startX);
+      const dy = Math.abs(e.clientY - drag.startY);
+      // Wait for 6 px of movement before committing to a direction
+      if (dx < 6 && dy < 6) return;
+      const dir: "fill" | "scroll" = dx > dy ? "scroll" : "fill";
+      setDrag((prev) => prev ? { ...prev, direction: dir } : null);
+      if (dir === "scroll") {
+        const delta = e.clientX - lastScrollX.current;
+        lastScrollX.current = e.clientX;
+        if (scrollRef.current) scrollRef.current.scrollLeft -= delta;
+        return;
+      }
+    }
+
+    if (drag.direction === "scroll") {
+      const delta = e.clientX - lastScrollX.current;
+      lastScrollX.current = e.clientX;
+      if (scrollRef.current) scrollRef.current.scrollLeft -= delta;
+      return;
+    }
+
+    // fill mode — update slot range within the same date column
     const hit = getCellFromPoint(e.clientX, e.clientY);
     if (hit && hit.date === drag.date && hit.slot !== drag.endSlot) {
       setDrag((prev) => prev ? { ...prev, endSlot: hit.slot } : null);
@@ -223,6 +254,7 @@ export default function AdminScheduleCalendar({ lang }: Props) {
 
   function commitDrag() {
     if (!drag) return;
+    if (drag.direction === "scroll") { setDrag(null); return; }
     const { date, startSlot, endSlot, isOpening } = drag;
     const lo = Math.min(startSlot, endSlot);
     const hi = Math.max(startSlot, endSlot);
@@ -444,7 +476,7 @@ export default function AdminScheduleCalendar({ lang }: Props) {
                           : `1px solid ${COLOR_BORDER}`,
                         background: bg === COLOR_CLOSED && isToday ? "#fffbfb" : bg,
                         cursor,
-                        touchAction: "pan-x"
+                        touchAction: "none"
                       }}
                     />
                   );
