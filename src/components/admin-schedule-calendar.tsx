@@ -334,28 +334,41 @@ export default function AdminScheduleCalendar({ lang }: Props) {
       {loading && <p className="ui-state-info">{t.loading}</p>}
 
       {!loading && (
+        /* Single container handles both X and Y scroll so position:sticky works in both directions */
         <div
+          ref={scrollRef}
           style={{
+            maxHeight: 560,
             overflowX: "auto",
+            overflowY: "auto",
             borderRadius: "1rem",
             border: `1px solid ${COLOR_BORDER}`,
             background: "#fff"
           }}
+          onPointerMove={handlePointerMove}
+          onPointerUp={commitDrag}
+          onPointerLeave={commitDrag}
+          onPointerCancel={() => setDrag(null)}
         >
-          {/* Day headers — sticky top */}
           <div
+            ref={gridRef}
             style={{
               display: "grid",
               gridTemplateColumns: `${LABEL_W}px repeat(7, 1fr)`,
               minWidth: 560,
-              borderBottom: `2px solid ${COLOR_BORDER}`,
-              position: "sticky",
-              top: 0,
-              zIndex: 10,
-              background: "#fff"
+              userSelect: "none"
             }}
           >
-            <div style={{ height: 42, position: "sticky", left: 0, zIndex: 11, background: "#fff" }} />
+            {/* Header row — sticky top; corner cell also sticky left */}
+            <div style={{
+              height: 42,
+              position: "sticky",
+              top: 0,
+              left: 0,
+              zIndex: 12,
+              background: "#fff",
+              borderBottom: `2px solid ${COLOR_BORDER}`
+            }} />
             {dates.map((date) => {
               const isToday = date === today;
               return (
@@ -370,87 +383,74 @@ export default function AdminScheduleCalendar({ lang }: Props) {
                     fontWeight: 700,
                     color: isToday ? "#ef4444" : "#374151",
                     borderLeft: `1px solid ${COLOR_BORDER}`,
-                    background: isToday ? "#fef2f2" : undefined
+                    borderBottom: `2px solid ${COLOR_BORDER}`,
+                    background: isToday ? "#fef2f2" : "#fff",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 10
                   }}
                 >
                   {formatDateHeader(date, lang)}
                 </div>
               );
             })}
-          </div>
 
-          {/* Scrollable grid */}
-          <div
-            ref={scrollRef}
-            style={{ maxHeight: 560, overflowY: "auto", minWidth: 560 }}
-            onPointerMove={handlePointerMove}
-            onPointerUp={commitDrag}
-            onPointerLeave={commitDrag}
-          >
-            <div
-              ref={gridRef}
-              style={{
-                display: "grid",
-                gridTemplateColumns: `${LABEL_W}px repeat(7, 1fr)`,
-                userSelect: "none"
-              }}
-            >
-              {Array.from({ length: SLOTS_PER_DAY }, (_, slot) => (
-                <>
-                  {/* Time label — sticky left so it stays visible on horizontal scroll */}
-                  <div
-                    key={`lbl-${slot}`}
-                    style={{
-                      height: CELL_H,
-                      display: "flex",
-                      alignItems: "center",
-                      paddingLeft: 8,
-                      fontSize: 10,
-                      color: "#9ca3af",
-                      borderBottom: `1px solid ${COLOR_BORDER}`,
-                      background: "#fafafa",
-                      flexShrink: 0,
-                      touchAction: "pan-y",
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 2
-                    }}
-                  >
-                    {slot % 2 === 0 ? slotLabel(slot) : ""}
-                  </div>
+            {/* Slot rows */}
+            {Array.from({ length: SLOTS_PER_DAY }, (_, slot) => (
+              <>
+                {/* Time label — sticky left; touch scrolls vertically */}
+                <div
+                  key={`lbl-${slot}`}
+                  style={{
+                    height: CELL_H,
+                    display: "flex",
+                    alignItems: "center",
+                    paddingLeft: 8,
+                    fontSize: 10,
+                    color: "#9ca3af",
+                    borderBottom: `1px solid ${COLOR_BORDER}`,
+                    background: "#fafafa",
+                    flexShrink: 0,
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 2,
+                    touchAction: "pan-y"
+                  }}
+                >
+                  {slot % 2 === 0 ? slotLabel(slot) : ""}
+                </div>
 
-                  {/* Day cells — touch-action:none so pointer events fire for drag */}
-                  {dates.map((date) => {
-                    const bg = getCellColor(date, slot);
-                    const cursor = getCellCursor(date, slot);
-                    const booked = getBookedSlot(date, slot);
-                    const isToday = date === today;
+                {/* Day cells — pan-x lets left/right swipe scroll; vertical drag fills slots */}
+                {dates.map((date) => {
+                  const bg = getCellColor(date, slot);
+                  const cursor = getCellCursor(date, slot);
+                  const booked = getBookedSlot(date, slot);
+                  const isToday = date === today;
 
-                    return (
-                      <div
-                        key={`${date}-${slot}`}
-                        data-date={date}
-                        data-slot={slot}
-                        title={booked
-                          ? `${booked.customerName} / ${lang === "ja" ? booked.packageNameJa : booked.packageNameZh}`
-                          : undefined}
-                        onPointerDown={(e) => handlePointerDown(e, date, slot)}
-                        style={{
-                          height: CELL_H,
-                          borderLeft: `1px solid ${COLOR_BORDER}`,
-                          borderBottom: slot % 2 === 1
-                            ? "1px solid #d1d5db"
-                            : `1px solid ${COLOR_BORDER}`,
-                          background: bg === COLOR_CLOSED && isToday ? "#fffbfb" : bg,
-                          cursor,
-                          touchAction: "none"
-                        }}
-                      />
-                    );
-                  })}
-                </>
-              ))}
-            </div>
+                  return (
+                    <div
+                      key={`${date}-${slot}`}
+                      data-date={date}
+                      data-slot={slot}
+                      title={booked
+                        ? `${booked.customerName} / ${lang === "ja" ? booked.packageNameJa : booked.packageNameZh}`
+                        : undefined}
+                      onPointerDown={(e) => handlePointerDown(e, date, slot)}
+                      style={{
+                        height: CELL_H,
+                        borderLeft: `1px solid ${COLOR_BORDER}`,
+                        borderBottom: slot % 2 === 1
+                          ? "1px solid #d1d5db"
+                          : `1px solid ${COLOR_BORDER}`,
+                        background: bg === COLOR_CLOSED && isToday ? "#fffbfb" : bg,
+                        cursor,
+                        touchAction: "pan-x"
+                      }}
+                    />
+                  );
+                })}
+              </>
+            ))}
           </div>
         </div>
       )}
