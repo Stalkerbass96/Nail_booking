@@ -139,8 +139,8 @@ wait_for_http() {
 echo "[deploy] validating compose file"
 $COMPOSE config >/dev/null
 
-echo "[deploy] building images"
-$COMPOSE build app auto-cancel-worker
+echo "[deploy] pulling images from registry"
+$COMPOSE pull app auto-cancel-worker
 
 echo "[deploy] starting postgres"
 $COMPOSE up -d postgres
