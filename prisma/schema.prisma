@@ -243,6 +243,16 @@ model SystemSetting {
   @@map("system_settings")
 }
 
+model DaySlot {
+  id   BigInt   @id @default(autoincrement())
+  date DateTime @db.Date
+  slot Int      // 0–47: slot index from midnight in 30-min steps (0=00:00, 1=00:30, ..., 47=23:30)
+
+  @@unique([date, slot])
+  @@index([date])
+  @@map("day_slots")
+}
+
 model BookingBlock {
   id               BigInt   @id @default(autoincrement())
   startAt          DateTime @map("start_at") @db.Timestamptz(6)

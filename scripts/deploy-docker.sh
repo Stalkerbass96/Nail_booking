@@ -154,6 +154,9 @@ if [ "${1:-}" = "--seed" ]; then
   $COMPOSE run --rm app npm run db:seed
 fi
 
+echo "[deploy] importing existing schedule to day slots (idempotent, skips already-imported dates)"
+$COMPOSE run --rm app node scripts/import-schedule-slots.cjs
+
 echo "[deploy] starting app and worker"
 $COMPOSE up -d app auto-cancel-worker
 wait_for_http "http://127.0.0.1:${APP_PORT}/api/public/categories"

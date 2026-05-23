@@ -1,5 +1,5 @@
-﻿import AdminNav from "@/components/admin-nav";
-import AdminSchedulePanel from "@/components/admin-schedule-panel";
+import AdminNav from "@/components/admin-nav";
+import AdminScheduleCalendar from "@/components/admin-schedule-calendar";
 import { resolveLang } from "@/lib/lang";
 
 type Props = {
@@ -13,7 +13,7 @@ export default async function AdminSchedulePage({ searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
       <AdminNav lang={lang} />
-      <AdminSchedulePanel lang={lang} />
+      <AdminScheduleCalendar lang={lang} />
     </main>
   );
 }

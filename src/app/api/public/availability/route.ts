@@ -1,5 +1,4 @@
 import { AppointmentStatus } from "@prisma/client";
-import { overlapsWithBlockedRanges } from "@/lib/booking-blocks";
 import { prisma } from "@/lib/db";
 import {
   addMinutes,
@@ -8,7 +7,7 @@ import {
   parseRuntimeSettings,
   parseSingleBigInt
 } from "@/lib/booking-rules";
-import { getBusinessWindowByDate } from "@/lib/business-hours";
+import { getOpenSlotsForDate, slotsToWindows } from "@/lib/day-slots";
 import { NextRequest, NextResponse } from "next/server";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -159,9 +158,10 @@ export async function GET(request: NextRequest) {
     const actualDuration = resolved.totalDurationMinutes;
     const blockedDuration = roundUpToSlot(actualDuration, runtime.slotMinutes);
 
-    const businessWindow = await getBusinessWindowByDate(prisma, date);
+    const openSlots = await getOpenSlotsForDate(prisma, date);
+    const openWindows = slotsToWindows(date, openSlots);
 
-    if (!businessWindow.isOpen || !businessWindow.openAt || !businessWindow.closeAt) {
+    if (openWindows.length === 0) {
       return NextResponse.json({
         date,
         slotMinutes: runtime.slotMinutes,
@@ -170,56 +170,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (businessWindow.closeAt <= businessWindow.openAt) {
-      return NextResponse.json({ error: "Invalid business hours range" }, { status: 422 });
-    }
+    const rangeStart = openWindows[0].openAt;
+    const rangeEnd = openWindows[openWindows.length - 1].closeAt;
 
-    const [occupiedAppointments, bookingBlocks] = await Promise.all([
-      prisma.appointment.findMany({
-        where: {
-          status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
-          startAt: { lt: businessWindow.closeAt },
-          endAt: { gt: businessWindow.openAt }
-        },
-        select: {
-          startAt: true,
-          endAt: true,
-          status: true
-        }
-      }),
-      prisma.bookingBlock.findMany({
-        where: {
-          startAt: { lt: businessWindow.closeAt },
-          endAt: { gt: businessWindow.openAt }
-        },
-        select: {
-          startAt: true,
-          endAt: true,
-          reason: true
-        },
-        orderBy: { startAt: "asc" }
-      })
-    ]);
+    const occupiedAppointments = await prisma.appointment.findMany({
+      where: {
+        status: { in: [AppointmentStatus.pending, AppointmentStatus.confirmed] },
+        startAt: { lt: rangeEnd },
+        endAt: { gt: rangeStart }
+      },
+      select: { startAt: true, endAt: true, status: true }
+    });
 
-    const candidateStarts = generateStartSlots(
-      businessWindow.openAt,
-      businessWindow.closeAt,
-      blockedDuration,
-      runtime.slotMinutes
+    const candidateStarts = openWindows.flatMap((w) =>
+      generateStartSlots(w.openAt, w.closeAt, blockedDuration, runtime.slotMinutes)
     );
 
     const slots = candidateStarts
       .filter((startAt) => {
         const endAt = addMinutes(startAt, blockedDuration);
-        if (overlapsWithAppointments(startAt, endAt, occupiedAppointments)) {
-          return false;
-        }
-
-        if (overlapsWithBlockedRanges(startAt, endAt, bookingBlocks)) {
-          return false;
-        }
-
-        return true;
+        return !overlapsWithAppointments(startAt, endAt, occupiedAppointments);
       })
       .map((startAt) => ({
         startAt: startAt.toISOString(),
@@ -230,8 +200,7 @@ export async function GET(request: NextRequest) {
       date,
       slotMinutes: runtime.slotMinutes,
       totalDurationMinutes: actualDuration,
-      slots,
-      blockedCount: bookingBlocks.length
+      slots
     });
   } catch (error) {
     if (error instanceof Error && (error.message.startsWith("Invalid ") || error.message.includes("required") || error.message.includes("addons"))) {

@@ -3,8 +3,8 @@ import {
   buildDateTimeWithOffset,
   formatYmdInOffset
 } from "@/lib/booking-rules";
-import { getBusinessWindowByDate } from "@/lib/business-hours";
 import { prisma } from "@/lib/db";
+import { dateToUtcMidnight, getOpenSlotsForDate, slotsToWindows } from "@/lib/day-slots";
 import { NextRequest, NextResponse } from "next/server";
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -28,63 +28,55 @@ export async function GET(request: NextRequest) {
       dayYmds.push(formatYmdInOffset(d));
     }
 
-    // Fetch appointments and booking blocks in parallel
-    const [appointments, bookingBlocks] = await Promise.all([
-      prisma.appointment.findMany({
-        where: {
-          startAt: { gte: rangeStart, lte: rangeEnd },
-          status: {
-            in: [
-              AppointmentStatus.pending,
-              AppointmentStatus.confirmed,
-              AppointmentStatus.completed
-            ]
-          }
-        },
-        orderBy: { startAt: "asc" },
-        select: {
-          id: true,
-          bookingNo: true,
-          startAt: true,
-          endAt: true,
-          status: true,
-          customer: { select: { name: true } },
-          servicePackage: { select: { nameZh: true, nameJa: true } }
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        startAt: { gte: rangeStart, lte: rangeEnd },
+        status: {
+          in: [
+            AppointmentStatus.pending,
+            AppointmentStatus.confirmed,
+            AppointmentStatus.completed
+          ]
         }
-      }),
-      prisma.bookingBlock.findMany({
-        where: {
-          startAt: { lte: rangeEnd },
-          endAt: { gte: rangeStart }
-        },
-        orderBy: { startAt: "asc" },
-        select: { id: true, startAt: true, endAt: true, reason: true }
-      })
-    ]);
+      },
+      orderBy: { startAt: "asc" },
+      select: {
+        id: true,
+        bookingNo: true,
+        startAt: true,
+        endAt: true,
+        status: true,
+        customer: { select: { name: true } },
+        servicePackage: { select: { nameZh: true, nameJa: true } }
+      }
+    });
 
-    // Fetch business windows for each day (7 sequential queries via parallel)
-    const windowEntries = await Promise.all(
+    // Fetch open windows per day from DaySlot
+    const dayWindowEntries = await Promise.all(
       dayYmds.map(async (ymd) => {
-        const w = await getBusinessWindowByDate(prisma, ymd);
-        return {
-          ymd,
-          isOpen: w.isOpen,
-          openAt: w.openAt?.toISOString() ?? null,
-          closeAt: w.closeAt?.toISOString() ?? null
-        };
+        const slots = await getOpenSlotsForDate(prisma, ymd);
+        const windows = slotsToWindows(ymd, slots);
+        return { ymd, windows };
       })
     );
 
+    // Build businessWindows map (first + last window per day for calendar background shading)
     const businessWindows: Record<
       string,
-      { isOpen: boolean; openAt: string | null; closeAt: string | null }
+      { isOpen: boolean; openAt: string | null; closeAt: string | null; openSlots: number[] }
     > = {};
-    for (const entry of windowEntries) {
-      businessWindows[entry.ymd] = {
-        isOpen: entry.isOpen,
-        openAt: entry.openAt,
-        closeAt: entry.closeAt
-      };
+    for (const { ymd, windows } of dayWindowEntries) {
+      const openSlots = await getOpenSlotsForDate(prisma, ymd);
+      if (windows.length === 0) {
+        businessWindows[ymd] = { isOpen: false, openAt: null, closeAt: null, openSlots: [] };
+      } else {
+        businessWindows[ymd] = {
+          isOpen: true,
+          openAt: windows[0].openAt.toISOString(),
+          closeAt: windows[windows.length - 1].closeAt.toISOString(),
+          openSlots
+        };
+      }
     }
 
     return NextResponse.json({
@@ -98,12 +90,7 @@ export async function GET(request: NextRequest) {
         packageNameZh: row.servicePackage.nameZh,
         packageNameJa: row.servicePackage.nameJa
       })),
-      bookingBlocks: bookingBlocks.map((b) => ({
-        id: b.id.toString(),
-        startAt: b.startAt.toISOString(),
-        endAt: b.endAt.toISOString(),
-        reason: b.reason ?? null
-      })),
+      bookingBlocks: [],
       businessWindows
     });
   } catch (err) {
