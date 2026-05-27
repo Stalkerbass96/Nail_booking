@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "@/lib/lang";
 import ImageUploadInput from "@/components/image-upload-input";
 
@@ -25,6 +25,7 @@ type PackageItem = {
   imageUrl?: string | null;
   priceJpy: number;
   durationMin: number;
+  sortOrder: number;
   isActive: boolean;
   category: CategoryItem;
   addonIds: string[];
@@ -81,7 +82,11 @@ const TEXT = {
     deleteFailed: "删除套餐失败",
     deleteConfirm: "确定要删除这个套餐吗？如果已经被图墙或预约引用，系统会拒绝删除。",
     deleteBlocked: "这个套餐已被图墙或预约引用，不能删除。",
-    empty: "暂无套餐"
+    empty: "暂无套餐",
+    moveUp: "上移",
+    moveDown: "下移",
+    reorderFailed: "排序调整失败",
+    reorderSuccess: "排序已更新"
   },
   ja: {
     title: "メニュー管理",
@@ -116,7 +121,11 @@ const TEXT = {
     deleteFailed: "メニューの削除に失敗しました",
     deleteConfirm: "このメニューを削除しますか？ギャラリーや予約で使われている場合は削除できません。",
     deleteBlocked: "このメニューはギャラリーまたは予約で使われているため削除できません。",
-    empty: "メニューはありません"
+    empty: "メニューはありません",
+    moveUp: "上へ",
+    moveDown: "下へ",
+    reorderFailed: "並び替えに失敗しました",
+    reorderSuccess: "並び順を更新しました"
   }
 } as const;
 
@@ -161,10 +170,18 @@ export default function AdminPackagesPanel({ lang }: Props) {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [addons, setAddons] = useState<AddonItem[]>([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [createForm, setCreateForm] = useState<PackageFormState>(createEmptyFormState());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PackageFormState>(createEmptyFormState());
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)),
+    [items]
+  );
 
   const addonLabelById = useMemo(() => {
     const map = new Map<string, string>();
@@ -333,6 +350,40 @@ export default function AdminPackagesPanel({ lang }: Props) {
     }
   }
 
+  async function moveItem(itemId: string, direction: -1 | 1) {
+    const currentIdx = sortedItems.findIndex((i) => i.id === itemId);
+    if (currentIdx < 0) return;
+    const targetIdx = currentIdx + direction;
+    if (targetIdx < 0 || targetIdx >= sortedItems.length) return;
+
+    const newOrder = [...sortedItems];
+    [newOrder[currentIdx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[currentIdx]];
+    const updates = newOrder.map((item, idx) => ({ id: item.id, sortOrder: idx * 10 }));
+
+    setSaving(true);
+    setError("");
+    try {
+      const results = await Promise.all(
+        updates.map(({ id, sortOrder }) =>
+          fetch(`/api/admin/packages/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sortOrder })
+          })
+        )
+      );
+      if (results.some((r) => !r.ok)) throw new Error(t.reorderFailed);
+      if (noticeTimer.current) clearTimeout(noticeTimer.current);
+      setNotice(t.reorderSuccess);
+      noticeTimer.current = setTimeout(() => setNotice(""), 2500);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.reorderFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
       <div className="flex items-center justify-between">
@@ -341,6 +392,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
       </div>
 
       {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {notice ? <p className="text-sm font-medium text-emerald-700" aria-live="polite">{notice}</p> : null}
       {loading ? <p className="ui-state-info" aria-live="polite">{t.loading}</p> : null}
 
       <form className="admin-subsection" onSubmit={createPackage}>
@@ -378,8 +430,8 @@ export default function AdminPackagesPanel({ lang }: Props) {
       </form>
 
       <div className="mt-4 grid gap-3">
-        {!loading && items.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
-        {items.map((item) => (
+        {!loading && sortedItems.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
+        {sortedItems.map((item, index) => (
           <article key={item.id} className="admin-item">
             <p className="font-medium text-brand-900">{item.nameZh} / {item.nameJa}</p>
             <p className="text-sm text-brand-700">
@@ -389,7 +441,9 @@ export default function AdminPackagesPanel({ lang }: Props) {
               {t.addons}: {item.addonIds.length ? item.addonIds.map((id) => addonLabelById.get(id) ?? id).join(", ") : t.none}
             </p>
 
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={saving || index === 0}>{t.moveUp}</button>
+              <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={saving || index === sortedItems.length - 1}>{t.moveDown}</button>
               <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">{t.edit}</button>
               <button className="admin-btn-danger" onClick={() => void deletePackage(item)} type="button">{t.remove}</button>
             </div>

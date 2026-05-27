@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
           select: { packageId: true }
         }
       },
-      orderBy: [{ isActive: "desc" }, { id: "asc" }]
+      orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
     });
 
     return NextResponse.json({
@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
         priceJpy: item.priceJpy,
         durationIncreaseMin: item.durationIncreaseMin,
         maxQty: item.maxQty,
+        sortOrder: item.sortOrder,
         isActive: item.isActive,
         packageIds: item.packageLinks.map((link) => link.packageId.toString())
       }))

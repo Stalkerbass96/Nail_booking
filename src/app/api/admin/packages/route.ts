@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
           select: { addonId: true }
         }
       },
-      orderBy: [{ category: { sortOrder: "asc" } }, { id: "asc" }]
+      orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
     });
 
     return NextResponse.json({
@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
         imageUrl: item.imageUrl,
         priceJpy: item.priceJpy,
         durationMin: item.durationMin,
+        sortOrder: item.sortOrder,
         isActive: item.isActive,
         category: {
           id: item.category.id.toString(),

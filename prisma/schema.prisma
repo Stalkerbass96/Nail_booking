@@ -109,6 +109,7 @@ model ServicePackage {
   imageUrl    String? @map("image_url")
   priceJpy    Int     @map("price_jpy")
   durationMin Int     @map("duration_min")
+  sortOrder   Int     @default(0) @map("sort_order")
   isActive    Boolean @default(true) @map("is_active")
 
   category      ServiceCategory    @relation(fields: [categoryId], references: [id])
@@ -128,6 +129,7 @@ model ServiceAddon {
   priceJpy            Int     @map("price_jpy")
   durationIncreaseMin Int     @map("duration_increase_min")
   maxQty              Int     @default(1) @map("max_qty")
+  sortOrder           Int     @default(0) @map("sort_order")
   isActive            Boolean @default(true) @map("is_active")
 
   packageLinks       PackageAddonLink[]

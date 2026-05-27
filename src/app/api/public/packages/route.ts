@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: [{ category: { sortOrder: "asc" } }, { id: "asc" }]
+      orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
     });
 
     return NextResponse.json({

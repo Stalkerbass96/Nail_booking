@@ -12,6 +12,7 @@ const updatePackageSchema = z.object({
   imageUrl: z.string().trim().max(1000).optional().nullable(),
   priceJpy: z.number().int().min(0).optional(),
   durationMin: z.number().int().min(5).optional(),
+  sortOrder: z.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
   addonIds: z.array(z.union([z.string(), z.number().int().positive()])).optional()
 });
@@ -72,6 +73,7 @@ export async function PATCH(
           ...(payload.imageUrl !== undefined ? { imageUrl: payload.imageUrl } : {}),
           ...(payload.priceJpy !== undefined ? { priceJpy: payload.priceJpy } : {}),
           ...(payload.durationMin !== undefined ? { durationMin: payload.durationMin } : {}),
+          ...(payload.sortOrder !== undefined ? { sortOrder: payload.sortOrder } : {}),
           ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {})
         }
       });
