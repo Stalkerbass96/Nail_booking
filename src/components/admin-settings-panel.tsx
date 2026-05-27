@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Lang } from "@/lib/lang";
+import { LINE_MSG_DEFAULTS, LINE_MSG_KEYS, type LineMsgKey } from "@/lib/line-message-settings";
 
 type SettingsDto = {
   slotMinutes: number;
@@ -52,6 +53,27 @@ const TEXT = {
     invalidEarnRatio: "积分累计比例必须在 1 到 100000 之间",
     invalidRedeemRatio: "积分抵扣比例必须在 1 到 100000 之间",
     slotHint: "当前系统仅支持 30 分钟的倍数，建议保持 30 分钟。",
+    // LINE messages section
+    lineTitle: "LINE 消息模板",
+    lineDesc: "所有发送给客户的 LINE 消息正文，在这里编辑。预约编号、详情链接、改期新时间等会自动拼接在后面。",
+    lineSave: "保存消息模板",
+    lineSaved: "消息模板已保存",
+    lineLoadFailed: "加载消息模板失败",
+    lineSaveFailed: "保存消息模板失败",
+    lineLoading: "加载中...",
+    line_msg_welcome_1: "关注欢迎语（第 1 行）",
+    line_msg_welcome_2: "关注欢迎语（第 2 行）",
+    line_msg_gallery_1: "图墙链接前文字",
+    line_msg_gallery_2: "图墙链接后文字",
+    line_msg_pending: "预约待确认消息",
+    line_msg_confirmed: "预约已确认消息",
+    line_msg_rescheduled: "预约改期消息",
+    lineHint_welcome: "第 2 行后面自动追加图墙链接",
+    lineHint_gallery: "消息结构：第 1 行 → 链接 → 第 2 行",
+    lineHint_pending: "自动追加：预约编号 + 详情链接",
+    lineHint_confirmed: "自动追加：预约编号 + 详情链接",
+    lineHint_rescheduled: "自动追加：新时间 + 预约编号 + 详情链接",
+    // danger zone
     dangerTitle: "测试清库",
     dangerDesc: "清空客户、预约、LINE 会话、图墙、分类、套餐和加项等业务数据，并恢复示例目录。管理员账号、系统设置和营业时间会保留。",
     confirmationLabel: "输入确认词 RESET 后才能执行",
@@ -95,6 +117,27 @@ const TEXT = {
     invalidEarnRatio: "ポイント付与比率は 1 から 100000 の範囲で入力してください",
     invalidRedeemRatio: "ポイント利用比率は 1 から 100000 の範囲で入力してください",
     slotHint: "現在の予約モデルでは 30 分単位のみサポートしています。通常は 30 分を推奨します。",
+    // LINE messages section
+    lineTitle: "LINE メッセージテンプレート",
+    lineDesc: "お客様に送るLINEメッセージの本文をここで編集できます。予約番号・詳細URL・変更後の日時などは自動付与されます。",
+    lineSave: "テンプレートを保存",
+    lineSaved: "テンプレートを保存しました",
+    lineLoadFailed: "テンプレートの読み込みに失敗しました",
+    lineSaveFailed: "テンプレートの保存に失敗しました",
+    lineLoading: "読み込み中...",
+    line_msg_welcome_1: "フォロー歓迎メッセージ（1行目）",
+    line_msg_welcome_2: "フォロー歓迎メッセージ（2行目）",
+    line_msg_gallery_1: "ギャラリーリンク前メッセージ",
+    line_msg_gallery_2: "ギャラリーリンク後メッセージ",
+    line_msg_pending: "予約受付メッセージ",
+    line_msg_confirmed: "予約確認メッセージ",
+    line_msg_rescheduled: "予約変更メッセージ",
+    lineHint_welcome: "2行目の後にギャラリーリンクが自動付与されます",
+    lineHint_gallery: "構成：1行目 → リンク → 2行目",
+    lineHint_pending: "予約番号・詳細URLが自動付与されます",
+    lineHint_confirmed: "予約番号・詳細URLが自動付与されます",
+    lineHint_rescheduled: "新しい日時・予約番号・詳細URLが自動付与されます",
+    // danger zone
     dangerTitle: "テストデータ初期化",
     dangerDesc: "顧客、予約、LINE 会話、ギャラリー、カテゴリ、メニュー、追加オプションなどの業務データを削除し、サンプルカタログを復元します。管理者アカウント、システム設定、営業時間は保持されます。",
     confirmationLabel: "実行するには確認文字 RESET を入力してください",
@@ -184,9 +227,21 @@ function validateSettings(
   };
 }
 
+// LINE message field descriptors (key → which hint to show)
+const LINE_FIELD_HINTS: Record<LineMsgKey, "welcome" | "gallery" | "pending" | "confirmed" | "rescheduled"> = {
+  line_msg_welcome_1: "welcome",
+  line_msg_welcome_2: "welcome",
+  line_msg_gallery_1: "gallery",
+  line_msg_gallery_2: "gallery",
+  line_msg_pending: "pending",
+  line_msg_confirmed: "confirmed",
+  line_msg_rescheduled: "rescheduled"
+};
+
 export default function AdminSettingsPanel({ lang }: Props) {
   const t = TEXT[lang];
 
+  // ── Numeric settings ─────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -301,8 +356,63 @@ export default function AdminSettingsPanel({ lang }: Props) {
     }
   }
 
+  // ── LINE message templates ────────────────────────────────────────────────
+  const [lineLoading, setLineLoading] = useState(true);
+  const [lineSaving, setLineSaving] = useState(false);
+  const [lineError, setLineError] = useState("");
+  const [lineOk, setLineOk] = useState("");
+  const lineOkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Initialise with hard-coded defaults; overwritten once the API responds
+  const [lineValues, setLineValues] = useState<Record<LineMsgKey, string>>(
+    () => ({ ...LINE_MSG_DEFAULTS })
+  );
+
+  useEffect(() => {
+    async function loadLine() {
+      setLineLoading(true);
+      setLineError("");
+      try {
+        const res = await fetch("/api/admin/line-messages");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || t.lineLoadFailed);
+        setLineValues(data.messages as Record<LineMsgKey, string>);
+      } catch (err) {
+        setLineError(err instanceof Error ? err.message : t.lineLoadFailed);
+      } finally {
+        setLineLoading(false);
+      }
+    }
+    void loadLine();
+  }, [t.lineLoadFailed]);
+
+  async function onSaveLineMessages(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLineError("");
+    setLineOk("");
+    setLineSaving(true);
+    try {
+      const res = await fetch("/api/admin/line-messages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lineValues)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || t.lineSaveFailed);
+      setLineValues(data.messages as Record<LineMsgKey, string>);
+      if (lineOkTimer.current) clearTimeout(lineOkTimer.current);
+      setLineOk(t.lineSaved);
+      lineOkTimer.current = setTimeout(() => setLineOk(""), 3000);
+    } catch (err) {
+      setLineError(err instanceof Error ? err.message : t.lineSaveFailed);
+    } finally {
+      setLineSaving(false);
+    }
+  }
+
   return (
     <section className="admin-panel-shell">
+      {/* ── Numeric settings ── */}
       <h2 className="admin-section-title">{t.title}</h2>
       <p className="mt-1 text-sm text-brand-700">{t.desc}</p>
 
@@ -342,6 +452,46 @@ export default function AdminSettingsPanel({ lang }: Props) {
         </div>
       </form>
 
+      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
+      {ok ? <p className="ui-state-success" aria-live="polite">{ok}</p> : null}
+
+      {/* ── LINE message templates ── */}
+      <section className="admin-subsection mt-8">
+        <p className="font-medium text-brand-900">{t.lineTitle}</p>
+        <p className="mt-1 text-sm text-brand-700">{t.lineDesc}</p>
+
+        {lineLoading ? <p className="ui-state-info mt-3" aria-live="polite">{t.lineLoading}</p> : null}
+
+        <form className="mt-4 grid gap-5" onSubmit={onSaveLineMessages}>
+          {LINE_MSG_KEYS.map((key) => {
+            const hintKey = `lineHint_${LINE_FIELD_HINTS[key]}` as keyof typeof t;
+            return (
+              <label key={key} className="grid gap-1 text-sm text-brand-800">
+                <span className="font-medium">{t[key as keyof typeof t]}</span>
+                <textarea
+                  className="admin-input min-h-16 resize-y"
+                  value={lineValues[key]}
+                  onChange={(e) => setLineValues((prev) => ({ ...prev, [key]: e.target.value }))}
+                  placeholder={LINE_MSG_DEFAULTS[key]}
+                  rows={2}
+                />
+                <span className="text-xs text-brand-500">{t[hintKey]}</span>
+              </label>
+            );
+          })}
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <button className="admin-btn-primary w-fit" disabled={lineSaving} type="submit">
+              {lineSaving ? `${t.lineSave}...` : t.lineSave}
+            </button>
+            {lineOk ? <span className="text-sm font-medium text-emerald-700" aria-live="polite">{lineOk}</span> : null}
+          </div>
+        </form>
+
+        {lineError ? <p className="admin-danger mt-2" aria-live="assertive">{lineError}</p> : null}
+      </section>
+
+      {/* ── Danger zone ── */}
       <section className="admin-subsection mt-6 border border-red-100 bg-red-50/50">
         <p className="font-medium text-red-800">{t.dangerTitle}</p>
         <p className="mt-2 text-sm leading-7 text-red-700">{t.dangerDesc}</p>
@@ -385,9 +535,6 @@ export default function AdminSettingsPanel({ lang }: Props) {
           </div>
         ) : null}
       </section>
-
-      {error ? <p className="admin-danger" aria-live="assertive">{error}</p> : null}
-      {ok ? <p className="ui-state-success" aria-live="polite">{ok}</p> : null}
     </section>
   );
 }

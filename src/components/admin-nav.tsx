@@ -73,7 +73,7 @@ export default function AdminNav({ lang }: Props) {
                     : { background: "transparent", color: "var(--text-3)", border: "1px solid transparent" }
                 }
               >
-                {lang === "ja" ? item.ja : item.zh}
+                {item.zh}
               </Link>
             );
           })}
