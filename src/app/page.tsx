@@ -44,12 +44,18 @@ export default async function HomePage({ searchParams }: Props) {
         servicePackage: { isActive: true },
         ...(categoryId ? { categoryId: BigInt(categoryId) } : {})
       },
-      include: {
+      select: {
+        id: true,
+        imageUrl: true,
+        customPriceJpy: true,
         servicePackage: {
           select: { id: true, nameZh: true, nameJa: true, priceJpy: true }
         },
         addonLinks: {
-          include: { addon: { select: { priceJpy: true, isActive: true } } }
+          select: {
+            qty: true,
+            addon: { select: { priceJpy: true, isActive: true } }
+          }
         }
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
