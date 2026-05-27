@@ -11,6 +11,7 @@ type AddonWithLinks = {
   priceJpy: number;
   durationIncreaseMin: number;
   maxQty: number;
+  sortOrder: number;
   isActive: boolean;
   packageLinks: Array<{ packageId: bigint }>;
 };
