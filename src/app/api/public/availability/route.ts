@@ -81,7 +81,7 @@ async function resolvePackageDuration(params: {
 
     return {
       packageId: showcaseItem.servicePackageId,
-      totalDurationMinutes: showcaseItem.servicePackage.durationMin + fixedAddonDuration + optionalDuration,
+      totalDurationMinutes: (showcaseItem.customDurationMin ?? showcaseItem.servicePackage.durationMin) + fixedAddonDuration + optionalDuration,
       packageFound: true
     };
   }

@@ -104,7 +104,7 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
   const fixedAddonPrice = fixedAddons.reduce((s, l) => s + l.addon.priceJpy * l.qty, 0);
   const fixedAddonDuration = fixedAddons.reduce((s, l) => s + l.addon.durationIncreaseMin * l.qty, 0);
   const originalPrice = Number(pkg.priceJpy) + fixedAddonPrice;
-  const baseDuration = pkg.durationMin + fixedAddonDuration;
+  const baseDuration = (item.customDurationMin ?? pkg.durationMin) + fixedAddonDuration;
 
   const showDiscount = item.customPriceJpy !== null && item.customPriceJpy < originalPrice;
   const displayPrice = showDiscount ? item.customPriceJpy! : originalPrice;

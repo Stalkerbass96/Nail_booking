@@ -41,6 +41,7 @@ type ShowcaseItem = {
   isPublished: boolean;
   hideAddonDetails: boolean;
   customPriceJpy: number | null;
+  customDurationMin: number | null;
   appointmentCount: number;
   category: CategoryItem;
   servicePackage: PackageItem & { isActive: boolean };
@@ -58,6 +59,7 @@ type ShowcaseFormState = {
   isPublished: boolean;
   hideAddonDetails: boolean;
   customPriceJpy: string;
+  customDurationMin: string;
 };
 
 type PublishFilter = "all" | "published" | "unpublished";
@@ -118,7 +120,8 @@ const TEXT = {
     addonsNone: "此套餐暂无可用加项",
     addonsLoading: "加载加项...",
     hideAddonDetails: "隐藏加项明细（价格/时长）",
-    customPriceJpy: "图墙专属价（留空则显示原价）"
+    customPriceJpy: "图墙专属价（留空则显示原价）",
+    customDurationMin: "图墙专属时长 min（留空则沿用套餐时长）"
   },
   ja: {
     title: "ギャラリー管理",
@@ -171,7 +174,8 @@ const TEXT = {
     addonsNone: "このメニューには利用可能なオプションがありません",
     addonsLoading: "オプションを読み込み中...",
     hideAddonDetails: "オプション明細（金額/時間）を非表示",
-    customPriceJpy: "ギャラリー専用価格（空白で通常価格表示）"
+    customPriceJpy: "ギャラリー専用価格（空白で通常価格表示）",
+    customDurationMin: "ギャラリー専用時間 min（空白でメニュー時間を適用）"
   }
 } as const;
 
@@ -191,7 +195,8 @@ function createEmptyForm(categoryId = "", servicePackageId = ""): ShowcaseFormSt
     sortOrder: "0",
     isPublished: true,
     hideAddonDetails: false,
-    customPriceJpy: ""
+    customPriceJpy: "",
+    customDurationMin: ""
   };
 }
 
@@ -207,7 +212,8 @@ function fromItem(item: ShowcaseItem): ShowcaseFormState {
     sortOrder: String(item.sortOrder),
     isPublished: item.isPublished,
     hideAddonDetails: item.hideAddonDetails,
-    customPriceJpy: item.customPriceJpy !== null ? String(item.customPriceJpy) : ""
+    customPriceJpy: item.customPriceJpy !== null ? String(item.customPriceJpy) : "",
+    customDurationMin: item.customDurationMin !== null ? String(item.customDurationMin) : ""
   };
 }
 
@@ -329,6 +335,7 @@ export default function AdminShowcasePanel({ lang }: Props) {
       imageUrl: form.imageUrl.trim(),
       hideAddonDetails: form.hideAddonDetails,
       customPriceJpy: form.customPriceJpy.trim() ? Math.max(1, Number.parseInt(form.customPriceJpy, 10) || 0) || null : null,
+      customDurationMin: form.customDurationMin.trim() ? Math.max(5, Number.parseInt(form.customDurationMin, 10) || 0) || null : null,
       sortOrder: Number.parseInt(form.sortOrder, 10) || 0,
       isPublished: form.isPublished
     };
@@ -594,6 +601,10 @@ export default function AdminShowcasePanel({ lang }: Props) {
             <span>{t.customPriceJpy}</span>
             <input className="admin-input-sm w-36" type="number" min="1" placeholder="留空" value={createForm.customPriceJpy} onChange={(e) => patchCreateForm({ customPriceJpy: e.target.value })} />
           </label>
+          <label className="flex items-center gap-2 text-sm text-brand-800">
+            <span>{t.customDurationMin}</span>
+            <input className="admin-input-sm w-28" type="number" min="5" step="5" placeholder="留空" value={createForm.customDurationMin} onChange={(e) => patchCreateForm({ customDurationMin: e.target.value })} />
+          </label>
         </div>
         {renderPreview(createForm.imageUrl)}
         <button className="admin-btn-primary w-fit" type="submit">{t.create}</button>
@@ -615,6 +626,9 @@ export default function AdminShowcasePanel({ lang }: Props) {
                       {displayName(lang, item.category.nameZh, item.category.nameJa)} / {displayName(lang, item.servicePackage.nameZh, item.servicePackage.nameJa)} / {item.servicePackage.priceJpy} JPY
                       {item.customPriceJpy !== null && (
                         <span className="ml-2 font-medium text-emerald-700">→ ¥{item.customPriceJpy.toLocaleString()}</span>
+                      )}
+                      {item.customDurationMin !== null && (
+                        <span className="ml-2 font-medium text-sky-700">→ {item.customDurationMin} min</span>
                       )}
                     </p>
                     <p className="text-sm text-brand-700">{item.isPublished ? t.published : t.unpublished} / {t.appointments} {item.appointmentCount} / #{item.sortOrder}</p>
@@ -668,6 +682,10 @@ export default function AdminShowcasePanel({ lang }: Props) {
                   <label className="flex items-center gap-2 text-sm text-brand-800">
                     <span>{t.customPriceJpy}</span>
                     <input className="admin-input-sm w-36" type="number" min="1" placeholder="留空" value={editForm.customPriceJpy} onChange={(e) => patchEditForm({ customPriceJpy: e.target.value })} />
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-brand-800">
+                    <span>{t.customDurationMin}</span>
+                    <input className="admin-input-sm w-28" type="number" min="5" step="5" placeholder="留空" value={editForm.customDurationMin} onChange={(e) => patchEditForm({ customDurationMin: e.target.value })} />
                   </label>
                 </div>
                 {renderPreview(editForm.imageUrl)}

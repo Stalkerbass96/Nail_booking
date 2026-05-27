@@ -462,7 +462,7 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
     (s, a) => s + a.durationIncreaseMin * (optionalQtyMap.get(a.id.toString()) ?? 1),
     0
   );
-  const totalDurationMinutes = showcaseItem.servicePackage.durationMin + fixedDuration + optionalDuration;
+  const totalDurationMinutes = (showcaseItem.customDurationMin ?? showcaseItem.servicePackage.durationMin) + fixedDuration + optionalDuration;
   const endAt = addMinutes(startAt, roundUpToSlot(totalDurationMinutes, runtime.slotMinutes));
   const bookingYmd = formatYmdInOffset(startAt);
   const autoCancelAt = await assertBookableRange({ startAt, endAt, bookingYmd, runtime });

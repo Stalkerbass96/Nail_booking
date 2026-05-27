@@ -170,7 +170,7 @@ export default async function BookingPage({ searchParams }: Props) {
                       packageDescriptionJa: showcaseItem.servicePackage.descJa,
                       priceJpy: originalPrice,
                       customPriceJpy,
-                      durationMin: showcaseItem.servicePackage.durationMin + fixedAddonDuration
+                      durationMin: (showcaseItem.customDurationMin ?? showcaseItem.servicePackage.durationMin) + fixedAddonDuration
                     }}
                     availableAddons={optionalAddons}
                     initialAddonQtys={initialAddonQtys}
