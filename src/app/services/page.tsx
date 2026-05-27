@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PublicSiteFrame from "@/components/public-site-frame";
+import ServicesCategoryNav from "@/components/services-category-nav";
 import { prisma } from "@/lib/db";
 import { pickText, resolveLang } from "@/lib/lang";
 
@@ -73,6 +74,11 @@ export default async function ServicesPage({ searchParams }: Props) {
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
   });
 
+  const navCategories = categories.map((c) => ({
+    id: c.id.toString(),
+    name: lang === "ja" ? c.nameJa : c.nameZh
+  }));
+
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-5">
@@ -89,6 +95,9 @@ export default async function ServicesPage({ searchParams }: Props) {
           </Link>
         </section>
 
+        {/* Sticky category jump bar — only shown when there are 2+ categories */}
+        <ServicesCategoryNav categories={navCategories} />
+
         {categories.length === 0 && (
           <section className="section-panel section-panel-compact">
             <p className="ui-state-info mt-0">{t.empty}</p>
@@ -99,7 +108,11 @@ export default async function ServicesPage({ searchParams }: Props) {
           {categories.map((category) => {
             const categoryName = lang === "ja" ? category.nameJa : category.nameZh;
             return (
-              <section key={category.id.toString()}>
+              <section
+                key={category.id.toString()}
+                id={`cat-${category.id.toString()}`}
+                style={{ scrollMarginTop: 112 }}
+              >
                 <div
                   className="mb-3 flex items-center gap-2 pb-2"
                   style={{ borderBottom: "2px solid var(--border)" }}
