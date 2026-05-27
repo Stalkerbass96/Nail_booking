@@ -1,26 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Category = { id: string; name: string };
 
-// Site header height (defined in globals.css .site-header-inner → height: 56px)
-const HEADER_H = 56;
-// Height of this nav bar itself (py-2.5 × 2 + button ~28px ≈ 48px)
+// Nav bar own height: py-2.5 (10px×2) + button 28px ≈ 48px
 const NAV_H = 48;
-const SCROLL_OFFSET = HEADER_H + NAV_H + 8; // a little extra breathing room
 
 export default function ServicesCategoryNav({ categories }: { categories: Category[] }) {
+  // Measured at runtime so it works on both mobile (52+1=53px) and desktop (56+1=57px)
+  const [headerH, setHeaderH] = useState(57);
   const [activeId, setActiveId] = useState(categories[0]?.id ?? "");
   const navRef = useRef<HTMLDivElement>(null);
 
-  // --- Intersection observer: track which section is in view ---
+  // Measure site-header height (including its border-bottom) and re-measure on resize
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = document.querySelector(".site-header");
+      if (el) setHeaderH(el.getBoundingClientRect().height);
+    };
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  const scrollOffset = headerH + NAV_H + 8;
+
+  // Track which section is in the viewport
   useEffect(() => {
     if (categories.length <= 1) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Pick the topmost intersecting section
         const hits = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -28,7 +39,7 @@ export default function ServicesCategoryNav({ categories }: { categories: Catego
           setActiveId(hits[0].target.id.replace("cat-", ""));
         }
       },
-      { rootMargin: `-${SCROLL_OFFSET}px 0px -55% 0px`, threshold: 0 }
+      { rootMargin: `-${scrollOffset}px 0px -55% 0px`, threshold: 0 }
     );
 
     for (const cat of categories) {
@@ -37,9 +48,9 @@ export default function ServicesCategoryNav({ categories }: { categories: Catego
     }
 
     return () => observer.disconnect();
-  }, [categories]);
+  }, [categories, scrollOffset]);
 
-  // --- Keep the active pill scrolled into view in the nav ---
+  // Keep the active pill scrolled into view inside the nav
   useEffect(() => {
     const btn = navRef.current?.querySelector<HTMLElement>(`[data-cat="${activeId}"]`);
     btn?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
@@ -51,24 +62,31 @@ export default function ServicesCategoryNav({ categories }: { categories: Catego
     setActiveId(id);
     const el = document.getElementById(`cat-${id}`);
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET;
+    // Manual offset scroll so both sticky bars are accounted for
+    const top = el.getBoundingClientRect().top + window.scrollY - scrollOffset;
     window.scrollTo({ top, behavior: "smooth" });
   }
 
   return (
+    // No negative margins — avoids horizontal page overflow on mobile.
+    // The sticky top is measured dynamically to sit flush below the site header.
     <div
-      ref={navRef}
-      className="sticky z-10 -mx-4 overflow-x-auto sm:-mx-6"
+      className="sticky z-10"
       style={{
-        top: HEADER_H,
+        top: headerH,
+        // Overlap the header's bottom border by 1px so there's no gap/line
+        marginTop: -1,
         borderBottom: "1px solid var(--border)",
         background: "rgba(250, 248, 245, 0.96)",
         backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        scrollbarWidth: "none"
+        WebkitBackdropFilter: "blur(20px)"
       }}
     >
-      <div className="flex gap-1.5 px-4 py-2.5 sm:px-6">
+      <div
+        ref={navRef}
+        className="flex gap-1.5 overflow-x-auto py-2.5"
+        style={{ scrollbarWidth: "none" }}
+      >
         {categories.map((cat) => {
           const active = activeId === cat.id;
           return (
