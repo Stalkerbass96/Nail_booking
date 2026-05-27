@@ -229,12 +229,6 @@ export async function POST(request: NextRequest) {
               // Best effort only.
             }
           }
-        } else if (typeof event.replyToken === "string" && config.enabled && config.autoReplyText) {
-          try {
-            await replyLineTextMessage(event.replyToken, config.autoReplyText);
-          } catch {
-            // Best effort only.
-          }
         }
       }
     }
