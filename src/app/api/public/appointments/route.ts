@@ -376,13 +376,13 @@ async function createLinePackageAppointment(payload: z.infer<typeof linePackageS
     });
   });
 
-  if (payload.lang && lineUser.isFollowing) {
+  if (lineUser.isFollowing) {
     await sendPendingBookingMessage(prisma, {
       lineUserDbId: lineUser.id,
       linePlatformUserId: lineUser.lineUserId,
       bookingNo: created.bookingNo,
       entryToken: lineUser.homeEntryToken,
-      lang: payload.lang
+      lang: "ja"
     });
   }
 
@@ -541,13 +541,13 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
     });
   });
 
-  if (payload.lang && lineUser.isFollowing) {
+  if (lineUser.isFollowing) {
     await sendPendingBookingMessage(prisma, {
       lineUserDbId: lineUser.id,
       linePlatformUserId: lineUser.lineUserId,
       bookingNo: created.bookingNo,
       entryToken: lineUser.homeEntryToken,
-      lang: payload.lang
+      lang: "ja"
     });
   }
 

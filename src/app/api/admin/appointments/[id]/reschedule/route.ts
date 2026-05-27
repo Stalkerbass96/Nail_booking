@@ -8,7 +8,7 @@ import {
   parseSingleBigInt,
   DEFAULT_SLOT_MINUTES
 } from "@/lib/booking-rules";
-import { getBusinessWindowByDate } from "@/lib/business-hours";
+import { getOpenSlotsForDate, slotsToWindows } from "@/lib/day-slots";
 import { prisma } from "@/lib/db";
 import { sendRescheduledBookingMessage } from "@/lib/line-notifications";
 import { NextRequest, NextResponse } from "next/server";
@@ -95,12 +95,14 @@ export async function PATCH(
     const newEndAt = addMinutes(newStartAt, totalDurationMinutes);
     const bookingYmd = formatYmdInOffset(newStartAt);
 
-    const businessWindow = await getBusinessWindowByDate(prisma, bookingYmd);
-    if (!businessWindow.isOpen || !businessWindow.openAt || !businessWindow.closeAt) {
-      return NextResponse.json({ error: "Store is closed on the selected date" }, { status: 400 });
-    }
-    if (newStartAt < businessWindow.openAt || newEndAt > businessWindow.closeAt) {
-      return NextResponse.json({ error: "Selected time is outside business hours" }, { status: 400 });
+    const openSlots = await getOpenSlotsForDate(prisma, bookingYmd);
+    const openWindows = slotsToWindows(bookingYmd, openSlots);
+    const withinWindow = openWindows.some((w) => newStartAt >= w.openAt && newEndAt <= w.closeAt);
+    if (!withinWindow) {
+      return NextResponse.json(
+        { error: "Store is closed or the selected time is not within open hours" },
+        { status: 400 }
+      );
     }
 
     const updated = await prisma.$transaction(async (tx) => {
