@@ -10,7 +10,7 @@ import {
   parseRuntimeSettings,
   parseSingleBigInt
 } from "@/lib/booking-rules";
-import { getBusinessWindowByDate } from "@/lib/business-hours";
+import { getOpenSlotsForDate, slotsToWindows } from "@/lib/day-slots";
 import { prisma } from "@/lib/db";
 import { sendPendingBookingMessage } from "@/lib/line-notifications";
 import { NextRequest, NextResponse } from "next/server";
@@ -113,14 +113,20 @@ async function assertBookableRange(input: {
   bookingYmd: string;
   runtime: { pendingAutoCancelHours: number };
 }) {
-  const businessWindow = await getBusinessWindowByDate(prisma, input.bookingYmd);
+  const openSlots = await getOpenSlotsForDate(prisma, input.bookingYmd);
+  const openWindows = slotsToWindows(input.bookingYmd, openSlots);
 
-  if (!businessWindow.isOpen || !businessWindow.openAt || !businessWindow.closeAt) {
-    throw new ApiError(400, "Store is closed for the selected date");
-  }
+  const withinWindow = openWindows.some(
+    (w) => input.startAt >= w.openAt && input.endAt <= w.closeAt
+  );
 
-  if (input.startAt < businessWindow.openAt || input.endAt > businessWindow.closeAt) {
-    throw new ApiError(400, "Selected time is outside business hours");
+  if (!withinWindow) {
+    throw new ApiError(
+      400,
+      openSlots.length === 0
+        ? "Store is closed for the selected date"
+        : "Selected time is outside business hours"
+    );
   }
 
   return addMinutes(new Date(), input.runtime.pendingAutoCancelHours * 60);
