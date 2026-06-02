@@ -66,7 +66,7 @@ export default async function BookingPage({ searchParams }: Props) {
                       }
                     }
                   },
-                  orderBy: { id: "asc" }
+                  orderBy: { addon: { sortOrder: "asc" } }
                 }
               }
             },

@@ -41,7 +41,7 @@ export default async function AddonsPage({ searchParams }: Props) {
       priceJpy: true,
       durationIncreaseMin: true
     },
-    orderBy: { id: "asc" }
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
   });
 
   const galleryParams = new URLSearchParams({ lang });

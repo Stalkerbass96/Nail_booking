@@ -65,10 +65,10 @@ export default async function ServicesPage({ searchParams }: Props) {
                 }
               }
             },
-            orderBy: { id: "asc" }
+            orderBy: { addon: { sortOrder: "asc" } }
           }
         },
-        orderBy: { id: "asc" }
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
       }
     },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }]
