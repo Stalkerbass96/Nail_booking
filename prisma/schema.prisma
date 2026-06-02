@@ -240,7 +240,7 @@ model SpecialBusinessDate {
 model SystemSetting {
   id    BigInt @id @default(autoincrement())
   key   String @unique @db.VarChar(80)
-  value String @db.VarChar(255)
+  value String @db.Text
 
   @@map("system_settings")
 }

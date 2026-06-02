@@ -213,18 +213,27 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        const BOOKING_LINK_TRIGGERS = ["予約リンク", "予約リンクを送って", "预约链接"];
-        if (text && BOOKING_LINK_TRIGGERS.includes(text.trim()) && typeof event.replyToken === "string" && config.enabled && config.appBaseUrl) {
-          const lineUser = await prisma.lineUser.findUnique({
-            where: { id: user.id },
-            select: { homeEntryToken: true }
-          });
-          const token = lineUser?.homeEntryToken;
-          if (token) {
-            const { buildLineHomeUrl } = await import("@/lib/line");
-            const url = buildLineHomeUrl(token, "ja");
+        if (text && typeof event.replyToken === "string" && config.enabled && config.appBaseUrl) {
+          const BOOKING_LINK_TRIGGERS = ["予約リンク", "予約リンクを送って", "预约链接"];
+          if (BOOKING_LINK_TRIGGERS.includes(text.trim())) {
+            const lineUser = await prisma.lineUser.findUnique({
+              where: { id: user.id },
+              select: { homeEntryToken: true }
+            });
+            const token = lineUser?.homeEntryToken;
+            if (token) {
+              const { buildLineHomeUrl } = await import("@/lib/line");
+              const url = buildLineHomeUrl(token, "ja");
+              try {
+                await replyLineTextMessage(event.replyToken, `ご予約はこちらからどうぞ👇\n${url}`);
+              } catch {
+                // Best effort only.
+              }
+            }
+          } else {
+            // General auto-reply for all other text messages
             try {
-              await replyLineTextMessage(event.replyToken, `ご予約はこちらからどうぞ👇\n${url}`);
+              await replyLineTextMessage(event.replyToken, config.autoReplyText);
             } catch {
               // Best effort only.
             }
