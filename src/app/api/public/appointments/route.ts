@@ -13,6 +13,7 @@ import {
 import { getOpenSlotsForDate, slotsToWindows } from "@/lib/day-slots";
 import { prisma } from "@/lib/db";
 import { sendPendingBookingMessage } from "@/lib/line-notifications";
+import { sendOwnerBookingAlert } from "@/lib/owner-line-notifications";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -391,6 +392,7 @@ async function createLinePackageAppointment(payload: z.infer<typeof linePackageS
       lang: "ja"
     });
   }
+  await sendOwnerBookingAlert(prisma, created.bookingNo).catch(() => false);
 
   return created;
 }
@@ -556,6 +558,7 @@ async function createLineShowcaseAppointment(payload: z.infer<typeof lineShowcas
       lang: "ja"
     });
   }
+  await sendOwnerBookingAlert(prisma, created.bookingNo).catch(() => false);
 
   return created;
 }

@@ -1,4 +1,5 @@
 import AdminNav from "@/components/admin-nav";
+import AdminOwnerLineNotificationPanel from "@/components/admin-owner-line-notification-panel";
 import AdminSettingsPanel from "@/components/admin-settings-panel";
 import { resolveLang } from "@/lib/lang";
 
@@ -13,6 +14,7 @@ export default async function AdminSettingsPage({ searchParams }: Props) {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <AdminNav lang={lang} />
+      <AdminOwnerLineNotificationPanel lang={lang} />
       <AdminSettingsPanel lang={lang} />
     </main>
   );
