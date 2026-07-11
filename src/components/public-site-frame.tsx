@@ -8,6 +8,7 @@ type Props = {
   children: ReactNode;
   entryToken?: string;
   minimalHeader?: boolean;
+  customerPoints?: number;
 };
 
 function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
@@ -21,8 +22,10 @@ export default function PublicSiteFrame({
   children,
   entryToken,
   minimalHeader = false,
+  customerPoints,
 }: Props) {
   const altLang = lang === "ja" ? "zh" : "ja";
+  const pointsLabel = lang === "ja" ? "ポイント" : "积分";
 
   return (
     <div className="site-shell">
@@ -73,6 +76,16 @@ export default function PublicSiteFrame({
           </div>
 
           <div className="site-header-tools shrink-0">
+            {customerPoints !== undefined && (
+              <span
+                className="site-points-pill"
+                aria-label={`${pointsLabel}: ${customerPoints}`}
+                title={`${pointsLabel}: ${customerPoints}`}
+              >
+                <span>{pointsLabel}</span>
+                <strong>{customerPoints.toLocaleString()}</strong>
+              </span>
+            )}
             {entryToken && !minimalHeader && (
               <span className="site-entry-pill">LINE</span>
             )}

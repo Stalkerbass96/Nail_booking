@@ -21,16 +21,19 @@
 | 数据库 | PostgreSQL 16 + Prisma ORM |
 | 样式 | Tailwind CSS v3 + CSS 自定义属性 |
 | 消息 | LINE Messaging API + LIFF |
-| 部署 | PM2 + Nginx + Let's Encrypt |
+| 部署 | Docker / GHCR + PM2 + Nginx + Let's Encrypt |
 
-## 当前状态（2026-05-01）
+## 当前状态（2026-07-06）
 
-- `npm run build` 通过
-- `npm run lint` 通过
-- UI 已完成暖色系编辑风格重构（ivory 背景、暖近黑文字、无 TS 徽标）
+- 本地 `main` 与 GitHub `origin/main` 对齐，最近提交为 `1d76b17`
+- 2.0 LINE-first 主链路已落地：LINE 加友、图墙选款、预约提交、后台确认、LINE 通知
+- UI 已完成暖色系编辑风格重构
+- 图墙支持自定义价格、自定义时长、固定/可选加项和图片上传
+- 排班已切换到 `DaySlot` 拖拽日历，前台预约按开放 slot 校验
+- 套餐、加项和前台展示支持 `sortOrder`
 - LINE follow 自动建档、欢迎推送、预约通知已实现
-- 图墙、套餐、排班、顾客、积分后台管理已实现
-- 等待 LINE Channel 配置后可完成完整业务闭环
+- 后台支持图墙、套餐、加项、排班、顾客、积分、系统设置和 LINE 1 对 1 会话
+- 部署链路支持 GitHub Actions 构建 GHCR 镜像，服务器拉取预构建镜像
 
 ## 本地开发
 
@@ -85,7 +88,7 @@ npm run dev
 | `CRON_SECRET` | 系统定时任务鉴权密钥 |
 | `LINE_CHANNEL_ACCESS_TOKEN` | LINE Messaging API Channel Access Token |
 | `LINE_CHANNEL_SECRET` | LINE Channel Secret（Webhook 签名验证） |
-| `LINE_AUTO_REPLY_TEXT` | 收到顾客消息时的自动回复文案（可选） |
+| `LINE_AUTO_REPLY_TEXT` | 旧版兼容变量；当前普通自由文本不自动回复，消息模板优先从后台系统设置维护 |
 
 ## 常用命令
 
@@ -104,6 +107,7 @@ npm run job:auto-cancel          # 手动触发自动取消任务
 
 | 文档 | 说明 |
 |------|------|
+| [docs/README.md](docs/README.md) | 文档索引与当前文件组织口径 |
 | [docs/deploy.md](docs/deploy.md) | ECS 生产部署 + LINE 配置完整指南 |
 | [docs/architecture/data-model-v2.0-line-first.md](docs/architecture/data-model-v2.0-line-first.md) | 数据模型 |
 | [docs/architecture/api-endpoints-v1.md](docs/architecture/api-endpoints-v1.md) | API 路由清单 |

@@ -8,6 +8,7 @@ type CategoryItem = {
   id: string;
   nameZh: string;
   nameJa: string;
+  sortOrder: number;
 };
 
 type AddonItem = {
@@ -179,8 +180,16 @@ export default function AdminPackagesPanel({ lang }: Props) {
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sortedItems = useMemo(
-    () => [...items].sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id)),
-    [items]
+    () => {
+      const categoryOrder = new Map(categories.map((category) => [category.id, category.sortOrder]));
+      return [...items].sort((a, b) =>
+        (categoryOrder.get(a.category.id) ?? 0) - (categoryOrder.get(b.category.id) ?? 0)
+        || a.category.id.localeCompare(b.category.id)
+        || a.sortOrder - b.sortOrder
+        || a.id.localeCompare(b.id)
+      );
+    },
+    [categories, items]
   );
 
   const addonLabelById = useMemo(() => {
@@ -351,12 +360,16 @@ export default function AdminPackagesPanel({ lang }: Props) {
   }
 
   async function moveItem(itemId: string, direction: -1 | 1) {
-    const currentIdx = sortedItems.findIndex((i) => i.id === itemId);
+    const current = sortedItems.find((item) => item.id === itemId);
+    if (!current) return;
+
+    const categoryItems = sortedItems.filter((item) => item.category.id === current.category.id);
+    const currentIdx = categoryItems.findIndex((item) => item.id === itemId);
     if (currentIdx < 0) return;
     const targetIdx = currentIdx + direction;
-    if (targetIdx < 0 || targetIdx >= sortedItems.length) return;
+    if (targetIdx < 0 || targetIdx >= categoryItems.length) return;
 
-    const newOrder = [...sortedItems];
+    const newOrder = [...categoryItems];
     [newOrder[currentIdx], newOrder[targetIdx]] = [newOrder[targetIdx], newOrder[currentIdx]];
     const updates = newOrder.map((item, idx) => ({ id: item.id, sortOrder: idx * 10 }));
 
@@ -431,7 +444,7 @@ export default function AdminPackagesPanel({ lang }: Props) {
 
       <div className="mt-4 grid gap-3">
         {!loading && sortedItems.length === 0 ? <p className="ui-state-info">{t.empty}</p> : null}
-        {sortedItems.map((item, index) => (
+        {sortedItems.map((item) => (
           <article key={item.id} className="admin-item">
             <p className="font-medium text-brand-900">{item.nameZh} / {item.nameJa}</p>
             <p className="text-sm text-brand-700">
@@ -442,8 +455,8 @@ export default function AdminPackagesPanel({ lang }: Props) {
             </p>
 
             <div className="mt-2 flex flex-wrap gap-2">
-              <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={saving || index === 0}>{t.moveUp}</button>
-              <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={saving || index === sortedItems.length - 1}>{t.moveDown}</button>
+              <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, -1)} type="button" disabled={saving || sortedItems.filter((candidate) => candidate.category.id === item.category.id)[0]?.id === item.id}>{t.moveUp}</button>
+              <button className="admin-btn-ghost" onClick={() => void moveItem(item.id, 1)} type="button" disabled={saving || sortedItems.filter((candidate) => candidate.category.id === item.category.id).at(-1)?.id === item.id}>{t.moveDown}</button>
               <button className="admin-btn-ghost" onClick={() => startEdit(item)} type="button">{t.edit}</button>
               <button className="admin-btn-danger" onClick={() => void deletePackage(item)} type="button">{t.remove}</button>
             </div>

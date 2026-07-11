@@ -1,6 +1,6 @@
 # AI Agent Handoff V1
 
-更新时间：2026-05-01
+更新时间：2026-07-06
 
 这份文档给新的 AI coding agent 或新开发者使用，目标是 5 分钟内建立足够上下文并继续开发。
 
@@ -29,10 +29,11 @@
 - 后台预约管理（列表、确认、取消、完成）
 - 后台顾客管理（潜在客户/正式顾客、LINE 关联、预约历史、积分）
 - 后台 LINE 会话页（1 对 1 文本消息、未读状态、手动绑定顾客）
-- 后台排班管理（每周营业时间、特殊营业日、封锁区间）
+- 后台排班管理（基于 `DaySlot` 的拖拽日历、封锁区间）
 - 分类管理、套餐管理、加项管理
+- 套餐/加项排序、图片上传、自定义图墙价格和自定义图墙时长
 - 积分查看与扣减
-- 系统设置（预约粒度、待确认超时、取消截止、积分倍率）
+- 系统设置（预约粒度、待确认超时、取消截止、积分倍率、LINE 消息模板）
 - 自动取消待确认预约 worker
 - Docker 单机部署链路
 
@@ -49,7 +50,8 @@
 
 业务规则：
 - `src/lib/booking-rules.ts` — 时间槽生成、时长计算、预约号生成
-- `src/lib/business-hours.ts` — 营业时间查询（周计划 + 特殊日期）
+- `src/lib/day-slots.ts` — 当前排班开放 slot 查询与窗口转换
+- `src/lib/business-hours.ts` — 旧版营业时间规则（部分兼容逻辑保留）
 - `src/lib/booking-blocks.ts` — 封锁区间校验
 - `src/lib/system-settings.ts` / `src/lib/system-settings-parser.ts` — 运行时配置
 - `src/lib/points.ts` — 积分计算
@@ -61,7 +63,8 @@ LINE 集成：
 
 后台鉴权：
 - `src/lib/admin-auth.ts`
-- `src/middleware.ts`
+- `middleware.ts`（根目录，实际保护 `/admin/*` 与 `/api/admin/*`）
+- `src/middleware.ts`（旧副本，需后续确认是否清理）
 
 Public API：
 - `src/app/api/public/*`
@@ -129,6 +132,9 @@ npm run test:e2e
 - ✅ 预约通知（待确认/已确认）
 - ✅ 后台图墙管理
 - ✅ 后台 LINE 1 对 1 会话
+- ✅ DaySlot 拖拽排班与前台 slot 校验
+- ✅ 图墙价格/时长/加项组合增强
+- ✅ GHCR 预构建镜像部署链路
 
 潜在后续方向：
 1. 邮件通知（目前缺失，LINE 不可用时无法触达顾客）

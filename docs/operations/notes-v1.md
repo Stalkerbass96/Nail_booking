@@ -1,14 +1,15 @@
 # Operations Notes V1
 
-更新时间：2026-05-01
+更新时间：2026-07-06
 
 ## 1. 当前运行结论
 
 - 系统支持单机部署：`postgres + app + auto-cancel-worker`
-- 预约粒度当前固定为 30 分钟模型，系统设置层面允许的值也已收敛到 30 分钟倍数
+- 预约开放时间当前以 `DaySlot` 为准；套餐/加项时长支持 5 分钟粒度，预约占用结束时间按 slot 向上取整
 - 待确认预约会占用档期，超时后由 worker 自动取消并释放档期
 - 当前支付为线下处理，系统记录实付金额与积分变化
 - LINE Webhook 已接入，follow 自动建档、预约通知、确认通知均已上线
+- 部署脚本从 GHCR 拉取预构建镜像，服务器不再本地构建 Next.js 镜像
 
 ## 2. 线上运维建议
 
@@ -26,6 +27,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
 
 3. 更新版本后，检查日志中是否有：
    - Prisma migrate 报错
+   - registry 镜像拉取失败
    - PostgreSQL 连接失败
    - worker 循环异常
    - LINE Webhook 签名验证失败（检查 `LINE_CHANNEL_SECRET` 是否正确）
@@ -33,7 +35,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
 ## 3. 已知限制
 
 - 暂未接入邮件通知
-- LINE 会话当前仅支持文本消息（不支持图片、模板消息）
+- LINE 会话当前仅支持文本消息（不支持图片、模板消息）；系统设置可维护部分 LINE 文案模板
 - 不支持顾客在预约流程中切换套餐
 - 后台预约完成流程仍可继续优化为更完整的表单
 

@@ -1,6 +1,6 @@
 # Docs Index
 
-更新时间：2026-05-01
+更新时间：2026-07-06
 
 文档按两条主线组织：
 - 产品与需求
@@ -23,6 +23,12 @@
 13. `operations/notes-v1.md`
 14. `testing/acceptance-v1.md`
 15. `CHANGELOG.md`
+
+## 与 GitHub 当前状态
+
+- 本地 `main` 与 `origin/main` 已对齐，最近提交为 `1d76b17 revert: remove auto-reply for general text messages`。
+- 本地文件夹相对 GitHub 仅有未跟踪截图文件：`line-mobile-*.png` 与 `ui-check-*.png`。
+- `node_modules/`、`.next*`、日志文件和本地环境文件属于开发产物或本地配置，不作为仓库源码口径。
 
 ## 面向人的入口
 
@@ -48,13 +54,23 @@
 
 ## 当前状态
 
-2.0 LINE-first 已全部落地。系统主链路：
+当前代码口径：2.0 LINE-first 已全部落地，并在 2026-05 至 2026-06 追加了图墙套餐增强、DaySlot 排班、上传、GHCR 部署和 LINE 消息设置等改动。系统主链路：
 
 1. 顾客身份：`LINE userId -> Customer`（`lead` → `active`）
 2. 前台入口：`/` 图墙首页 → 按图预约
 3. 预约提交：`ShowcaseItem -> Appointment`（`line_showcase` 来源）
 4. 通知链路：`follow` 欢迎 / `pending` 待确认 / `confirmed` 已确认
-5. 后台运营：图墙管理、预约确认、LINE 1 对 1 会话
+5. 后台运营：图墙管理、预约确认、拖拽排班、LINE 1 对 1 会话
+
+## 当前文件组织口径
+
+- `src/app/`：页面和 Route Handlers，按 `public`、`admin`、`line`、`system` 分区。
+- `src/components/`：前台预约组件和后台管理面板。
+- `src/lib/`：预约规则、DaySlot、LINE、积分、系统设置和鉴权等共享业务逻辑。
+- `prisma/`：schema 与迁移历史。
+- `scripts/`：seed、部署、自动取消 worker 和验证脚本。
+- `e2e/`：smoke 与 acceptance 测试入口。
+- `docs/`：需求、架构、部署、运营和测试文档。
 
 ## 文档维护规则
 

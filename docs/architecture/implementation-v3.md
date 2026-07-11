@@ -1,6 +1,6 @@
 # Implementation Overview V3
 
-更新时间：2026-05-01
+更新时间：2026-07-06
 
 本文档描述当前代码仓库的实现状态，目标是让开发者或新的 AI agent 迅速理解系统结构、关键约束和部署方式。
 
@@ -47,16 +47,16 @@ docker-compose.deploy.yml
 
 ## 3. 当前已实现能力
 
-1. Prisma schema 与数据库迁移链路已落地（5 个迁移，截至 2026-03-08）。
+1. Prisma schema 与数据库迁移链路已落地，迁移已覆盖 LINE-first、图墙加项、自定义价格/时长、DaySlot、排序字段和长文本系统设置。
 2. 后台登录鉴权已落地，使用 JWT cookie session + middleware 保护管理页面与管理 API。
 3. 前台图墙首页（分类筛选、宫格布局），图墙项关联套餐，点击进入固定套餐预约流程。
-4. 可用时段计算、营业时间规则、封锁区间、预约冲突拦截已实现。
+4. 可用时段计算已切换到 `DaySlot`；预约提交会校验开放 slot、封锁区间和预约冲突。
 5. 预约状态流转已实现：`pending`、`confirmed`、`completed`、`canceled`。
-6. 后台已支持：图墙管理、预约管理、顾客管理、LINE 会话管理、排班管理（含特殊营业日和封锁区间）、分类/套餐/加项管理、积分查看与扣减、系统设置。
+6. 后台已支持：图墙管理、预约管理、顾客管理、LINE 会话管理、拖拽排班、分类/套餐/加项管理、排序、图片上传、积分查看与扣减、系统设置。
 7. LINE 完整接入：Webhook follow/unfollow/message/accountLink、自动建档（`lead` 顾客）、首次推送图墙链接、预约待确认通知、预约已确认通知、后台 1 对 1 文本会话。
-8. 系统设置已落地，包括预约粒度、待确认自动取消时长、取消截止时长、积分倍率。
+8. 系统设置已落地，包括预约粒度、待确认自动取消时长、取消截止时长、积分倍率和 LINE 消息模板。
 9. 自动取消待确认预约的 worker 已实现，支持循环执行。
-10. Docker 单机部署链路已实现，适配 Ubuntu 单主机场景。
+10. Docker 单机部署链路已实现，适配 Ubuntu 单主机场景；CI 可构建并推送 GHCR 镜像供服务器拉取。
 11. 中日双语框架已接入，页面通过 `?lang=zh|ja` 维持语言参数。
 
 ## 4. 默认系统设置
@@ -81,7 +81,7 @@ docker-compose.deploy.yml
 - 当前只有一个店长/美甲师，不支持指定技师。
 - 待确认预约占用档期。
 - 超时未确认预约会自动取消并立即释放档期。
-- 套餐和加项时长目前按 30 分钟倍数建模。
+- 套餐和加项时长支持 5 分钟粒度；预约结束时间按 slot 粒度向上取整。
 - 顾客从图墙进入预约后不能切换套餐。
 - 支付为线下处理，系统仅记录实付金额与积分变动。
 - 顾客主身份为 `LINE userId`；邮箱为可选辅助字段，不做唯一约束。
@@ -90,6 +90,7 @@ docker-compose.deploy.yml
 
 业务规则：
 - `src/lib/booking-rules.ts`
+- `src/lib/day-slots.ts`
 - `src/lib/business-hours.ts`
 - `src/lib/booking-blocks.ts`
 - `src/lib/system-settings.ts` / `src/lib/system-settings-parser.ts`
@@ -102,8 +103,8 @@ LINE 集成：
 - `src/app/api/line/webhook/route.ts`
 
 管理端鉴权：
+- `middleware.ts`
 - `src/lib/admin-auth.ts`
-- `src/middleware.ts`
 
 Public API：
 - `src/app/api/public/*`

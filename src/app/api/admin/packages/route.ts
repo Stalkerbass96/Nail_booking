@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const items = await prisma.servicePackage.findMany({
       include: {
         category: {
-          select: { id: true, nameZh: true, nameJa: true }
+          select: { id: true, nameZh: true, nameJa: true, sortOrder: true }
         },
         addonLinks: {
           select: { addonId: true }
@@ -54,7 +54,8 @@ export async function GET(request: NextRequest) {
         category: {
           id: item.category.id.toString(),
           nameZh: item.category.nameZh,
-          nameJa: item.category.nameJa
+          nameJa: item.category.nameJa,
+          sortOrder: item.category.sortOrder
         },
         addonIds: item.addonLinks.map((a) => a.addonId.toString())
       }))

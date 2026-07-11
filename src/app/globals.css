@@ -241,6 +241,26 @@ a:focus-visible {
     gap: 8px;
   }
 
+  .site-points-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-mid);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text-2);
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .site-points-pill strong {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
   .site-entry-pill {
     display: none;
   }

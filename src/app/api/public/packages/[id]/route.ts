@@ -38,7 +38,8 @@ export async function GET(
                 durationIncreaseMin: true
               }
             }
-          }
+          },
+          orderBy: [{ addon: { sortOrder: "asc" } }, { id: "asc" }]
         }
       }
     });

@@ -155,7 +155,7 @@ export default function BookingForm(props: Props) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [slotLoading, setSlotLoading] = useState(false);
   const [selectedStartAt, setSelectedStartAt] = useState("");
-  const [bookingName, setBookingName] = useState(customerName ?? "");
+  const [bookingName, setBookingName] = useState("");
   const [customerNote, setCustomerNote] = useState("");
   const initialQtys = props.mode === "showcase" ? (props.initialAddonQtys ?? {}) : {};
   const [addonQtys, setAddonQtys] = useState<Record<string, number>>(initialQtys);
@@ -585,6 +585,7 @@ export default function BookingForm(props: Props) {
               id="booking-name"
               className="ui-input"
               type="text"
+              required
               maxLength={80}
               value={bookingName}
               onChange={(e) => setBookingName(e.target.value)}

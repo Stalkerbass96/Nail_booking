@@ -100,7 +100,7 @@ export default async function BookingPage({ searchParams }: Props) {
                   }
                 }
               },
-              orderBy: { id: "asc" }
+              orderBy: [{ addon: { sortOrder: "asc" } }, { id: "asc" }]
             }
           }
         })
@@ -108,6 +108,9 @@ export default async function BookingPage({ searchParams }: Props) {
   ]);
 
   const customerName = entryUser?.customer?.name || entryUser?.displayName || null;
+  const customerPoints = entryUser?.customer?.customerType === "active"
+    ? entryUser.customer.currentPoints
+    : undefined;
 
   const unavailable = (
     <section className="section-panel section-panel-compact">
@@ -120,7 +123,12 @@ export default async function BookingPage({ searchParams }: Props) {
   );
 
   return (
-    <PublicSiteFrame lang={lang} entryToken={entryToken} minimalHeader>
+    <PublicSiteFrame
+      lang={lang}
+      entryToken={entryToken}
+      minimalHeader
+      customerPoints={customerPoints}
+    >
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 overflow-x-hidden px-4 py-4 sm:px-6 sm:py-5">
 
         {/* ── Showcase mode ── */}

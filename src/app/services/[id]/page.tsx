@@ -31,7 +31,8 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
       addonLinks: {
         include: {
           addon: true
-        }
+        },
+        orderBy: [{ addon: { sortOrder: "asc" } }, { id: "asc" }]
       },
       showcaseItems: {
         where: { isPublished: true },

@@ -1,6 +1,6 @@
 ﻿# Deployment Checklist V1
 
-最后更新：2026-03-08
+最后更新：2026-07-06
 
 这份清单给两类人用：
 - 你自己在全新 Ubuntu 主机上部署
@@ -16,6 +16,7 @@
 - [ ] 已安装 Docker Compose Plugin
 - [ ] 已拉取仓库代码
 - [ ] 已复制 `.env.deploy.example` 为 `.env.deploy`
+- [ ] 如果 GHCR 镜像为私有或受限，服务器已完成 registry 登录
 
 ## 2. `.env.deploy` 必填项检查
 
@@ -51,7 +52,7 @@ chmod +x scripts/deploy-docker.sh
 
 执行过程中应看到：
 - [ ] compose 配置校验通过
-- [ ] 镜像构建成功
+- [ ] registry 镜像拉取成功
 - [ ] `postgres is healthy`
 - [ ] migration 执行成功
 - [ ] seed 执行成功
@@ -98,6 +99,7 @@ curl http://127.0.0.1:3000/api/public/categories
 - [ ] `/admin/customers` 能打开
 - [ ] `/admin/schedule` 能打开
 - [ ] `/admin/line` 能打开
+- [ ] `/admin/settings` 能打开并可查看 LINE 消息模板配置
 
 ### 4.5 如果本次同时验收 LINE
 
@@ -159,3 +161,4 @@ git pull
 - [ ] 图墙数据仍在
 - [ ] 数据未丢失
 - [ ] worker 仍在运行
+- [ ] 若 GitHub Actions 负责发布镜像，确认部署前对应 workflow 已成功

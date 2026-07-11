@@ -1,10 +1,10 @@
 # Development Task Breakdown V2.0
 
-更新时间：2026-05-01
+更新时间：2026-07-06
 
 本文档记录 2.0 LINE-first 升级的任务完成情况，并列出后续可能的开发方向。
 
-**当前状态：2.0 所有 P0/P1 任务已全部完成。**
+**当前状态：2.0 所有 P0/P1 任务已全部完成，后续增强已覆盖 DaySlot 排班、图片上传、排序、图墙价格/时长和 GHCR 部署链路。**
 
 ---
 
@@ -16,7 +16,7 @@
 ## 2. 已完成任务（P1 — 数据模型与迁移）
 
 - ✅ T1-1 Prisma schema 调整：`Customer.customerType`、`Customer.createdFrom`、`LineUser.welcomeSentAt`、`Appointment.showcaseItemId`、`Appointment.sourceChannel`、新增 `ShowcaseItem` 模型
-- ✅ T1-2 数据迁移：5 个 migration 文件已生成并跟踪
+- ✅ T1-2 数据迁移：迁移文件已生成并跟踪，后续已追加图墙加项、DaySlot、排序和系统设置长文本迁移
 - ✅ T1-3 数据访问层：顾客查找逻辑以 LINE 为主，预约创建支持记录图墙来源
 
 ## 3. 已完成任务（P1 — LINE 顾客建档主链路）
@@ -70,3 +70,14 @@
 | 积分兑换流程 | 目前仅后台扣减，无前台兑换界面 |
 | 更多自动化测试 | 特别是 LINE 通知路径的 E2E 覆盖 |
 | 多图图墙详情 | 当前每个图墙项仅单图 |
+
+## 10. 2026-05 至 2026-06 追加完成项
+
+- ✅ 图墙固定/可选加项、加项数量和最大数量
+- ✅ 图墙自定义价格、折扣展示和自定义时长
+- ✅ 套餐/加项排序与顾客侧排序一致
+- ✅ 本地图片上传与上传图片 API
+- ✅ 基于 `DaySlot` 的拖拽排班日历
+- ✅ 前台预约按 `DaySlot` 校验可用时间
+- ✅ LINE 消息模板进入系统设置
+- ✅ GitHub Actions 构建 GHCR 镜像，部署脚本从 registry 拉取

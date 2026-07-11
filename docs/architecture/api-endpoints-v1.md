@@ -1,6 +1,6 @@
 ﻿# API Endpoints V1
 
-最后更新：2026-03-08
+最后更新：2026-07-06
 
 本文档记录当前代码里的主要 API 路由，口径以 **2.0 LINE-first** 为准。
 
@@ -11,7 +11,7 @@
 - `GET /api/public/showcase`
   - 获取前台图墙项
   - 支持分类筛选
-  - 返回图墙图片、标题、关联套餐、基础价格与分类信息
+  - 返回图墙图片、标题、关联套餐、自定义价格/时长、固定加项与分类信息
 
 - `GET /api/public/categories`
   - 获取前台分类列表
@@ -20,12 +20,12 @@
 
 - `GET /api/public/availability`
   - 获取可预约时间段
-  - 支持通过 `showcaseItemId` 计算套餐时长
-  - 旧版 `packageId + addonIds` 参数仍保留兼容
+  - 通过 `DaySlot` 计算开放时间
+  - 支持 `showcaseItemId`、`packageId` 和带数量的可选加项
 
 - `POST /api/public/appointments`
   - 创建预约
-  - 2.0 主路径参数：`entry + showcaseItemId + startAt + customerNote + lang`
+  - 2.0 主路径参数：`entry + showcaseItemId/packageId + addons + startAt + customerNote + lang`
   - 根据 `entry` 找到 LINE 用户和顾客
   - 提交成功后将顾客从 `lead` 转为 `active`
   - 写入 `showcaseItemId` 与 `sourceChannel=line_showcase`
@@ -45,6 +45,16 @@
 
 - `DELETE /api/public/line/manage`
   - 解除顾客当前 LINE 绑定
+
+### 公开套餐与图片
+
+- `GET /api/public/packages`
+- `GET /api/public/packages/{id}`
+- `GET /api/public/packages/{id}/addons`
+  - 公开套餐列表、套餐详情与可选加项
+
+- `GET /api/uploads/{filename}`
+  - 服务后台上传的图片文件
 
 ### LINE Webhook
 
@@ -89,6 +99,9 @@
 - `DELETE /api/admin/showcase/{id}`
   - 删除图墙项
 
+- `POST /api/admin/showcase/{id}/addons`
+  - 维护图墙固定加项组合
+
 ### 顾客管理
 
 - `GET /api/admin/customers`
@@ -124,16 +137,22 @@
 - `PATCH /api/admin/addons/{id}`
 - `DELETE /api/admin/addons/{id}`
 
+- `POST /api/admin/upload`
+  - 上传图墙或套餐图片
+
 ### 排班 / 封锁 / 系统设置
 
 - `GET /api/admin/schedule`
-  - 获取每周营业时间、特殊营业日、封锁区间
+  - 获取排班和封锁信息
 
 - `PUT /api/admin/schedule`
-  - 更新每周营业时间
+  - 更新排班
 
 - `POST /api/admin/schedule`
-  - 新增特殊营业日或封锁区间
+  - 新增开放 slot 或封锁区间
+
+- `GET /api/admin/schedule/week`
+  - 获取周视图排班数据
 
 - `DELETE /api/admin/schedule/blocks/{id}`
   - 删除封锁区间
@@ -165,6 +184,12 @@
 
 - `POST /api/admin/line/users/{id}/link-request`
   - 后台发送链接消息给顾客
+
+- `POST /api/admin/line/users/{id}/gallery-link`
+  - 后台发送图墙首页链接给顾客
+
+- `POST /api/admin/line/sync-followers`
+  - 同步 webhook 配置前已经关注的 LINE 用户
 
 ### 后台认证
 

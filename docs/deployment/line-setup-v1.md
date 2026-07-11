@@ -1,6 +1,6 @@
 # LINE Setup V1
 
-最后更新：2026-03-08
+最后更新：2026-07-06
 
 这份文档说明 **2.0 LINE-first** 版本如何接入 LINE Messaging API。
 
@@ -31,6 +31,7 @@
 - 后台查看 LINE 用户列表与会话历史
 - 后台主动发送文字消息
 - 后台给顾客发送预约主页 / 绑定 / 跟进消息
+- 系统设置中可维护部分 LINE 消息模板
 - 顾客仍可使用 `/line/link` 与 `/line/manage` 做已有兼容流程
 
 当前依赖的页面与接口：
@@ -65,14 +66,15 @@
 APP_BASE_URL=https://your-domain.com
 LINE_CHANNEL_SECRET=your-line-channel-secret
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
-LINE_AUTO_REPLY_TEXT=Thanks for adding the salon LINE account. Please open the booking home page from the message link.
+LINE_AUTO_REPLY_TEXT=
 ```
 
 说明：
 - `APP_BASE_URL` 用于生成首页链接、预约详情链接等顾客可打开的 URL
 - `LINE_CHANNEL_SECRET` 用于校验 Webhook 签名
 - `LINE_CHANNEL_ACCESS_TOKEN` 用于系统主动推送消息
-- `LINE_AUTO_REPLY_TEXT` 是收到顾客自由文本消息后的自动回复文本，可选
+- 当前普通自由文本不会自动回复；顾客发送明确触发词时才会收到预约链接回复
+- `LINE_AUTO_REPLY_TEXT` 为旧配置兼容项，实际消息模板优先以后台系统设置为准
 
 ## 5. LINE Developers Console 的配置步骤
 
@@ -129,7 +131,7 @@ nano .env.deploy
 APP_BASE_URL=https://your-domain.com
 LINE_CHANNEL_SECRET=your-line-channel-secret
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
-LINE_AUTO_REPLY_TEXT=Thanks for adding the salon LINE account. Please open the booking home page from the message link.
+LINE_AUTO_REPLY_TEXT=
 ```
 
 然后重新部署：

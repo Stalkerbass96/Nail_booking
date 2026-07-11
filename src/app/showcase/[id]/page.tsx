@@ -87,7 +87,7 @@ export default async function ShowcaseDetailPage({ params, searchParams }: Props
             }
           }
         },
-        orderBy: { id: "asc" }
+        orderBy: [{ addon: { sortOrder: "asc" } }, { id: "asc" }]
       }
     }
   });

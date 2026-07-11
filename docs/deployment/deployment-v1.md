@@ -1,6 +1,6 @@
 ﻿# Ubuntu Single-Host Deployment V1
 
-最后更新：2026-03-08
+最后更新：2026-07-06
 
 这份文档按 **2.0 LINE-first** 版本编写，目标是：
 - 你拿到一台全新的 Ubuntu 云主机
@@ -13,6 +13,7 @@
 - 单机部署
 - PostgreSQL、Next.js 应用、worker 都在同一台主机
 - 使用 Docker Compose
+- 应用与 worker 镜像默认从 GHCR 拉取，服务器侧不再本地构建 Next.js 镜像
 - 测试阶段先直接开放 `3000` 端口
 
 如果后面要接域名和 HTTPS，再看：
@@ -135,7 +136,7 @@ AUTO_CANCEL_INTERVAL_MS=300000
 APP_BASE_URL=http://<服务器IP>:3000
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
-LINE_AUTO_REPLY_TEXT=Thanks for adding the salon LINE account. Please open the booking home page from the message link.
+LINE_AUTO_REPLY_TEXT=
 ```
 
 注意：
@@ -158,7 +159,7 @@ AUTO_CANCEL_INTERVAL_MS=300000
 APP_BASE_URL=https://your-domain.com
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
-LINE_AUTO_REPLY_TEXT=Thanks for adding the salon LINE account. Please open the booking home page from the message link.
+LINE_AUTO_REPLY_TEXT=
 ```
 
 ### 5.5 2.0 版本里 LINE 不是“可有可无”的提醒
@@ -198,7 +199,7 @@ chmod +x scripts/deploy-docker.sh
 - 校验 `docker`、`docker compose`、`curl`
 - 校验 `.env.deploy` 必填值
 - 检查 compose 配置是否合法
-- 构建应用镜像
+- 从 registry 拉取 `app` 和 `auto-cancel-worker` 镜像
 - 启动 PostgreSQL
 - 等待 PostgreSQL healthcheck 通过
 - 执行 `prisma migrate deploy`
@@ -338,6 +339,7 @@ git pull
 说明：
 - 正常更新不需要再执行 `--seed`
 - `--seed` 只建议首次部署时使用
+- 如果镜像由 GitHub Actions 发布，需确认目标提交已经成功推送到 GHCR
 
 ## 11. 备份与恢复
 

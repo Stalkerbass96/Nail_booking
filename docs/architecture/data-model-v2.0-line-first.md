@@ -1,6 +1,6 @@
 # Data Model V2.0（LINE-first）
 
-更新时间：2026-05-01
+更新时间：2026-07-06
 
 本文档描述当前 Prisma schema 的实际状态（2.0 LINE-first 已完整落地）。
 
@@ -32,8 +32,10 @@
 | BusinessHour | 每周营业时间 |
 | SpecialBusinessDate | 特殊营业日覆盖 |
 | SystemSetting | 键值配置 |
+| DaySlot | 按日期和 30 分钟格记录开放 slot |
 | BookingBlock | 预约封锁区间 |
 | ShowcaseItem | 图墙展示项 |
+| ShowcaseItemAddon | 图墙固定加项组合 |
 | LineMessage | LINE 消息记录 |
 | LineLinkSession | LINE 绑定会话 |
 | LineLinkToken | LINE 绑定 Token |
@@ -63,8 +65,7 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BigInt PK | |
-| displayName | String | 默认取自 LINE 昵称，后台可修改 |
-| name | String? | 店长维护的正式姓名（可空） |
+| name | String | 顾客姓名，LINE 建档时可由昵称或占位名生成 |
 | email | String? | 辅助字段，非唯一 |
 | customerType | Enum | `lead`（已加好友，未预约）/ `active`（已预约） |
 | createdFrom | Enum | `line` / `admin` / `legacy_web` |
@@ -83,13 +84,15 @@ LINE 平台技术身份，与 Customer 一对一关联。
 |------|------|------|
 | id | BigInt PK | |
 | lineUserId | String unique | LINE 平台 userId |
-| displayName | String | LINE 昵称 |
+| displayName | String? | LINE 昵称 |
 | pictureUrl | String? | LINE 头像 |
+| statusMessage | String? | LINE 状态消息 |
 | isFollowing | Boolean | 是否已加好友 |
-| followedAt | DateTime? | 加好友时间 |
-| lastSeenAt | DateTime? | 最后活跃时间 |
+| linkedAt | DateTime? | 与 Customer 绑定时间 |
+| homeEntryToken | String? | 图墙首页入口 token |
 | welcomeSentAt | DateTime? | 首次欢迎链接推送时间（只推一次） |
 | lastHomeLinkSentAt | DateTime? | 最后推送首页链接时间 |
+| lastSeenAt | DateTime? | 最后活跃时间 |
 | customerId | BigInt? FK→Customer | 关联业务顾客 |
 | createdAt / updatedAt | DateTime | |
 
@@ -102,13 +105,14 @@ LINE 平台技术身份，与 Customer 一对一关联。
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | BigInt PK | |
-| title | String | 展示标题 |
-| description | String? | 简短说明 |
-| imageUrl | String? | 封面图 URL |
-| categoryId | BigInt? FK→ServiceCategory | 关联分类 |
-| servicePackageId | BigInt? FK→ServicePackage | 关联套餐（绑定后预约时固定此套餐） |
-| displayPriceJpy | Int? | 展示价格（日元） |
-| priceLabel | String? | 价格文案（如"起"） |
+| titleZh / titleJa | String | 展示标题 |
+| descriptionZh / descriptionJa | String? | 简短说明 |
+| imageUrl | String | 封面图 URL |
+| categoryId | BigInt FK→ServiceCategory | 关联分类 |
+| servicePackageId | BigInt FK→ServicePackage | 关联套餐（预约时固定此套餐） |
+| customPriceJpy | Int? | 自定义展示/预约价格 |
+| customDurationMin | Int? | 自定义基础时长 |
+| hideAddonDetails | Boolean | 是否隐藏固定加项明细 |
 | sortOrder | Int | 排序值 |
 | isPublished | Boolean | 是否上架 |
 | createdAt / updatedAt | DateTime | |
@@ -126,13 +130,13 @@ LINE 平台技术身份，与 Customer 一对一关联。
 | id | BigInt PK | |
 | bookingNo | String unique | 预约号，格式 `NB-YYYYMMDD-XXXX` |
 | customerId | BigInt FK→Customer | |
-| servicePackageId | BigInt FK→ServicePackage | |
+| packageId | BigInt FK→ServicePackage | |
 | showcaseItemId | BigInt? FK→ShowcaseItem | 来源图墙项（2.0 新增） |
 | sourceChannel | Enum | `line_showcase` / `admin_manual` / `legacy_web` |
 | status | Enum | `pending` / `confirmed` / `completed` / `canceled` |
 | startAt | DateTime | 预约开始时间（indexed） |
 | endAt | DateTime | 预约结束时间 |
-| autoCancelAt | DateTime? | 待确认自动取消时间 |
+| autoCancelAt | DateTime | 待确认自动取消时间 |
 | styleNote | String? | 款式备注（旧版字段，兼容保留） |
 | customerNote | String? | 顾客备注 |
 | cancelReason | String? | 取消原因 |
@@ -148,18 +152,19 @@ LINE 平台技术身份，与 Customer 一对一关联。
 | 模型 | 关键字段 |
 |------|----------|
 | ServiceCategory | id, nameZh, nameJa, sortOrder, isActive |
-| ServicePackage | id, categoryId, nameZh, nameJa, priceJpy, durationMinutes, isActive |
-| ServiceAddon | id, packageId, nameZh, nameJa, priceJpy, durationMinutes, isActive |
+| ServicePackage | id, categoryId, nameZh, nameJa, descZh, descJa, imageUrl, priceJpy, durationMin, sortOrder, isActive |
+| ServiceAddon | id, nameZh, nameJa, descZh, descJa, priceJpy, durationIncreaseMin, maxQty, sortOrder, isActive |
 | PackageAddonLink | packageId + addonId（唯一约束） |
 
 ---
 
-### BusinessHour / SpecialBusinessDate / BookingBlock
+### BusinessHour / SpecialBusinessDate / DaySlot / BookingBlock
 
 | 模型 | 关键字段 |
 |------|----------|
-| BusinessHour | weekday(0-6), openTime, closeTime |
-| SpecialBusinessDate | date(unique), isClosed, openTime?, closeTime? |
+| BusinessHour | weekday(0-6), isOpen, openTime, closeTime |
+| SpecialBusinessDate | date(unique), isOpen, openTime?, closeTime?, note |
+| DaySlot | date + slot（唯一约束；slot 为当天 30 分钟格索引） |
 | BookingBlock | startAt, endAt, reason? |
 
 ---
@@ -185,9 +190,10 @@ LINE 消息记录，用于后台 1 对 1 会话展示。
 | lineUserId | 关联 LineUser |
 | direction | `incoming`（顾客发） / `outgoing`（店长发） / `system`（系统通知） |
 | messageType | `text` 等 |
-| content | 消息内容 |
-| isRead | 是否已读 |
-| lineMessageId? | LINE 平台 Message ID（去重用） |
+| text | 消息内容 |
+| status | `received` / `queued` / `sent` / `failed` |
+| readAt | 已读时间 |
+| rawJson | 原始 LINE 事件 |
 
 ---
 
@@ -201,9 +207,9 @@ LINE 消息记录，用于后台 1 对 1 会话展示。
 |-----|--------|------|
 | `slot_minutes` | 30 | 预约时间粒度（分钟） |
 | `pending_auto_cancel_hours` | 24 | 待确认超时自动取消时长（小时） |
-| `cancel_cutoff_hours` | 6 | 距开始多少小时内不可取消 |
 | `point_earn_ratio_jpy` | 100 | 消费多少日元获得 1 积分 |
 | `point_redeem_ratio_jpy` | 100 | 1 积分抵多少日元 |
+| `line_*` | - | LINE 消息模板配置 |
 
 ---
 
@@ -215,7 +221,8 @@ enum CustomerCreatedFrom { line admin legacy_web }
 enum AppointmentStatus  { pending confirmed completed canceled }
 enum AppointmentSourceChannel { line_showcase admin_manual legacy_web }
 enum LineMessageDirection { incoming outgoing system }
-enum PointLedgerType { earn use adjust }
+enum PointTxType { earn use adjust }
+enum LineMessageStatus { received queued sent failed }
 ```
 
 ---
@@ -227,5 +234,12 @@ enum PointLedgerType { earn use adjust }
 | `20260306153000_init` | 初始 schema（Customer、Appointment、ServicePackage 等核心模型） |
 | `20260307190000_schedule_line_features` | BusinessHour、SpecialBusinessDate、BookingBlock、ShowcaseItem、LineUser |
 | `20260307193000_line_link_sessions` | LineLinkSession、LineLinkToken |
-| `20260307195000_line_message_read_state` | LineMessage.isRead 字段 |
+| `20260307195000_line_message_read_state` | LineMessage.readAt 字段 |
 | `20260308160000_line_first_v2` | Customer.customerType、Customer.createdFrom、Appointment.showcaseItemId、Appointment.sourceChannel |
+| `20260501120000_add_addon_qty_and_showcase_addons` | 加项数量、图墙固定加项组合 |
+| `20260502090000_showcase_hide_addon_details` | 图墙隐藏固定加项明细 |
+| `20260502110000_showcase_custom_price` | 图墙自定义价格 |
+| `20260523120000_add_day_slot` | DaySlot 排班模型 |
+| `20260527120000_add_showcase_custom_duration` | 图墙自定义时长 |
+| `20260527130000_add_sort_order_to_packages_and_addons` | 套餐和加项排序 |
+| `20260602120000_system_setting_value_text` | 系统设置值扩展为 Text |
