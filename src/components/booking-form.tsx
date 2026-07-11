@@ -63,6 +63,7 @@ type Props = {
 const TEXT = {
   zh: {
     date: "选择日期",
+    dateRequired: "请选择预约日期",
     slots: "选择时间",
     name: "预约姓名",
     namePlaceholder: "请输入您的姓名",
@@ -97,6 +98,7 @@ const TEXT = {
   },
   ja: {
     date: "日付を選ぶ",
+    dateRequired: "予約日を選択してください",
     slots: "時間を選ぶ",
     name: "お名前",
     namePlaceholder: "お名前を入力してください",
@@ -276,12 +278,23 @@ export default function BookingForm(props: Props) {
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!entryToken || !selectedStartAt) {
+    if (!entryToken) {
       setError(t.required);
       return;
     }
+
+    const validationErrors: string[] = [];
+    if (!date) {
+      validationErrors.push(t.dateRequired);
+    } else if (!selectedStartAt) {
+      validationErrors.push(t.selectSlot);
+    }
     if (!bookingName.trim()) {
-      setError(t.nameRequired);
+      validationErrors.push(t.nameRequired);
+    }
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(lang === "ja" ? " / " : "；"));
       return;
     }
 
@@ -531,6 +544,7 @@ export default function BookingForm(props: Props) {
               onChange={(e) => {
                 const nextDate = e.target.value;
                 setDate(nextDate);
+                setError("");
                 void refreshAvailability(nextDate);
               }}
             />
@@ -566,7 +580,10 @@ export default function BookingForm(props: Props) {
                 type="button"
                 aria-pressed={active}
                 className={`slot-chip ${active ? "slot-chip-active" : ""}`}
-                onClick={() => setSelectedStartAt(slot.startAt)}
+                onClick={() => {
+                  setSelectedStartAt(slot.startAt);
+                  setError("");
+                }}
               >
                 {formatSlotLabel(lang, slot.startAt)}
               </button>
@@ -585,10 +602,12 @@ export default function BookingForm(props: Props) {
               id="booking-name"
               className="ui-input"
               type="text"
-              required
               maxLength={80}
               value={bookingName}
-              onChange={(e) => setBookingName(e.target.value)}
+              onChange={(e) => {
+                setBookingName(e.target.value);
+                setError("");
+              }}
               placeholder={t.namePlaceholder}
             />
           </label>
