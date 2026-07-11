@@ -2,13 +2,13 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Lang } from "@/lib/lang";
 import { pickText } from "@/lib/lang";
+import { findLineEntryByToken } from "@/lib/line-customers";
 
 type Props = {
   lang: Lang;
   children: ReactNode;
   entryToken?: string;
   minimalHeader?: boolean;
-  customerPoints?: number;
 };
 
 function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
@@ -17,15 +17,18 @@ function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
   return `${pathname}?${params.toString()}`;
 }
 
-export default function PublicSiteFrame({
+export default async function PublicSiteFrame({
   lang,
   children,
   entryToken,
   minimalHeader = false,
-  customerPoints,
 }: Props) {
   const altLang = lang === "ja" ? "zh" : "ja";
   const pointsLabel = lang === "ja" ? "ポイント" : "积分";
+  const entryUser = entryToken && !minimalHeader
+    ? await findLineEntryByToken(entryToken)
+    : null;
+  const customerPoints = entryUser?.customer?.currentPoints;
 
   return (
     <div className="site-shell">

@@ -7,12 +7,13 @@ import { pickText, resolveLang } from "@/lib/lang";
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; entry?: string }>;
 };
 
 export default async function ServiceDetailPage({ params, searchParams }: Props) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const lang = resolveLang(query?.lang);
+  const entryToken = query?.entry?.trim() || undefined;
 
   let packageId: bigint;
   try {
@@ -48,12 +49,16 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
   }
 
   const addons = servicePackage.addonLinks.filter((item) => item.addon.isActive);
+  const bookingParams = new URLSearchParams({ lang });
+  if (entryToken) bookingParams.set("entry", entryToken);
   const bookingHref = servicePackage.showcaseItems[0]
-    ? `/booking?showcaseItemId=${servicePackage.showcaseItems[0].id.toString()}&lang=${lang}`
-    : `/?lang=${lang}`;
+    ? `/booking?showcaseItemId=${servicePackage.showcaseItems[0].id.toString()}&${bookingParams.toString()}`
+    : `/?${bookingParams.toString()}`;
+  const servicesParams = new URLSearchParams({ lang });
+  if (entryToken) servicesParams.set("entry", entryToken);
 
   return (
-    <PublicSiteFrame lang={lang}>
+    <PublicSiteFrame lang={lang} entryToken={entryToken}>
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <section className="detail-hero-panel">
           <div className="detail-hero-copy">
@@ -104,7 +109,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
             <Link className="ui-btn-primary" href={bookingHref}>
               {pickText(lang, "\u524d\u5f80\u56fe\u5899\u9884\u7ea6", "\u30ae\u30e3\u30e9\u30ea\u30fc\u4e88\u7d04\u3078")}
             </Link>
-            <Link className="ui-btn-secondary" href={`/services?lang=${lang}`}>
+            <Link className="ui-btn-secondary" href={`/services?${servicesParams.toString()}`}>
               {pickText(lang, "\u8fd4\u56de\u670d\u52a1\u5217\u8868", "\u30e1\u30cb\u30e5\u30fc\u4e00\u89a7\u3078\u623b\u308b")}
             </Link>
           </div>

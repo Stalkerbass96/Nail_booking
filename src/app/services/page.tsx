@@ -3,7 +3,6 @@ import PublicSiteFrame from "@/components/public-site-frame";
 import ServicesCategoryNav from "@/components/services-category-nav";
 import { prisma } from "@/lib/db";
 import { pickText, resolveLang } from "@/lib/lang";
-import { findLineEntryByToken } from "@/lib/line-customers";
 
 type Props = {
   searchParams: Promise<{ lang?: string; entry?: string }>;
@@ -43,8 +42,6 @@ export default async function ServicesPage({ searchParams }: Props) {
   const lang = resolveLang(query?.lang);
   const entryToken = query?.entry?.trim() || undefined;
   const t = TEXT[lang];
-  const entryUser = entryToken ? await findLineEntryByToken(entryToken) : null;
-  const customerPoints = entryUser?.customer?.currentPoints;
 
   const categories = await prisma.serviceCategory.findMany({
     where: { isActive: true },
@@ -83,11 +80,7 @@ export default async function ServicesPage({ searchParams }: Props) {
   }));
 
   return (
-    <PublicSiteFrame
-      lang={lang}
-      entryToken={entryToken}
-      customerPoints={customerPoints}
-    >
+    <PublicSiteFrame lang={lang} entryToken={entryToken}>
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-5">
 
         <section
