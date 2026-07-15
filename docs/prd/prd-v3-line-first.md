@@ -79,7 +79,7 @@
 2. Webhook 收到 `follow` 事件。
 3. 系统以 `LINE userId` 创建顾客档案，状态为 `lead`。
 4. 系统仅首次向该顾客推送首页链接。
-5. 顾客打开 `/` 定额款式首页。
+5. 顾客打开 `/` 后默认进入 `/services` menu 页面，也可从导航进入 `/?view=design` 定额款式页。
 6. 顾客按分类筛选并点击某定额款式项。
 7. 系统带着该定额款式项绑定的套餐进入预约页。
 8. 顾客选择时间并填写备注。
@@ -101,7 +101,8 @@
 
 ### 6.1 顾客侧页面
 
-- `/`：定额款式首页
+- `/`：默认重定向到 `/services` menu 页面
+- `/?view=design`：定额款式首页
 - `/booking?showcaseItemId=...`：预约页
 - `/booking/success/{bookingNo}`：预约成功页
 - `/booking/{bookingNo}` 或等价公开详情页：预约详情页

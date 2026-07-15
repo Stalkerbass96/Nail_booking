@@ -43,7 +43,7 @@ export default async function PublicBookingDetailPage({ params, searchParams }: 
     }
   });
 
-  const galleryHref = `/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`;
+  const galleryHref = `/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}&view=design`;
   const servicesHref = `/services?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`;
 
   return (

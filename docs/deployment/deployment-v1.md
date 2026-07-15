@@ -25,7 +25,8 @@
 ## 1. 部署完成后的访问地址
 
 部署成功后，你应该能打开：
-- 前台定额款式首页：`http://<服务器IP>:3000`
+- 前台 menu 默认入口：`http://<服务器IP>:3000/services`
+- 前台定额款式首页：`http://<服务器IP>:3000/?view=design`
 - 后台登录：`http://<服务器IP>:3000/admin/login`
 - 定额款式管理：`http://<服务器IP>:3000/admin/showcase`
 - 预约管理：`http://<服务器IP>:3000/admin/appointments`
@@ -367,7 +368,7 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml exec -T postg
 
 ## 12. 2.0 推荐验收顺序
 
-1. 打开前台首页，确认看到定额款式而不是旧式服务列表
+1. 打开前台首页，确认默认进入 menu 页面；再通过导航确认定额款式页可访问
 2. 登录后台
 3. 打开 `/admin/showcase`，确认能看到定额款式管理页
 4. 打开 `/admin/appointments`，确认预约管理页可正常打开

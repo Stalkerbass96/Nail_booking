@@ -12,7 +12,7 @@ export default async function BookingSuccessPage({ params, searchParams }: Props
   const lang = resolveLang(query?.lang);
   const entryToken = query?.entry?.trim() || undefined;
   const detailHref = `/booking/${bookingNo}?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`;
-  const galleryHref = `/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}`;
+  const galleryHref = `/?lang=${lang}${entryToken ? `&entry=${entryToken}` : ""}&view=design`;
 
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken} minimalHeader>

@@ -36,7 +36,8 @@
 
 当前依赖的页面与接口：
 - 后台页面：`/admin/line`
-- 定额款式首页：`/`
+- menu 默认入口：`/services`
+- 定额款式首页：`/?view=design`
 - 顾客绑定页：`/line/link`
 - 顾客绑定管理页：`/line/manage`
 - Webhook：`/api/line/webhook`

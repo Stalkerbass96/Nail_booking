@@ -1477,26 +1477,24 @@ a:focus-visible {
   .site-header-inner,
   .site-header-inner-compact,
   .site-header-inner-stream {
-    height: auto;
+    height: 52px;
     min-height: 52px;
-    padding: 6px 14px;
-    gap: 4px 8px;
+    padding: 0 10px;
+    gap: 4px;
   }
 
   .site-header:not(.site-header-minimal) .site-header-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: 34px 34px;
+    display: flex;
   }
 
   .site-header:not(.site-header-minimal) .site-header-primary {
-    display: contents;
+    display: flex;
+    flex: 1;
+    min-width: 0;
   }
 
   .site-header:not(.site-header-minimal) .site-brand {
-    grid-column: 1;
-    grid-row: 1;
-    min-width: 0;
+    display: none;
   }
 
   .site-header:not(.site-header-minimal) .site-header-divider {
@@ -1504,9 +1502,7 @@ a:focus-visible {
   }
 
   .site-header:not(.site-header-minimal) .site-header-tools {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
+    flex-shrink: 0;
   }
 
   .brand-wordmark {
@@ -1519,9 +1515,9 @@ a:focus-visible {
 
   .site-nav {
     display: grid;
-    grid-column: 1 / -1;
-    grid-row: 2;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr) minmax(0, 1fr);
+    flex: 1;
+    min-width: 0;
     width: 100%;
     overflow: visible;
     gap: 2px;

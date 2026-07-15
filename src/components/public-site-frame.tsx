@@ -11,9 +11,15 @@ type Props = {
   minimalHeader?: boolean;
 };
 
-function withLangAndEntry(pathname: string, lang: Lang, entryToken?: string) {
+function withLangAndEntry(
+  pathname: string,
+  lang: Lang,
+  entryToken?: string,
+  extra?: Record<string, string>
+) {
   const params = new URLSearchParams({ lang });
   if (entryToken) params.set("entry", entryToken);
+  for (const [key, value] of Object.entries(extra ?? {})) params.set(key, value);
   return `${pathname}?${params.toString()}`;
 }
 
@@ -38,7 +44,7 @@ export default async function PublicSiteFrame({
           <div className="site-header-primary flex min-w-0 items-center gap-3">
             <Link
               className="site-brand"
-              href={withLangAndEntry("/", lang, entryToken)}
+              href={withLangAndEntry("/services", lang, entryToken)}
             >
               <strong className="brand-wordmark">Tsuzuri</strong>
             </Link>
@@ -64,7 +70,7 @@ export default async function PublicSiteFrame({
                   </Link>
                   <Link
                     className="site-nav-link"
-                    href={withLangAndEntry("/", lang, entryToken)}
+                    href={withLangAndEntry("/", lang, entryToken, { view: "design" })}
                   >
                     {pickText(lang, "定额款式", "定額デザイン")}
                   </Link>
@@ -95,7 +101,7 @@ export default async function PublicSiteFrame({
             )}
             <Link
               className="site-lang-switch"
-              href={withLangAndEntry("/", altLang, entryToken)}
+              href={withLangAndEntry("/services", altLang, entryToken)}
             >
               {altLang === "ja" ? "JP" : "中文"}
             </Link>
@@ -112,7 +118,7 @@ export default async function PublicSiteFrame({
               <Link href={withLangAndEntry("/services", lang, entryToken)}>
                 {pickText(lang, "套餐", "メニュー")}
               </Link>
-              <Link href={withLangAndEntry("/", lang, entryToken)}>
+              <Link href={withLangAndEntry("/", lang, entryToken, { view: "design" })}>
                 {pickText(lang, "定额款式", "定額デザイン")}
               </Link>
               <Link href={withLangAndEntry("/addons", lang, entryToken)}>

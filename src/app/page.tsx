@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import PublicSiteFrame from "@/components/public-site-frame";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { pickText, resolveLang } from "@/lib/lang";
 
@@ -8,11 +9,12 @@ type Props = {
     lang?: string;
     categoryId?: string;
     entry?: string;
+    view?: string;
   }>;
 };
 
 function buildHref(lang: string, entry: string | undefined, categoryId?: string) {
-  const params = new URLSearchParams({ lang });
+  const params = new URLSearchParams({ lang, view: "design" });
   if (entry) params.set("entry", entry);
   if (categoryId) params.set("categoryId", categoryId);
   const qs = params.toString();
@@ -24,6 +26,12 @@ export default async function HomePage({ searchParams }: Props) {
   const lang = resolveLang(query?.lang);
   const entryToken = query?.entry?.trim() || undefined;
   const categoryId = query?.categoryId?.trim() || undefined;
+
+  if (query?.view !== "design") {
+    const params = new URLSearchParams({ lang });
+    if (entryToken) params.set("entry", entryToken);
+    redirect(`/services?${params.toString()}`);
+  }
 
   const [categories, showcaseItems] = await Promise.all([
     prisma.serviceCategory.findMany({

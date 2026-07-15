@@ -55,13 +55,13 @@ type Props = {
 const TEXT = {
   zh: {
     title: "\u9884\u7ea6\u7ba1\u7406",
-    subtitle: "\u6309\u65e5\u671f\u3001\u72b6\u6001\u3001\u5165\u53e3\u548c\u56fe\u5899\u6b3e\u5f0f\u5feb\u901f\u7b5b\u9009\u9884\u7ea6\uff0c\u5e76\u5728\u4e00\u4e2a\u9875\u9762\u91cc\u5b8c\u6210\u786e\u8ba4\u3001\u53d6\u6d88\u548c\u5b8c\u7ed3\u3002",
+    subtitle: "按日期、状态、入口和定额款式快速筛选预约，并在一个页面里完成确认、取消和完结。",
     date: "\u65e5\u671f",
     status: "\u72b6\u6001",
     source: "\u9884\u7ea6\u5165\u53e3",
-    showcase: "\u56fe\u5899\u6b3e\u5f0f",
+    showcase: "定额款式",
     keyword: "\u5173\u952e\u8bcd",
-    keywordPlaceholder: "\u641c\u7d22\u9884\u7ea6\u53f7\u3001\u987e\u5ba2\u59d3\u540d\u3001LINE \u6635\u79f0\u3001\u56fe\u5899\u6b3e\u5f0f\u6216\u5957\u9910",
+    keywordPlaceholder: "搜索预约号、顾客姓名、LINE 昵称、定额款式或套餐",
     refresh: "\u5237\u65b0",
     reset: "\u91cd\u7f6e\u7b5b\u9009",
     pending: "\u5f85\u786e\u8ba4",
@@ -71,7 +71,7 @@ const TEXT = {
     all: "\u5168\u90e8",
     allSources: "\u5168\u90e8\u5165\u53e3",
     allShowcase: "\u5168\u90e8\u6b3e\u5f0f",
-    noShowcase: "\u975e\u56fe\u5899\u6d41\u7a0b",
+    noShowcase: "非定额款式流程",
     customer: "\u987e\u5ba2",
     time: "\u65f6\u95f4",
     service: "\u670d\u52a1",
@@ -112,13 +112,13 @@ const TEXT = {
   },
   ja: {
     title: "\u4e88\u7d04\u7ba1\u7406",
-    subtitle: "\u65e5\u4ed8\u3001\u72b6\u614b\u3001\u5c0e\u7dda\u3001\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee\u3067\u4e88\u7d04\u3092\u7d5e\u308a\u8fbc\u307f\u3001\u78ba\u8a8d\u30fb\u30ad\u30e3\u30f3\u30bb\u30eb\u30fb\u5b8c\u4e86\u51e6\u7406\u3092\u4e00\u753b\u9762\u3067\u9032\u3081\u3089\u308c\u307e\u3059\u3002",
+    subtitle: "日付、状態、導線、定額デザインで予約を絞り込み、確認・キャンセル・完了処理を一画面で進められます。",
     date: "\u65e5\u4ed8",
     status: "\u72b6\u614b",
     source: "\u4e88\u7d04\u5c0e\u7dda",
-    showcase: "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee",
+    showcase: "定額デザイン",
     keyword: "\u30ad\u30fc\u30ef\u30fc\u30c9",
-    keywordPlaceholder: "\u4e88\u7d04\u756a\u53f7\u3001\u9867\u5ba2\u540d\u3001LINE \u540d\u3001\u30ae\u30e3\u30e9\u30ea\u30fc\u540d\u3001\u30e1\u30cb\u30e5\u30fc\u540d\u3067\u691c\u7d22",
+    keywordPlaceholder: "予約番号、顧客名、LINE 名、定額デザイン名、メニュー名で検索",
     refresh: "\u518d\u8aad\u8fbc",
     reset: "\u6761\u4ef6\u3092\u30ea\u30bb\u30c3\u30c8",
     pending: "\u672a\u78ba\u8a8d",
@@ -127,8 +127,8 @@ const TEXT = {
     canceled: "\u30ad\u30e3\u30f3\u30bb\u30eb",
     all: "\u3059\u3079\u3066",
     allSources: "\u3059\u3079\u3066\u306e\u5c0e\u7dda",
-    allShowcase: "\u3059\u3079\u3066\u306e\u30ae\u30e3\u30e9\u30ea\u30fc",
-    noShowcase: "\u30ae\u30e3\u30e9\u30ea\u30fc\u7d4c\u7531\u3067\u306f\u306a\u3044",
+    allShowcase: "すべての定額デザイン",
+    noShowcase: "定額デザイン経由ではない",
     customer: "\u9867\u5ba2",
     time: "\u65e5\u6642",
     service: "\u30e1\u30cb\u30e5\u30fc",
@@ -196,12 +196,12 @@ function statusClass(status: AppointmentItem["status"]) {
 
 function sourceChannelLabel(lang: Lang, sourceChannel: AppointmentItem["sourceChannel"]) {
   if (lang === "ja") {
-    if (sourceChannel === "line_showcase") return "LINE \u30ae\u30e3\u30e9\u30ea\u30fc";
+    if (sourceChannel === "line_showcase") return "LINE 定額デザイン";
     if (sourceChannel === "admin_manual") return "\u7ba1\u7406\u753b\u9762\u624b\u52d5";
     return "\u65e7 Web";
   }
 
-  if (sourceChannel === "line_showcase") return "LINE \u56fe\u5899";
+  if (sourceChannel === "line_showcase") return "LINE 定额款式";
   if (sourceChannel === "admin_manual") return "\u540e\u53f0\u624b\u52a8";
   return "\u65e7\u7f51\u9875";
 }
@@ -564,7 +564,7 @@ export default function AdminAppointmentsPanel({ lang }: Props) {
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-500">{t.service}</p>
                     <p className="mt-2 text-sm font-semibold text-brand-900">{item.package.name}</p>
-                    <p className="text-xs text-brand-600">{lang === "ja" ? "\u30ae\u30e3\u30e9\u30ea\u30fc\u9805\u76ee" : "\u56fe\u5899\u6b3e\u5f0f"}: {item.showcaseItem?.title || t.noShowcase}</p>
+                    <p className="text-xs text-brand-600">{lang === "ja" ? "定額デザイン" : "定额款式"}: {item.showcaseItem?.title || t.noShowcase}</p>
                     <p className="text-xs text-brand-600">{lang === "ja" ? "\u4e88\u7d04\u5165\u53e3" : "\u9884\u7ea6\u5165\u53e3"}: {sourceChannelLabel(lang, item.sourceChannel)}</p>
                   </div>
                   <div className="rounded-2xl border border-brand-100 bg-brand-50/45 p-3">

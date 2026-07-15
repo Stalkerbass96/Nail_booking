@@ -46,6 +46,7 @@ export default async function AddonsPage({ searchParams }: Props) {
 
   const galleryParams = new URLSearchParams({ lang });
   if (entryToken) galleryParams.set("entry", entryToken);
+  galleryParams.set("view", "design");
 
   return (
     <PublicSiteFrame lang={lang} entryToken={entryToken}>

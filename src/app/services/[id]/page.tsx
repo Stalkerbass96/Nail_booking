@@ -107,7 +107,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
 
           <div className="mt-6 flex flex-wrap gap-3">
             <Link className="ui-btn-primary" href={bookingHref}>
-              {pickText(lang, "\u524d\u5f80\u56fe\u5899\u9884\u7ea6", "\u30ae\u30e3\u30e9\u30ea\u30fc\u4e88\u7d04\u3078")}
+              {pickText(lang, "预约此套餐", "このメニューを予約")}
             </Link>
             <Link className="ui-btn-secondary" href={`/services?${servicesParams.toString()}`}>
               {pickText(lang, "\u8fd4\u56de\u670d\u52a1\u5217\u8868", "\u30e1\u30cb\u30e5\u30fc\u4e00\u89a7\u3078\u623b\u308b")}

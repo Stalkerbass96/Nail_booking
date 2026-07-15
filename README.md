@@ -58,7 +58,8 @@ npm run dev
 
 | 页面 | URL |
 |------|-----|
-| 前台定额款式 | `http://localhost:3000` |
+| 前台 menu（默认入口） | `http://localhost:3000/services` |
+| 前台定额款式 | `http://localhost:3000/?view=design` |
 | 后台登录 | `http://localhost:3000/admin/login` |
 | 定额款式管理 | `http://localhost:3000/admin/showcase` |
 | LINE 管理 | `http://localhost:3000/admin/line` |
