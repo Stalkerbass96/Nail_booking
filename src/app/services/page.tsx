@@ -8,16 +8,9 @@ type Props = {
   searchParams: Promise<{ lang?: string; entry?: string }>;
 };
 
-function withQuery(lang: string, entryToken?: string) {
-  const params = new URLSearchParams({ lang });
-  if (entryToken) params.set("entry", entryToken);
-  return params.toString();
-}
-
 const TEXT = {
   zh: {
     title: "套餐 & 价格",
-    backToGallery: "回到定额套餐",
     book: "预约此套餐",
     duration: "分钟",
     addons: "可选加项",
@@ -27,7 +20,6 @@ const TEXT = {
   },
   ja: {
     title: "メニュー & 料金",
-    backToGallery: "定額メニューに戻る",
     book: "このメニューを予約",
     duration: "分",
     addons: "オプション追加",
@@ -83,16 +75,10 @@ export default async function ServicesPage({ searchParams }: Props) {
     <PublicSiteFrame lang={lang} entryToken={entryToken}>
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-5">
 
-        <section
-          className="flex items-center justify-between gap-3 pb-4"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
+        <section className="pb-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <h1 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
             {t.title}
           </h1>
-          <Link className="ui-btn-secondary shrink-0" href={`/?${withQuery(lang, entryToken)}`}>
-            {t.backToGallery}
-          </Link>
         </section>
 
         {/* Sticky category jump bar — only shown when there are 2+ categories */}

@@ -52,11 +52,11 @@ export default async function PublicBookingDetailPage({ params, searchParams }: 
         {!appointment ? (
           <section className="section-panel section-panel-compact">
             <p className="ui-state-error mt-0">
-              {pickText(lang, "没有找到这笔预约，请返回定额套餐重新选择。", "この予約は見つかりません。定額メニューに戻って確認してください。")}
+              {pickText(lang, "没有找到这笔预约，请返回定额款式重新选择。", "この予約は見つかりません。定額デザインに戻って確認してください。")}
             </p>
             <div className="mt-4">
               <Link className="ui-btn-primary" href={galleryHref}>
-                {pickText(lang, "返回定额套餐", "定額メニューに戻る")}
+                {pickText(lang, "返回定额款式", "定額デザインに戻る")}
               </Link>
             </div>
           </section>
@@ -119,12 +119,12 @@ export default async function PublicBookingDetailPage({ params, searchParams }: 
                     : appointment.status === "confirmed"
                       ? pickText(lang, "预约已经确认，后续如果需要沟通细节，店长会通过 LINE 联系你。", "予約は確定しています。詳細確認が必要な場合は LINE でご連絡します。")
                       : appointment.status === "completed"
-                        ? pickText(lang, "这笔预约已经完成，欢迎继续回到定额套餐挑选下一次款式。", "この予約は完了しています。次回のデザイン選びは定額メニューからどうぞ。")
-                        : pickText(lang, "这笔预约已取消，如需重新预约，请回到定额套餐重新选择。", "この予約はキャンセルされています。再予約する場合は定額メニューから選び直してください。")}
+                        ? pickText(lang, "这笔预约已经完成，欢迎继续回到定额款式挑选下一次款式。", "この予約は完了しています。次回のデザイン選びは定額デザインからどうぞ。")
+                        : pickText(lang, "这笔预约已取消，如需重新预约，请回到定额款式重新选择。", "この予約はキャンセルされています。再予約する場合は定額デザインから選び直してください。")}
                 </p>
                 <div className="mt-5 grid gap-2">
                   <Link className="ui-btn-primary w-full" href={galleryHref}>
-                    {pickText(lang, "继续看定额套餐", "定額メニューに戻る")}
+                    {pickText(lang, "继续看定额款式", "定額デザインに戻る")}
                   </Link>
                   <Link className="ui-btn-secondary w-full" href={servicesHref}>
                     {pickText(lang, "查看套餐", "メニューを見る")}

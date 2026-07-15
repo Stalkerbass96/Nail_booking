@@ -35,7 +35,7 @@ export default async function PublicSiteFrame({
       <header className={`site-header${minimalHeader ? " site-header-minimal" : ""}`}>
         <div className="site-header-inner">
           {/* Brand wordmark only — no badge */}
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="site-header-primary flex min-w-0 items-center gap-3">
             <Link
               className="site-brand"
               href={withLangAndEntry("/", lang, entryToken)}
@@ -46,6 +46,7 @@ export default async function PublicSiteFrame({
             {!minimalHeader && (
               <>
                 <span
+                  className="site-header-divider"
                   aria-hidden="true"
                   style={{
                     width: 1,
@@ -65,7 +66,7 @@ export default async function PublicSiteFrame({
                     className="site-nav-link"
                     href={withLangAndEntry("/", lang, entryToken)}
                   >
-                    {pickText(lang, "定额套餐", "定額メニュー")}
+                    {pickText(lang, "定额款式", "定額デザイン")}
                   </Link>
                   <Link
                     className="site-nav-link"
@@ -112,7 +113,7 @@ export default async function PublicSiteFrame({
                 {pickText(lang, "套餐", "メニュー")}
               </Link>
               <Link href={withLangAndEntry("/", lang, entryToken)}>
-                {pickText(lang, "定额套餐", "定額メニュー")}
+                {pickText(lang, "定额款式", "定額デザイン")}
               </Link>
               <Link href={withLangAndEntry("/addons", lang, entryToken)}>
                 {pickText(lang, "加项", "オプション")}

@@ -6,12 +6,12 @@
 
 ## 1. Public APIs
 
-### 首页与定额套餐
+### 首页与定额款式
 
 - `GET /api/public/showcase`
-  - 获取前台定额套餐项
+  - 获取前台定额款式项
   - 支持分类筛选
-  - 返回定额套餐图片、标题、关联套餐、自定义价格/时长、固定加项与分类信息
+  - 返回定额款式图片、标题、关联套餐、自定义价格/时长、固定加项与分类信息
 
 - `GET /api/public/categories`
   - 获取前台分类列表
@@ -73,7 +73,7 @@
 - `GET /api/admin/appointments`
   - 获取预约列表
   - 支持 `date / status / lang / limit`
-  - 返回顾客、套餐、定额套餐来源、加项与来源渠道
+  - 返回顾客、套餐、定额款式来源、加项与来源渠道
 
 - `PATCH /api/admin/appointments/{id}/confirm`
   - 确认预约
@@ -85,22 +85,22 @@
 - `PATCH /api/admin/appointments/{id}/complete`
   - 完成预约并写入实收金额、积分使用等信息
 
-### 定额套餐管理
+### 定额款式管理
 
 - `GET /api/admin/showcase`
-  - 获取后台定额套餐项列表
+  - 获取后台定额款式项列表
 
 - `POST /api/admin/showcase`
-  - 新建定额套餐项
+  - 新建定额款式项
 
 - `PATCH /api/admin/showcase/{id}`
-  - 更新定额套餐项
+  - 更新定额款式项
 
 - `DELETE /api/admin/showcase/{id}`
-  - 删除定额套餐项
+  - 删除定额款式项
 
 - `POST /api/admin/showcase/{id}/addons`
-  - 维护定额套餐固定加项组合
+  - 维护定额款式固定加项组合
 
 ### 顾客管理
 
@@ -111,7 +111,7 @@
 
 - `GET /api/admin/customers/{id}`
   - 获取顾客详情
-  - 返回顾客类型、来源、LINE 档案、预约历史与定额套餐来源
+  - 返回顾客类型、来源、LINE 档案、预约历史与定额款式来源
 
 - `GET /api/admin/customers/{id}/points`
   - 获取顾客积分流水
@@ -138,7 +138,7 @@
 - `DELETE /api/admin/addons/{id}`
 
 - `POST /api/admin/upload`
-  - 上传定额套餐或套餐图片
+  - 上传定额款式或套餐图片
 
 ### 排班 / 封锁 / 系统设置
 
@@ -186,7 +186,7 @@
   - 后台发送链接消息给顾客
 
 - `POST /api/admin/line/users/{id}/gallery-link`
-  - 后台发送定额套餐首页链接给顾客
+  - 后台发送套餐页面预约链接给顾客
 
 - `POST /api/admin/line/sync-followers`
   - 同步 webhook 配置前已经关注的 LINE 用户
@@ -206,6 +206,6 @@
 
 - 顾客主身份已经切到 `LINE userId -> Customer`
 - `email + bookingNo` 不再是主业务路径
-- 首页主入口改为定额套餐
+- 首页主入口改为定额款式
 - 预约主创建路径改为 `entry + showcaseItemId`
 - 旧接口仍有部分保留，仅用于兼容和过渡

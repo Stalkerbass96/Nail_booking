@@ -11,7 +11,7 @@ type Props = {
 
 const LINKS = [
   { href: "/admin",              zh: "总览",   ja: "ダッシュボード" },
-  { href: "/admin/showcase",     zh: "定额套餐",   ja: "定額メニュー" },
+  { href: "/admin/showcase",     zh: "定额款式",   ja: "定額デザイン" },
   { href: "/admin/appointments", zh: "预约",   ja: "予約" },
   { href: "/admin/schedule",     zh: "排班",   ja: "営業" },
   { href: "/admin/categories",   zh: "分类",   ja: "カテゴリ" },

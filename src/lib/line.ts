@@ -163,7 +163,7 @@ export async function getAllLineFollowerIds(): Promise<string[]> {
 }
 
 export function buildLineHomeUrl(entryToken: string, lang = "ja") {
-  return buildAppUrl("/", { entry: entryToken, lang });
+  return buildAppUrl("/services", { entry: entryToken, lang });
 }
 
 export function buildPublicBookingDetailUrl(bookingNo: string, entryToken?: string, lang = "ja") {

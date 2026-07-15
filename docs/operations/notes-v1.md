@@ -16,7 +16,7 @@
 1. 首次上线后，先验证：
    - `/admin/login` 可访问
    - 种子账号能登录
-   - 公开定额套餐接口可访问（`/api/public/showcase`）
+   - 公开定额款式接口可访问（`/api/public/showcase`）
    - worker 容器在运行
    - LINE Webhook URL 在 LINE Developer Console 已配置并通过验证
 2. 修改过 `.env.deploy` 后，执行一次重启：
@@ -41,10 +41,10 @@ docker compose --env-file .env.deploy -f docker-compose.deploy.yml restart
 
 ## 4. 建议的上线验收清单
 
-1. 前台定额套餐首页可访问
+1. 前台定额款式首页可访问
 2. 后台登录可访问
-3. 可以读取定额套餐与分类数据
-4. 可以从定额套餐进入预约并提交
+3. 可以读取定额款式与分类数据
+4. 可以从定额款式进入预约并提交
 5. 可以在后台确认预约
 6. worker 容器正常运行（`docker compose ps` 查看状态）
 7. LINE Webhook 配置完成，`follow` 事件可正常接收

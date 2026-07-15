@@ -9,7 +9,7 @@
 ## 1. 设计原则
 
 1. 顾客主身份为 `LINE userId`，邮箱为可选辅助字段。
-2. 定额套餐（ShowcaseItem）是前台的核心展示入口，与套餐解耦但可绑定套餐。
+2. 定额款式（ShowcaseItem）是前台的核心展示入口，与套餐解耦但可绑定套餐。
 3. 预约记录"顾客从哪张图进入"（showcaseItemId + sourceChannel）。
 4. 兼容旧版邮箱路径，旧数据不做破坏性删除。
 
@@ -22,7 +22,7 @@
 | Admin | 店长账号 |
 | Customer | 业务顾客实体 |
 | LineUser | LINE 平台技术身份 |
-| ServiceCategory | 套餐分类（也用于定额套餐筛选） |
+| ServiceCategory | 套餐分类（也用于定额款式筛选） |
 | ServicePackage | 套餐 |
 | ServiceAddon | 加项 |
 | PackageAddonLink | 套餐-加项多对多关联 |
@@ -34,8 +34,8 @@
 | SystemSetting | 键值配置 |
 | DaySlot | 按日期和 30 分钟格记录开放 slot |
 | BookingBlock | 预约封锁区间 |
-| ShowcaseItem | 定额套餐展示项 |
-| ShowcaseItemAddon | 定额套餐固定加项组合 |
+| ShowcaseItem | 定额款式展示项 |
+| ShowcaseItemAddon | 定额款式固定加项组合 |
 | LineMessage | LINE 消息记录 |
 | LineLinkSession | LINE 绑定会话 |
 | LineLinkToken | LINE 绑定 Token |
@@ -89,7 +89,7 @@ LINE 平台技术身份，与 Customer 一对一关联。
 | statusMessage | String? | LINE 状态消息 |
 | isFollowing | Boolean | 是否已加好友 |
 | linkedAt | DateTime? | 与 Customer 绑定时间 |
-| homeEntryToken | String? | 定额套餐首页入口 token |
+| homeEntryToken | String? | 客人预约入口 token |
 | welcomeSentAt | DateTime? | 首次欢迎链接推送时间（只推一次） |
 | lastHomeLinkSentAt | DateTime? | 最后推送首页链接时间 |
 | lastSeenAt | DateTime? | 最后活跃时间 |
@@ -100,7 +100,7 @@ LINE 平台技术身份，与 Customer 一对一关联。
 
 ### ShowcaseItem
 
-定额套餐展示项，前台首页的核心模型。
+定额款式展示项，前台首页的核心模型。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -117,7 +117,7 @@ LINE 平台技术身份，与 Customer 一对一关联。
 | isPublished | Boolean | 是否上架 |
 | createdAt / updatedAt | DateTime | |
 
-约束：一个定额套餐项只能绑定一个套餐，一个套餐可以被多个定额套餐项引用。
+约束：一个定额款式项只能绑定一个套餐，一个套餐可以被多个定额款式项引用。
 
 ---
 
@@ -131,7 +131,7 @@ LINE 平台技术身份，与 Customer 一对一关联。
 | bookingNo | String unique | 预约号，格式 `NB-YYYYMMDD-XXXX` |
 | customerId | BigInt FK→Customer | |
 | packageId | BigInt FK→ServicePackage | |
-| showcaseItemId | BigInt? FK→ShowcaseItem | 来源定额套餐项（2.0 新增） |
+| showcaseItemId | BigInt? FK→ShowcaseItem | 来源定额款式项（2.0 新增） |
 | sourceChannel | Enum | `line_showcase` / `admin_manual` / `legacy_web` |
 | status | Enum | `pending` / `confirmed` / `completed` / `canceled` |
 | startAt | DateTime | 预约开始时间（indexed） |
@@ -236,10 +236,10 @@ enum LineMessageStatus { received queued sent failed }
 | `20260307193000_line_link_sessions` | LineLinkSession、LineLinkToken |
 | `20260307195000_line_message_read_state` | LineMessage.readAt 字段 |
 | `20260308160000_line_first_v2` | Customer.customerType、Customer.createdFrom、Appointment.showcaseItemId、Appointment.sourceChannel |
-| `20260501120000_add_addon_qty_and_showcase_addons` | 加项数量、定额套餐固定加项组合 |
-| `20260502090000_showcase_hide_addon_details` | 定额套餐隐藏固定加项明细 |
-| `20260502110000_showcase_custom_price` | 定额套餐自定义价格 |
+| `20260501120000_add_addon_qty_and_showcase_addons` | 加项数量、定额款式固定加项组合 |
+| `20260502090000_showcase_hide_addon_details` | 定额款式隐藏固定加项明细 |
+| `20260502110000_showcase_custom_price` | 定额款式自定义价格 |
 | `20260523120000_add_day_slot` | DaySlot 排班模型 |
-| `20260527120000_add_showcase_custom_duration` | 定额套餐自定义时长 |
+| `20260527120000_add_showcase_custom_duration` | 定额款式自定义时长 |
 | `20260527130000_add_sort_order_to_packages_and_addons` | 套餐和加项排序 |
 | `20260602120000_system_setting_value_text` | 系统设置值扩展为 Text |

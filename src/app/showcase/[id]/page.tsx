@@ -12,7 +12,7 @@ type Props = {
 
 const TEXT = {
   zh: {
-    back: "← 返回定额套餐",
+    back: "← 返回定额款式",
     package: "套餐",
     category: "分类",
     addons: "已含加项",
@@ -22,7 +22,7 @@ const TEXT = {
     qty: "×"
   },
   ja: {
-    back: "← 定額メニューに戻る",
+    back: "← 定額デザインに戻る",
     package: "メニュー",
     category: "カテゴリ",
     addons: "含まれるオプション",

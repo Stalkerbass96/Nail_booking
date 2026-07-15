@@ -1477,9 +1477,36 @@ a:focus-visible {
   .site-header-inner,
   .site-header-inner-compact,
   .site-header-inner-stream {
-    height: 52px;
-    padding: 0 14px;
-    gap: 8px;
+    height: auto;
+    min-height: 52px;
+    padding: 6px 14px;
+    gap: 4px 8px;
+  }
+
+  .site-header:not(.site-header-minimal) .site-header-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 34px 34px;
+  }
+
+  .site-header:not(.site-header-minimal) .site-header-primary {
+    display: contents;
+  }
+
+  .site-header:not(.site-header-minimal) .site-brand {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .site-header:not(.site-header-minimal) .site-header-divider {
+    display: none;
+  }
+
+  .site-header:not(.site-header-minimal) .site-header-tools {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
   }
 
   .brand-wordmark {
@@ -1491,9 +1518,13 @@ a:focus-visible {
   }
 
   .site-nav {
-    overflow-x: auto;
-    scrollbar-width: none;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    overflow: visible;
+    gap: 2px;
   }
 
   .site-nav::-webkit-scrollbar,
@@ -1512,6 +1543,14 @@ a:focus-visible {
     border-radius: 6px;
     padding: 0 10px;
     font-size: 13px;
+  }
+
+  .site-nav .site-nav-link {
+    min-width: 0;
+    justify-content: center;
+    padding: 0 4px;
+    font-size: 12px;
+    white-space: nowrap;
   }
 
   .site-header-tools { gap: 6px; }
