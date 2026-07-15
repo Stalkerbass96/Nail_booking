@@ -17,7 +17,7 @@ function withQuery(lang: string, entryToken?: string) {
 const TEXT = {
   zh: {
     title: "套餐 & 价格",
-    backToGallery: "回到图墙",
+    backToGallery: "回到定额套餐",
     book: "预约此套餐",
     duration: "分钟",
     addons: "可选加项",
@@ -27,7 +27,7 @@ const TEXT = {
   },
   ja: {
     title: "メニュー & 料金",
-    backToGallery: "ギャラリーに戻る",
+    backToGallery: "定額メニューに戻る",
     book: "このメニューを予約",
     duration: "分",
     addons: "オプション追加",

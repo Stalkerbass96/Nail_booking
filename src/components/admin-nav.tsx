@@ -11,7 +11,7 @@ type Props = {
 
 const LINKS = [
   { href: "/admin",              zh: "总览",   ja: "ダッシュボード" },
-  { href: "/admin/showcase",     zh: "图墙",   ja: "ギャラリー" },
+  { href: "/admin/showcase",     zh: "定额套餐",   ja: "定額メニュー" },
   { href: "/admin/appointments", zh: "预约",   ja: "予約" },
   { href: "/admin/schedule",     zh: "排班",   ja: "営業" },
   { href: "/admin/categories",   zh: "分类",   ja: "カテゴリ" },
@@ -73,7 +73,7 @@ export default function AdminNav({ lang }: Props) {
                     : { background: "transparent", color: "var(--text-3)", border: "1px solid transparent" }
                 }
               >
-                {item.zh}
+                {lang === "ja" ? item.ja : item.zh}
               </Link>
             );
           })}

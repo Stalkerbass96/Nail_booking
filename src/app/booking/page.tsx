@@ -113,8 +113,8 @@ export default async function BookingPage({ searchParams }: Props) {
     <section className="section-panel section-panel-compact">
       <p className="ui-state-error mt-0">
         {lang === "ja"
-          ? "このメニューは現在ご利用いただけません。ギャラリーに戻って別のデザインをお選びください。"
-          : "所选套餐暂不可用，请返回图墙选择其他款式。"}
+          ? "このメニューは現在ご利用いただけません。定額メニューに戻って別のデザインをお選びください。"
+          : "所选套餐暂不可用，请返回定额套餐选择其他款式。"}
       </p>
     </section>
   );

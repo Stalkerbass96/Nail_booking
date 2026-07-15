@@ -17,8 +17,8 @@ export type LineMsgSettings = Record<LineMsgKey, string>;
 /** Fallback values used when the row is absent from SystemSetting. */
 export const LINE_MSG_DEFAULTS: LineMsgSettings = {
   line_msg_welcome_1: "サロン LINE の追加ありがとうございます。",
-  line_msg_welcome_2: "予約はギャラリーホームからお好みのデザインを選んで進めてください。",
-  line_msg_gallery_1: "下のリンクからギャラリーを見てご予約ください。",
+  line_msg_welcome_2: "予約は定額メニューホームからお好みのデザインを選んで進めてください。",
+  line_msg_gallery_1: "下のリンクから定額メニューを見てご予約ください。",
   line_msg_gallery_2: "デザインと希望時間をそのまま選択できます。",
   line_msg_pending: "ご予約リクエストを受け付けました。店長確認をお待ちください。",
   line_msg_confirmed: "ご予約が確定しました。ご来店をお待ちしています。",

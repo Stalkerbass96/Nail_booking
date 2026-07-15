@@ -53,8 +53,8 @@ const TEXT = {
     batchFailed: "批量更新失败",
     reorderFailed: "排序失败",
     deleteFailed: "删除分类失败",
-    deleteConfirm: "确定要删除这个分类吗？如果已经被套餐或图墙使用，系统会拒绝删除。",
-    deleteBlocked: "这个分类已被套餐或图墙使用，不能删除。",
+    deleteConfirm: "确定要删除这个分类吗？如果已经被套餐或定额套餐使用，系统会拒绝删除。",
+    deleteBlocked: "这个分类已被套餐或定额套餐使用，不能删除。",
     empty: "暂无分类"
   },
   ja: {
@@ -85,8 +85,8 @@ const TEXT = {
     batchFailed: "一括更新に失敗しました",
     reorderFailed: "並び替えに失敗しました",
     deleteFailed: "カテゴリの削除に失敗しました",
-    deleteConfirm: "このカテゴリを削除しますか？メニューやギャラリーで使われている場合は削除できません。",
-    deleteBlocked: "このカテゴリはメニューまたはギャラリーで使われているため削除できません。",
+    deleteConfirm: "このカテゴリを削除しますか？メニューや定額メニューで使われている場合は削除できません。",
+    deleteBlocked: "このカテゴリはメニューまたは定額メニューで使われているため削除できません。",
     empty: "カテゴリはありません"
   }
 } as const;

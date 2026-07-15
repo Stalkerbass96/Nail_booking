@@ -57,15 +57,15 @@ export default async function PublicSiteFrame({
                 <nav className="site-nav" aria-label="Primary">
                   <Link
                     className="site-nav-link"
-                    href={withLangAndEntry("/", lang, entryToken)}
-                  >
-                    {pickText(lang, "图墙", "ギャラリー")}
-                  </Link>
-                  <Link
-                    className="site-nav-link"
                     href={withLangAndEntry("/services", lang, entryToken)}
                   >
                     {pickText(lang, "套餐", "メニュー")}
+                  </Link>
+                  <Link
+                    className="site-nav-link"
+                    href={withLangAndEntry("/", lang, entryToken)}
+                  >
+                    {pickText(lang, "定额套餐", "定額メニュー")}
                   </Link>
                   <Link
                     className="site-nav-link"
@@ -108,11 +108,11 @@ export default async function PublicSiteFrame({
         <footer className="site-footer">
           <div className="site-footer-inner site-footer-inner-stream">
             <div className="site-footer-links site-footer-links-inline">
-              <Link href={withLangAndEntry("/", lang, entryToken)}>
-                {pickText(lang, "图墙", "ギャラリー")}
-              </Link>
               <Link href={withLangAndEntry("/services", lang, entryToken)}>
                 {pickText(lang, "套餐", "メニュー")}
+              </Link>
+              <Link href={withLangAndEntry("/", lang, entryToken)}>
+                {pickText(lang, "定额套餐", "定額メニュー")}
               </Link>
               <Link href={withLangAndEntry("/addons", lang, entryToken)}>
                 {pickText(lang, "加项", "オプション")}

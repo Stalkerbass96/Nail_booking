@@ -10,14 +10,14 @@ type Props = {
 const TEXT = {
   zh: {
     title: "加项目录",
-    backToGallery: "回到图墙",
+    backToGallery: "回到定额套餐",
     duration: "分钟",
     plus: "+",
     empty: "暂无可展示的加项。"
   },
   ja: {
     title: "オプション一覧",
-    backToGallery: "ギャラリーに戻る",
+    backToGallery: "定額メニューに戻る",
     duration: "分",
     plus: "+",
     empty: "表示できるオプションがありません。"

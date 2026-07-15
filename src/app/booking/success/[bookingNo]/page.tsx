@@ -63,7 +63,7 @@ export default async function BookingSuccessPage({ params, searchParams }: Props
               {pickText(lang, "查看预约详情", "予約詳細を見る")}
             </Link>
             <Link className="ui-btn-secondary w-full" href={galleryHref}>
-              {pickText(lang, "继续看图墙", "ギャラリーに戻る")}
+              {pickText(lang, "继续看定额套餐", "定額メニューに戻る")}
             </Link>
           </div>
         </section>
